@@ -87,48 +87,49 @@ export default function App({ onWidthChange, initialEnabled }: { onWidthChange: 
         </Row>
       </Drawer.Header>
       <Drawer.Body style={{bottom: 0}}>
-        <Message type="info">
-          Please provide the information below
-        </Message>
-        <br></br>
-        <br></br>
+        <div className="disclaimer">
+          Shoppiem AI is in Beta. Please give us a feedback if you see something wrong.
+        </div>
+        <div className="section-header">
+          Please confirm the information below
+        </div>
+        <div className="break-2"></div>
         <Form className="product-info-form">
           <Form.Group controlId="product-name">
             <Form.ControlLabel>Product Name</Form.ControlLabel>
             <Form.Control name="textarea" accepter={Textarea} rows={3} value={productInfo.name}/>
           </Form.Group>
         </Form>
-        <br></br>
-        <br></br>
+        <div className="break-2"></div>
         <Form className="product-info-form">
           <Form.Group controlId="product-url">
             <Form.ControlLabel>Product URL</Form.ControlLabel>
             <Form.Control name="product-url" value={productInfo.productUrl}/>
           </Form.Group>
         </Form>
-        <br></br>
-        {/*<br></br>*/}
+        <div className="break-1"></div>
         <Button appearance="primary" style={{width: "100%"}}>
           Submit
         </Button>
+
+        <div className="message-container">
+          <span className="chat-msg left">Hi! I'm Shoppiem AI! I can answer specific questions about products on Amazon.</span>
+          <span className="chat-msg right">Hi! I'm Shoppiem AI! I can answer all your questions about most products on Amazon.</span>
+          <span className="chat-msg right">Hi!</span>
+          <span className="chat-msg right">(:)</span>
+          <span className="chat-msg left">Hey there sir!</span>
+          <span className="chat-msg left">Hey there sir!</span>
+          <span className="chat-msg left">Hey there sir!</span>
+          <span className="chat-msg right">Hi!</span>
+          <span className="chat-msg right">(:)</span>
+        </div>
       </Drawer.Body>
       <Drawer.Footer>
-
-        {/*<Form className="product-info-form">*/}
-        {/*  <Form.Group controlId="chat-box">*/}
-        {/*    /!*<Form.ControlLabel>Product Name</Form.ControlLabel>*!/*/}
-        {/*    <Form.Control name="textarea" accepter={Textarea} rows={5}*/}
-        {/*                  placeholder="Ask a question"/>*/}
-        {/*  </Form.Group>*/}
-        {/*</Form>*/}
-
-        {/*<Form className="chat-form">*/}
-        {/*  <Form.Group controlId="chat-box">*/}
-        {/*    <Form.ControlLabel>Product Name</Form.ControlLabel>*/}
-        {/*    <Form.Control name="textarea" accepter={Textarea} rows={5} placeholder="Ask a question"/>*/}
-        {/*  </Form.Group>*/}
-        {/*</Form>*/}
-
+        <div className="typing">
+          <span className="circle scaling"></span>
+          <span className="circle scaling"></span>
+          <span className="circle scaling"></span>
+        </div>
         <div className="chat-form-container">
           <Form className="chat-form">
             <Form.Group controlId="chat-box">
@@ -141,22 +142,6 @@ export default function App({ onWidthChange, initialEnabled }: { onWidthChange: 
         </div>
       </Drawer.Footer>
     </Drawer>
-
-
-
-  {/*  <Drawer open={open} onClose={() => setOpen(false)}>*/}
-  {/*  <Drawer.Header>*/}
-  {/*    <Drawer.Title>Drawer Title</Drawer.Title>*/}
-  {/*  </Drawer.Header>*/}
-  {/*  <Drawer.Body>*/}
-  {/*    /!*<Paragraph />*!/*/}
-  {/*  </Drawer.Body>*/}
-  {/*  <Drawer.Footer>*/}
-  {/*    <Button appearance="primary">Confirm</Button>*/}
-  {/*    <Button appearance="subtle">Cancel</Button>*/}
-  {/*  </Drawer.Footer>*/}
-  {/*</Drawer>*/}
-
 
     <div className="absolute bottom-0 right-0 w-16 z-1000 mb-6 mr-4 flex justify-center items-center p-1">
       <Button active={true} onClick={handleOpen} size={"lg"}>
