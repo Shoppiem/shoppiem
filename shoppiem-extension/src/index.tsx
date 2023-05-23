@@ -2,7 +2,7 @@ import 'react-app-polyfill/ie11';
 
 import React from 'react';
 import { createRoot } from 'react-dom/client';
-import Panel from './Panel';
+import App from './App';
 import { APP_COLLAPSE_WIDTH, APP_EXTEND_WIDTH } from './const';
 
 async function loadChromeStorage() {
@@ -62,7 +62,7 @@ async function init() {
     htmlWrapper.style['margin-right'] = `${value}px`;
   }
 
-  root.render(<Panel onWidthChange={onSidePanelWidthChange} initialEnabled={initialEnabled} />);
+  root.render(<App onWidthChange={onSidePanelWidthChange} initialEnabled={initialEnabled} />);
 }
 
 init();

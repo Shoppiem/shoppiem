@@ -1,0 +1,44 @@
+.rs-drawer-content {
+  border-top-left-radius: 18px;
+}
+.rs-drawer-header {
+  padding: 12px 20px 5px 20px;
+}
+/*.rs-drawer-header-close {*/
+/*  display: none*/
+/*}*/
+.shoppiem-full-logo {
+  width: 128px;
+}
+.rs-drawer-body {
+  padding: 30px 20px;
+}
+.rs-form-control {
+  width: 100%;
+}
+.product-info-form .rs-input, .chat-form .rs-input {
+  width: 100%;
+}
+
+.rs-drawer-header + .rs-drawer-body {
+  height: calc(100% - 266px);
+}
+
+.chat-form-container {
+  display: flex;
+  position: relative;
+}
+.chat-form {
+  width: 100%;
+}
+.chat-form textarea {
+  resize: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  border: 1px solid #b0afaf;
+  outline: none;
+  padding: 10px;
+  overflow: auto;
+  height: 60px;
+}
