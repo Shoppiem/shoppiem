@@ -10,7 +10,9 @@
   align-items: center;
   bottom: 0;
 }
-
+.typing-empty {
+  height: 40px;
+}
 .circle {
   display: block;
   height: 10px;
