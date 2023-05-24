@@ -87,6 +87,7 @@
   margin-bottom: 1rem;
   position: relative;
   padding-bottom: 1rem;
+  bottom: 0;
 }
 
 .chat-msg {
@@ -106,6 +107,10 @@
   color: #101828;
   background: #f2f4f7;
   border-radius: 0px 8px 8px 8px;
+}
+
+.chat-msg.right.empty {
+  background: #fff;
 }
 
 .chat-msg.right {
