@@ -5,6 +5,7 @@ import {
   Button,
 } from 'rsuite';
 import 'rsuite/dist/rsuite.min.css';
+import CloseIcon from '@rsuite/icons/Close';
 
 
 // @ts-ignore
@@ -98,7 +99,8 @@ export default function App(): ReactElement {
           <img className="shoppiem-full-logo" src={fullLogo} alt="Shoppiem"/>
         </Drawer.Title>
         <Drawer.Actions>
-          <Button onClick={() => setOpen(false)}>Close</Button>
+          <CloseIcon onClick={() => setOpen(false)} className="close-btn"/>
+          {/*<Button onClick={() => setOpen(false)}><CloseIcon/></Button>*/}
         </Drawer.Actions>
       </Drawer.Header>
       <Drawer.Header style={{marginTop: "1rem"}}>

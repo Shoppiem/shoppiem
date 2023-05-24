@@ -81,6 +81,9 @@
 .break-1 {
   margin-top: 1rem;
 }
+.close-btn:hover {
+  cursor: pointer;
+}
 
 .message-container {
   margin-top: 2rem;
