@@ -1,0 +1,185 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Shoppiem API",
+    "description": "Shoppiem AI API Service",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://api.shoppiem.com",
+      "description": "Prod"
+    },
+    {
+      "url": "http://localhost:8080",
+      "description": "Dev"
+    }
+  ],
+  "paths": {
+    "/user/": {
+      "get": {
+        "tags": [
+          "user"
+        ],
+        "summary": "Get user profile",
+        "description": "Get user profile or create one if it doesn't exist",
+        "operationId": "getUserprofile",
+        "responses": {
+          "200": {
+            "description": "Get user profile response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserProfileResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/product": {
+      "post": {
+        "tags": [
+          "product"
+        ],
+        "summary": "Create a new product",
+        "description": "Create a new product",
+        "operationId": "createProduct",
+        "requestBody": {
+          "required": true,
+          "description": "New product request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProductRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generic Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "UserProfileResponse":  {
+        "type": "object",
+        "required": [
+          "error",
+          "profile"
+        ],
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "profile": {
+            "$ref": "#/components/schemas/UserProfile"
+          }
+        }
+      },
+      "GenericResponse":  {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "ProductRequest":  {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "product_url": {
+            "type": "string"
+          },
+          "image_url": {
+            "type": "string"
+          }
+        }
+      },
+      "ChatDto":  {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "product_id": {
+            "type": "string"
+          },
+          "from_user": {
+            "type": "boolean"
+          }
+        }
+      },
+      "FeedbackDto":  {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          }
+        }
+      },
+      "UserProfile":  {
+        "type": "object",
+        "required": [
+          "firebase_id",
+          "name",
+          "email",
+          "picture",
+          "roles",
+          "is_authorized"
+        ],
+        "properties": {
+          "firebase_id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "picture": {
+            "type": "string"
+          },
+          "roles": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "boolean"
+            }
+          },
+          "is_authorized": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}
