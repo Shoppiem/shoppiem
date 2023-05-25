@@ -3,7 +3,7 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "vector";
 
 CREATE TABLE IF NOT EXISTS public.user (
-    id BIGSERIAL NOT NULL constraint project_id_fk primary key,
+    id BIGSERIAL NOT NULL primary key,
     uid varchar(255),
     full_name varchar(255),
     first_name varchar(128),
@@ -19,13 +19,13 @@ ALTER TABLE public.user OWNER TO root;
 comment on table public.user is 'Basic user information';
 
 CREATE TABLE IF NOT EXISTS public.product (
-    id BIGSERIAL NOT NULL constraint project_id_fk primary key,
+    id BIGSERIAL NOT NULL primary key,
     product_sku varchar(255) not null,
     title varchar(255),
     product_url varchar,
     image_url varchar,
     description varchar,
-    price numeric(6,2)
+    price numeric(6,2),
     currency varchar(8),
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP

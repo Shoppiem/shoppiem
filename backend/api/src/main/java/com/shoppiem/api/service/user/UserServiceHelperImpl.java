@@ -31,7 +31,7 @@ public class UserServiceHelperImpl implements UserServiceHelper {
 
   private void createDbUserHelper(UserProfile userProfile) {
     if (userProfile != null && !ObjectUtils.isEmpty(userProfile.getUid())) {
-      UserEntity entity = userRepo.findByFirebaseId(userProfile.getUid());
+      UserEntity entity = userRepo.findByUid(userProfile.getUid());
       if (entity == null) {
         UserEntity newUser = new UserEntity();
         newUser.setEmail(userProfile.getEmail());
