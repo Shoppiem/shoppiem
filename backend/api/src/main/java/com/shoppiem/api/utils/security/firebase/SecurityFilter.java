@@ -91,7 +91,7 @@ public class SecurityFilter extends OncePerRequestFilter {
     private UserProfile firebaseTokenToUser(FirebaseToken decodedToken) {
       UserProfile user = new UserProfile();
         if (decodedToken != null) {
-            user.setFirebaseId(decodedToken.getUid());
+            user.setUid(decodedToken.getUid());
             user.setName(decodedToken.getName());
             user.setEmail(decodedToken.getEmail());
             user.setPicture(decodedToken.getPicture());

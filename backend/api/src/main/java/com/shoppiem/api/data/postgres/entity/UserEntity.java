@@ -18,9 +18,14 @@ import java.time.LocalDateTime;
 @Table(schema = "public", name = "user")
 public class UserEntity {
     @Id
-    @JsonProperty("firebase_id")
-    @Column(name = "firebase_id")
-    private String firebaseId;
+    @SequenceGenerator(name="pk_sequence",sequenceName="user_id_seq", allocationSize=1)
+    @GeneratedValue(strategy= GenerationType.AUTO,generator="pk_sequence_user")
+    @Column(name = "id")
+    private Long id;
+    
+    @JsonProperty("uid")
+    @Column(name = "uid")
+    private String uid;
 
     @Basic
     @JsonProperty("name")

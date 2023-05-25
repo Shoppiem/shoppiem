@@ -61,11 +61,6 @@ public class FirebaseSDKConfig {
     }
 
     private String decodeKey(String encoded) {
-        try {
-           return new String(Base64.getDecoder().decode(encoded), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            e.printStackTrace();
-        }
-        return null;
+        return new String(Base64.getDecoder().decode(encoded), StandardCharsets.UTF_8);
     }
 }

@@ -77,6 +77,6 @@ public class UserServiceIntegrationTest extends AbstractTestNGSpringContextTests
         assertThat(user.getUpdatedAt(), is(notNullValue()));
         assertThat(user.getFullName(), startsWith(response.getProfile().getName()));
         assertThat(user.getEmail(), startsWith(response.getProfile().getEmail()));
-        assertThat(user.getFirebaseId(), is(notNullValue()));
+        assertThat(user.getUid(), is(notNullValue()));
     }
 }

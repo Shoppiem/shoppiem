@@ -3,7 +3,8 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "vector";
 
 CREATE TABLE IF NOT EXISTS public.user (
-    firebase_id varchar(255) NOT NULL PRIMARY KEY,
+    id BIGSERIAL NOT NULL constraint project_id_fk primary key,
+    uid varchar(255),
     full_name varchar(255),
     first_name varchar(128),
     last_name varchar(128),
@@ -12,7 +13,7 @@ CREATE TABLE IF NOT EXISTS public.user (
     is_premium_user boolean not null default false,
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(firebase_id)
+    UNIQUE(uid)
 );
 ALTER TABLE public.user OWNER TO root;
 comment on table public.user is 'Basic user information';
@@ -24,7 +25,8 @@ CREATE TABLE IF NOT EXISTS public.product (
     product_url varchar,
     image_url varchar,
     description varchar,
-    price varchar(255),
+    price numeric(6,2)
+    currency varchar(8),
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
@@ -63,6 +65,7 @@ comment on table public.embedding is 'Sentences embeddings';
 
 CREATE TABLE IF NOT EXISTS public.feedback (
      id BIGSERIAL PRIMARY KEY NOT NULL,
+     user_id bigint NOT NULL,
      subject varchar(255),
      body varchar,
      updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,

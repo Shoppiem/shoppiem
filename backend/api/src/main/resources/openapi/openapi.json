@@ -149,7 +149,7 @@
       "UserProfile":  {
         "type": "object",
         "required": [
-          "firebase_id",
+          "uid",
           "name",
           "email",
           "picture",
@@ -157,7 +157,7 @@
           "is_authorized"
         ],
         "properties": {
-          "firebase_id": {
+          "uid": {
             "type": "string"
           },
           "name": {
