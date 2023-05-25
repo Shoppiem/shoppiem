@@ -1,1 +1,0 @@
-ALTER TABLE public.project ADD COLUMN project_uid varchar(8) NOT NULL default '';

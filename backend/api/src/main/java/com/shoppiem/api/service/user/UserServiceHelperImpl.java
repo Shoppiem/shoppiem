@@ -36,7 +36,6 @@ public class UserServiceHelperImpl implements UserServiceHelper {
         UserEntity newUser = new UserEntity();
         newUser.setEmail(userProfile.getEmail());
         newUser.setFirebaseId(userProfile.getFirebaseId());
-        newUser.setFullName(userProfile.getName());
         log.info("Creating new user with firebase ID = {}", newUser.getFirebaseId());
         userRepo.save(newUser);
 

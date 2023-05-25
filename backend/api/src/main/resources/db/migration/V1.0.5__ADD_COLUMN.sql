@@ -1,1 +1,0 @@
-ALTER TABLE public.project ADD COLUMN get_raw_transcript boolean NOT NULL default false;

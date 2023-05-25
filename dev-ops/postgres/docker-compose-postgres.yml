@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   shoppiem_db:
-    image: postgres
+    image: ankane/pgvector
     command: postgres -c 'max_connections=2000'
     container_name: shoppiem_db
     restart: always

@@ -23,19 +23,9 @@ public class UserEntity {
     private String firebaseId;
 
     @Basic
-    @JsonProperty("full_name")
-    @Column(name = "full_name")
-    private String fullName;
-
-    @Basic
-    @JsonProperty("first_name")
-    @Column(name = "first_name")
-    private String firstName;
-
-    @Basic
-    @JsonProperty("last_name")
-    @Column(name = "last_name")
-    private String lastName;
+    @JsonProperty("name")
+    @Column(name = "name")
+    private String name;
 
     @Basic
     @JsonProperty("is_premium_user")
