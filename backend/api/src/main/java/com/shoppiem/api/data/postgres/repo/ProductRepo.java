@@ -14,4 +14,5 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional
 public interface ProductRepo extends JpaRepository<ProductEntity, Long> {
+  ProductEntity findByProductSku(String sku);
 }

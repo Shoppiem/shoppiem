@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS public.product (
     price numeric(6,2),
     currency varchar(8),
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE(product_sku)
 );
 ALTER TABLE public.product OWNER TO root;
 
