@@ -54,6 +54,8 @@ configure(subprojects.findAll(it ->
   apply plugin: 'io.swagger.core.v3.swagger-gradle-plugin'
 
   dependencies {
+    implementation 'org.springframework:spring-websocket:5.3.24'
+    implementation 'org.springframework:spring-messaging:5.3.24'
     api 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:adapter-rxjava2:2.9.0'
     implementation 'com.squareup.retrofit2:converter-jackson:2.9.0'

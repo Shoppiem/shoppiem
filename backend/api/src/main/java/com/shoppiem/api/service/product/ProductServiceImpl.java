@@ -4,6 +4,7 @@ import com.shoppiem.api.GenericResponse;
 import com.shoppiem.api.ProductRequest;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -30,7 +31,12 @@ public class ProductServiceImpl implements ProductService {
     return null;
   }
 
-  private String parseProductSku(String productUrl) {
-    return "";
+  @Override
+  public String parseProductSku(String url) {
+    // Assume we are only dealing with Amazon product URLs
+    String[] tokens = url.split("/dp/");
+    String skuPart = tokens[1];
+    String sku = skuPart.split("/")[0];
+    return sku;
   }
 }

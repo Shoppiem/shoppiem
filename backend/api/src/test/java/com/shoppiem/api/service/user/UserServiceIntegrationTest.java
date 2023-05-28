@@ -67,7 +67,7 @@ public class UserServiceIntegrationTest extends AbstractTestNGSpringContextTests
         assertThat(response, is(notNullValue()));
         assertThat(response.getProfile().getName(), is(notNullValue()));
         assertThat(response.getProfile().getEmail(), is(notNullValue()));
-        assertThat(response.getProfile().getFirebaseId(), is(notNullValue()));
+        assertThat(response.getProfile().getUid(), is(notNullValue()));
         Thread.sleep(5000);
         List<UserEntity> allUsers = userRepo.findAll();
         assertThat(allUsers, is(notNullValue()));
@@ -75,7 +75,7 @@ public class UserServiceIntegrationTest extends AbstractTestNGSpringContextTests
         UserEntity user = allUsers.get(0);
         assertThat(user.getCreatedAt(), is(notNullValue()));
         assertThat(user.getUpdatedAt(), is(notNullValue()));
-        assertThat(user.getFullName(), startsWith(response.getProfile().getName()));
+        assertThat(user.getName(), startsWith(response.getProfile().getName()));
         assertThat(user.getEmail(), startsWith(response.getProfile().getEmail()));
         assertThat(user.getUid(), is(notNullValue()));
     }

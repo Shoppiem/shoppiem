@@ -8,4 +8,5 @@ import com.shoppiem.api.ProductRequest;
  */
 public interface ProductService {
   GenericResponse createProduct(ProductRequest productRequest);
+  String parseProductSku(String productUrl);
 }

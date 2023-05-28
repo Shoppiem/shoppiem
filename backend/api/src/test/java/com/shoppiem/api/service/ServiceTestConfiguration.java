@@ -36,7 +36,7 @@ public class ServiceTestConfiguration {
     @Bean
     public UserProfile getUserPrincipal() {
         UserProfile principal = new UserProfile();
-        principal.setFirebaseId(UUID.randomUUID().toString().replace("-", ""));
+        principal.setUid(UUID.randomUUID().toString().replace("-", ""));
         principal.setName("Sideshow Bob");
         principal.setEmail("bobby@gmail.com");
         principal.setPicture("http://lorem.picsum/200");

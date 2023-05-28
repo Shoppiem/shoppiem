@@ -27,7 +27,7 @@ public class ServiceTestHelper {
         Mockito.when(authentication.getPrincipal()).thenReturn(new UserProfile()
             .name("TestNG User")
             .email("testuser@exampe.com")
-            .firebaseId(userId == null ? UUID.randomUUID().toString() : userId)
+            .uid(userId == null ? UUID.randomUUID().toString() : userId)
         );
 
         SecurityContext securityContext = Mockito.mock(SecurityContext.class);

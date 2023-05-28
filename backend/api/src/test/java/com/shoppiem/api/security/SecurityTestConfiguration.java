@@ -30,7 +30,7 @@ public class SecurityTestConfiguration {
     @Bean
     public UserProfile getUserPrincipal() {
       UserProfile userProfile = new UserProfile();
-      userProfile.setFirebaseId(UUID.randomUUID().toString().replace("-", ""));
+      userProfile.setUid(UUID.randomUUID().toString().replace("-", ""));
       userProfile.setName("Sideshow Bob");
       userProfile.setEmail("bobby@gmail.com");
       userProfile.setPicture("http://lorem.picsum/200");
