@@ -1,9 +1,8 @@
 {
-  "name": "react-chrome-extension-template-side-panel",
+  "name": "shoppiem-ai",
   "version": "0.2.0",
   "license": "MIT",
   "source": "./src/index.html",
-  "browserslist": "> 0.5%, last 2 versions, not dead",
   "scripts": {
     "prestart": "yarn style",
     "start": "parcel --dist-dir ./public/dist",
@@ -14,13 +13,16 @@
   },
   "dependencies": {
     "@rsuite/icons": "^1.0.2",
+    "@stomp/stompjs": "^7.0.0",
+    "@types/sockjs-client": "^1.5.1",
     "classnames": "^2.3.1",
     "nanoid": "^4.0.2",
     "react": "^18.2.0",
     "react-app-polyfill": "^3.0.0",
     "react-dom": "^18.2.0",
     "react-frame-component": "^5.2.3",
-    "rsuite": "^5.34.0"
+    "rsuite": "^5.34.0",
+    "sockjs-client": "^1.6.1"
   },
   "devDependencies": {
     "@types/react": "^18.0.19",
@@ -31,5 +33,10 @@
     "process": "^0.11.10",
     "tailwindcss": "^3.1.8",
     "typescript": "^4.8.3"
+  },
+  "alias": {
+    "process": {
+      "global": "{}"
+    }
   }
 }

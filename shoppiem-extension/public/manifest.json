@@ -1,7 +1,7 @@
 {
-  "short_name": "react-chrome-extension-template-side-panel",
-  "name": "React Chrome Extension Template: Side Panel",
-  "version": "0.2.0",
+  "short_name": "shoppiem-ai",
+  "name": "Shoppiem AI",
+  "version": "1.0.0",
   "manifest_version": 3,
   "background": {
     "service_worker": "background.js"
@@ -9,15 +9,23 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "css": ["dist/index.4eeece91.css"],
-      "js": ["dist/index.6099912e.js"]
+      "css": [
+        "dist/index.735b2751.css",
+        "dist/index.b284f5af.css",
+        "dist/index.fd2011b2.css"
+      ],
+      "js": ["dist/index.b48ba010.js"]
     }
   ],
-  "permissions": ["storage", "scripting", "tabs", "activeTab"],
+  "permissions": [
+    "storage",
+    "scripting",
+    "tabs"
+  ],
   "icons": {
-    "16": "16.png",
-    "32": "32.png",
-    "48": "48.png",
-    "128": "128.png"
+    "16": "icon-16.png",
+    "32": "icon-32.png",
+    "48": "icon-48.png",
+    "128": "icon-128.png"
   }
 }
