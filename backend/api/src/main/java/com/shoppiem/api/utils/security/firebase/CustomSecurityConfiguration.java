@@ -1,6 +1,7 @@
 package com.shoppiem.api.utils.security.firebase;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shoppiem.api.utils.security.UnsecurePaths;
 import com.shoppiem.api.utils.security.firewall.FirewallConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.autoconfigure.security.reactive.ReactiveManagementWebSecurityAutoConfiguration;
@@ -51,7 +52,7 @@ import java.util.Map;
         ReactiveManagementWebSecurityAutoConfiguration.class,
         ReactiveSecurityAutoConfiguration.class
 })
-@ConditionalOnProperty(value = "security.firebaseEnabled")
+//@ConditionalOnProperty(value = "security.firebaseEnabled")
 @Import(FirewallConfiguration.class)
 @ComponentScan(basePackages = {"com.shoppiem.api.utils.security.firebase"})
 @RequiredArgsConstructor
@@ -80,9 +81,7 @@ public class CustomSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and()
                 .authorizeRequests()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .antMatchers(
-                        "/actuator/health**",
-                        "/lead/**")
+            .antMatchers(UnsecurePaths.wildcardPaths())
           .permitAll()
                 .anyRequest().authenticated()
                 .and()

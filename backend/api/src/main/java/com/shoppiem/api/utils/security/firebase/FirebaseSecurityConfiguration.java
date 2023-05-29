@@ -1,6 +1,7 @@
 package com.shoppiem.api.utils.security.firebase;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shoppiem.api.utils.security.UnsecurePaths;
 import com.shoppiem.api.utils.security.firewall.FirewallConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.autoconfigure.security.reactive.ReactiveManagementWebSecurityAutoConfiguration;
@@ -79,9 +80,8 @@ public class FirebaseSecurityConfiguration extends WebSecurityConfigurerAdapter 
                 .and()
                 .authorizeRequests()
                 .antMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .antMatchers("/actuator/health**",
-                  "/lead/**"
-                ).permitAll()
+            .antMatchers(UnsecurePaths.wildcardPaths())
+            .permitAll()
                 .anyRequest().authenticated()
                 .and()
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)

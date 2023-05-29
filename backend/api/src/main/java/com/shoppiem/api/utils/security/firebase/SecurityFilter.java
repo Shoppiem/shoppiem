@@ -6,6 +6,7 @@ import com.google.firebase.auth.FirebaseToken;
 import com.shoppiem.api.utils.firebase.FirebaseService;
 import com.shoppiem.api.utils.security.Credentials;
 import com.shoppiem.api.UserProfile;
+import com.shoppiem.api.utils.security.UnsecurePaths;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -61,9 +62,7 @@ public class SecurityFilter extends OncePerRequestFilter {
     // All non-preflight requests must have a valid authorization token
     boolean methodExcluded = Stream.of("options")
       .anyMatch(method -> httpServletRequest.getMethod().toLowerCase().contains(method));
-    boolean uriExcluded = Stream.of(
-        "/actuator/health",
-        "/lead")
+    boolean uriExcluded = UnsecurePaths.paths()
       .anyMatch(uri -> httpServletRequest.getRequestURI().toLowerCase().contains(uri));
     if (!(methodExcluded || uriExcluded)) {
       verifyToken(httpServletRequest);
