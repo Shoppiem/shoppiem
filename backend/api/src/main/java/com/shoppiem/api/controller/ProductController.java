@@ -2,6 +2,7 @@ package com.shoppiem.api.controller;
 
 import com.shoppiem.api.GenericResponse;
 import com.shoppiem.api.ProductApi;
+import com.shoppiem.api.ProductCreateResponse;
 import com.shoppiem.api.ProductRequest;
 import com.shoppiem.api.UserApi;
 import com.shoppiem.api.UserProfileResponse;
@@ -23,7 +24,7 @@ public class ProductController implements ProductApi {
   private final ProductService productService;
 
   @Override
-  public ResponseEntity<GenericResponse> createProduct(ProductRequest productRequest) {
+  public ResponseEntity<ProductCreateResponse> createProduct(ProductRequest productRequest) {
     return ResponseEntity.ok(productService.createProduct(productRequest));
   }
 }

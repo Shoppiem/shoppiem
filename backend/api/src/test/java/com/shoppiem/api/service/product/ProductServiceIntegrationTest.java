@@ -2,6 +2,7 @@ package com.shoppiem.api.service.product;
 
 
 import com.shoppiem.api.GenericResponse;
+import com.shoppiem.api.ProductCreateResponse;
 import com.shoppiem.api.ProductRequest;
 import com.shoppiem.api.service.ServiceTestConfiguration;
 import com.shoppiem.api.utils.migration.FlywayMigration;
@@ -61,12 +62,12 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
     @Test
     public void createProductTest() {
       ProductRequest request = new ProductRequest()
-          .productUrl("https://www.amazon.com/Belkin-Boost%E2%86%91ChargeTM-Wireless-Compatible-Kickstand/dp/B0BXRMCC31/?_encoding=UTF8&pd_rd_w=dyu4M&content-id=amzn1.sym.c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_p=c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_r=CVH3RSQQQDGMZPB008AQ&pd_rd_wg=B4Bru&pd_rd_r=08f1c561-28fd-45c0-8d24-ca21537303c7&ref_=pd_gw_gcx_gw_EGG-Graduation-23-1a&th=1")
-          .imageUrl("https://m.media-amazon.com/images/I/61lX0E1PX2L._AC_SL1500_.jpg")
-          .title("Belkin Boost↑Charge™ Wireless Power Bank 5K w/MagSafe Compatible 7.5W Charging, Included Pop-up Kickstand - Compatible w/iPhone 14, 14 Plus, 14 Pro, 14 Pro Max, 13, 13 Mini, AirPods and More - Purple");
-      GenericResponse response = productService.createProduct(request);
+          .productUrl("https://www.amazon.com/Belkin-Boost%E2%86%91ChargeTM-Wireless-Compatible-Kickstand/dp/B0BXRMCC31/?_encoding=UTF8&pd_rd_w=dyu4M&content-id=amzn1.sym.c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_p=c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_r=CVH3RSQQQDGMZPB008AQ&pd_rd_wg=B4Bru&pd_rd_r=08f1c561-28fd-45c0-8d24-ca21537303c7&ref_=pd_gw_gcx_gw_EGG-Graduation-23-1a&th=1");
+//          .imageUrl("https://m.media-amazon.com/images/I/61lX0E1PX2L._AC_SL1500_.jpg")
+//          .title("Belkin Boost↑Charge™ Wireless Power Bank 5K w/MagSafe Compatible 7.5W Charging, Included Pop-up Kickstand - Compatible w/iPhone 14, 14 Plus, 14 Pro, 14 Pro Max, 13, 13 Mini, AirPods and More - Purple");
+      ProductCreateResponse response = productService.createProduct(request);
       assertNotNull(response);
-      assertTrue(response.getStatus().equalsIgnoreCase("ok"));
+      assertTrue(response.getInProgress());
     }
 
     @Test

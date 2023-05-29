@@ -26,30 +26,60 @@ public class ProductServiceImpl implements ProductService {
 
   @SneakyThrows
   @Override
-  public GenericResponse createProduct(ProductRequest productRequest) {
+  public ProductCreateResponse createProduct(ProductRequest productRequest) {
     var productSku = parseProductSku(productRequest.getProductUrl());
     var entity = productRepo.findByProductSku(productSku);
     if (entity == null) {
+      log.info(productSku);
       // Product not found. Scrape this product and its reviews.
       // And then create embeddings for it.
-      messagingTemplate.convertAndSendToUser(
-          productRequest.getSessionId(),
-          webSocketProps.getQueue(),
-          new ProductCreateResponse()
-              .inProgress(true)
-      );
+//      messagingTemplate.convertAndSendToUser(
+//          productRequest.getSessionId(),
+//          webSocketProps.getQueue(),
+//          new ProductCreateResponse()
+//              .inProgress(true)
+//      );
     } else {
       // Signal that the product is ready and can start the chat session
     }
-    Thread.sleep(5000L);
-    messagingTemplate.convertAndSendToUser(
-        productRequest.getSessionId(),
-        webSocketProps.getQueue(),
-        new ProductCreateResponse()
-            .isReady(true)
-    );
-    return null;
+//    Thread.sleep(5000L);
+//    messagingTemplate.convertAndSendToUser(
+//        productRequest.getSessionId(),
+//        webSocketProps.getQueue(),
+//        new ProductCreateResponse()
+//            .isReady(true)
+//    );
+    return new ProductCreateResponse()
+        .inProgress(true);
   }
+
+//  @SneakyThrows
+//  @Override
+//  public ProductCreateResponse createProduct(ProductRequest productRequest) {
+//    var productSku = parseProductSku(productRequest.getProductUrl());
+//    var entity = productRepo.findByProductSku(productSku);
+//    if (entity == null) {
+//      // Product not found. Scrape this product and its reviews.
+//      // And then create embeddings for it.
+////      messagingTemplate.convertAndSendToUser(
+////          productRequest.getSessionId(),
+////          webSocketProps.getQueue(),
+////          new ProductCreateResponse()
+////              .inProgress(true)
+////      );
+//    } else {
+//      // Signal that the product is ready and can start the chat session
+//    }
+////    Thread.sleep(5000L);
+////    messagingTemplate.convertAndSendToUser(
+////        productRequest.getSessionId(),
+////        webSocketProps.getQueue(),
+////        new ProductCreateResponse()
+////            .isReady(true)
+////    );
+//    return new ProductCreateResponse()
+//        .inProgress(true);
+//  }
 
   @Override
   public String parseProductSku(String url) {

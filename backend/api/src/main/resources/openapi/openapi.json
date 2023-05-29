@@ -63,7 +63,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/GenericResponse"
+                  "$ref": "#/components/schemas/ProductCreateResponse"
                 }
               }
             }
@@ -110,16 +110,7 @@
       "ProductRequest":  {
         "type": "object",
         "properties": {
-          "title": {
-            "type": "string"
-          },
           "product_url": {
-            "type": "string"
-          },
-          "image_url": {
-            "type": "string"
-          },
-          "session_id": {
             "type": "string"
           }
         }
