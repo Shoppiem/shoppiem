@@ -12,7 +12,9 @@ public class UnsecurePaths {
       "/actuator/health",
       "/actuator/health/**",
       "/ws/**",
-      "/ws"
+      "/ws",
+      "/product/**",
+      "/product"
   );
 
   public static Stream<String> paths() {

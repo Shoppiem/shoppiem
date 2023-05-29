@@ -93,7 +93,10 @@ public class FirebaseSecurityConfiguration extends WebSecurityConfigurerAdapter 
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedHeaders(List.of("*"));
-        corsConfiguration.setAllowedOrigins(List.of("http://localhost:1234"));
+        corsConfiguration.setAllowedOrigins(List.of(
+            "http://localhost:1234",
+            "chrome-extension://hcpjdbdfkeeahjennonnojanglgpfbom"
+            ));
         corsConfiguration.setAllowedMethods(List.of("*"));
         corsConfiguration.setExposedHeaders(List.of("*"));
         corsConfiguration.setAllowCredentials(true);
