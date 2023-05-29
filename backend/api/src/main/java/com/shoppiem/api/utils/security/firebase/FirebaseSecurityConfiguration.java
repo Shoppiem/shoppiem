@@ -28,6 +28,8 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
  * @author Bizuwork Melesse
@@ -72,7 +74,6 @@ public class FirebaseSecurityConfiguration extends WebSecurityConfigurerAdapter 
     protected void configure(HttpSecurity security) throws Exception
     {
         security.cors()
-                .configurationSource(request -> getCorsConfiguration())
                 .and()
                 .csrf().disable().formLogin().disable()
                 .httpBasic().disable()
@@ -88,14 +89,18 @@ public class FirebaseSecurityConfiguration extends WebSecurityConfigurerAdapter 
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     }
 
-    private CorsConfiguration getCorsConfiguration() {
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedHeaders(List.of("*"));
-        corsConfiguration.setAllowedOrigins(List.of("*"));
+        corsConfiguration.setAllowedOrigins(List.of("http://localhost:1234"));
         corsConfiguration.setAllowedMethods(List.of("*"));
         corsConfiguration.setExposedHeaders(List.of("*"));
-        corsConfiguration.setAllowCredentials(false);
-        return corsConfiguration;
+        corsConfiguration.setAllowCredentials(true);
+        corsConfiguration.setMaxAge(3600L);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", corsConfiguration);
+        return source;
     }
 
     @Bean
