@@ -1,6 +1,5 @@
 package com.shoppiem.api.service.product;
 
-import com.shoppiem.api.GenericResponse;
 import com.shoppiem.api.ProductCreateResponse;
 import com.shoppiem.api.ProductRequest;
 

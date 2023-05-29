@@ -6,6 +6,7 @@ import com.shoppiem.api.ProductRequest;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.props.WebSocketProps;
+import com.shoppiem.api.service.scraper.ScraperService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -23,6 +24,7 @@ public class ProductServiceImpl implements ProductService {
   private final ProductRepo productRepo;
   private final WebSocketProps webSocketProps;
   private final SimpMessagingTemplate messagingTemplate;
+  private final ScraperService scraperService;
 
   @SneakyThrows
   @Override
@@ -31,6 +33,7 @@ public class ProductServiceImpl implements ProductService {
     var entity = productRepo.findByProductSku(productSku);
     if (entity == null) {
       log.info(productSku);
+      scraperService.getContent(productSku, productRequest.getProductUrl());
       // Product not found. Scrape this product and its reviews.
       // And then create embeddings for it.
 //      messagingTemplate.convertAndSendToUser(

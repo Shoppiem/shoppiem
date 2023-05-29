@@ -78,6 +78,8 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
         assertEquals("B0BXRMCC31", sku);
     }
 
+//    B07VWZHCNX
+
 //    private Long createProject() {
 //        ProjectEntity entity = new ProjectEntity();
 //        entity.setProjectName("Demo TestNG project");

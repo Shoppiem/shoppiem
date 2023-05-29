@@ -21,6 +21,7 @@ import org.springframework.context.annotation.Configuration;
     OpenAiProps.class,
     UserProps.class,
     IpAddressProps.class,
+    ScraperProps.class
 })
 public class PropConfiguration {
 }

@@ -1,13 +1,9 @@
 package com.shoppiem.api.controller;
 
-import com.shoppiem.api.GenericResponse;
 import com.shoppiem.api.ProductApi;
 import com.shoppiem.api.ProductCreateResponse;
 import com.shoppiem.api.ProductRequest;
-import com.shoppiem.api.UserApi;
-import com.shoppiem.api.UserProfileResponse;
 import com.shoppiem.api.service.product.ProductService;
-import com.shoppiem.api.service.user.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
