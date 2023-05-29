@@ -118,8 +118,52 @@
           },
           "image_url": {
             "type": "string"
+          },
+          "session_id": {
+            "type": "string"
           }
         }
+      },
+      "ProductCreateResponse":  {
+        "type": "object",
+        "properties": {
+          "is_ready": {
+            "type": "boolean"
+          },
+          "in_progress": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": "string"
+          }
+        }
+      },
+      "Payload":  {
+        "oneOf": [
+          {
+            "$ref": "#/components/schemas/ProductCreateResponse"
+          }
+        ]
+      },
+      "WebsocketResponse":  {
+        "type": "object",
+        "properties": {
+          "type": {
+            "$ref": "#/components/schemas/WebsocketResponseType"
+          },
+          "payload": {
+            "$ref": "#/components/schemas/Payload"
+          }
+        }
+      },
+      "WebsocketResponseType":  {
+        "type": "string",
+        "enum": [
+          "Create Product"
+        ],
+        "x-enum-varnames": [
+          "CREATE_PRODUCT"
+        ]
       },
       "ChatDto":  {
         "type": "object",

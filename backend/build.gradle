@@ -191,15 +191,17 @@ task openApiBuilder() {
         apiPackage = project.apiPackageName
         modelPackage = project.modelPackageName
         configOptions = [
-          dateLibrary            : "java8",
-          interfaceOnly          : "true",
-          invoker                : "false",
-          generateSupportingFiles: "false",
-          serializableModel      : "true",
-          swaggerAnnotations     : "false",
-          java8                  : "false",
-          gradleBuildFile        : "false",
-          useTags                : "true"
+                dateLibrary            : "java8",
+                interfaceOnly          : "true",
+                invoker                : "false",
+                generateSupportingFiles: "false",
+                serializableModel      : "true",
+                swaggerAnnotations     : "false",
+                java8                  : "false",
+                gradleBuildFile        : "false",
+                useTags                : "true",
+                oas3                   : "true",
+                useSpringfox           : "false",
         ]
       }
       projectTasks.getByName('compileJava')

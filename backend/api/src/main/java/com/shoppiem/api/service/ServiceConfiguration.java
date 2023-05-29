@@ -23,6 +23,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @RequiredArgsConstructor
 @EnableAsync
 @Import({
+    WebSocketConfiguration.class,
     DataConfiguration.class,
     MapperConfiguration.class,
     FlywayMigrationConfiguration.class})
