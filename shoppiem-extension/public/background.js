@@ -2,69 +2,33 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log('Extension Installed')
 });
 
+function initProduct(url) {
+  const host = "http://localhost:8080/product"
+  const requestBody = {
+    product_url: url
+  };
+
+  fetch(host, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(requestBody)
+  })
+  .then(response => response.json())
+  .then(data => {
+    console.log(data);
+  })
+  .catch(error => {
+    console.error(error);
+  });
+}
+
 chrome.tabs.onUpdated.addListener(
     function(tabId, changeInfo, tab) {
-      // read changeInfo data and do something with it
-      // like send the new url to contentscripts.js
-      console.log("changeInfo: ", changeInfo)
-      console.log("New url: ", changeInfo.url)
-      if (changeInfo.url) {
-        chrome.tabs.sendMessage( tabId, {
-          message: 'hello!',
-          url: changeInfo.url
-        })
+      const url = changeInfo.url
+      if (url && url.includes("amazon.com")) {
+        initProduct(url)
       }
     }
 );
-
-// function createWebSocketConnection() {
-//   if('WebSocket' in window){
-//     chrome.storage.local.get("instance", function(data) {
-//       console.log("data: ", data)
-//       connect('ws://' + data.instance + '/ws');
-//     });
-//   }
-// }
-//
-// //Make a websocket connection with the server.
-// function connect(host) {
-//   if (websocket === undefined) {
-//     websocket = new WebSocket(host);
-//   }
-//
-//   websocket.onopen = function() {
-//     chrome.storage.local.get(["username"], function(data) {
-//       websocket.send(JSON.stringify({userLoginId: data.username}));
-//     });
-//   };
-//
-//   websocket.onmessage = function (event) {
-//     var received_msg = JSON.parse(event.data);
-//     var demoNotificationOptions = {
-//       type: "basic",
-//       title: received_msg.subject,
-//       message: received_msg.message,
-//       iconUrl: "images/demo-icon.png"
-//     }
-//     chrome.notifications.create("", demoNotificationOptions);
-//     updateToolbarBadge();
-//   };
-//
-//   //If the websocket is closed but the session is still active, create new connection again
-//   websocket.onclose = function() {
-//     websocket = undefined;
-//     chrome.storage.local.get(['demo_session'], function(data) {
-//       if (data.demo_session) {
-//         createWebSocketConnection();
-//       }
-//     });
-//   };
-// }
-//
-// //Close the websocket connection
-// function closeWebSocketConnection(username) {
-//   if (websocket != null || websocket != undefined) {
-//     websocket.close();
-//     websocket = undefined;
-//   }
-// }
