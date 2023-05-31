@@ -1,6 +1,5 @@
 package com.shoppiem.api.service.parser;
 
-import io.netty.util.internal.StringUtil;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -12,7 +11,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.jsoup.select.Elements;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -31,9 +29,11 @@ public class AmazonParserImpl implements AmazonParser {
     String sellerXPath = "//*[@id=\"bylineInfo\"]";
     String ratingXPath = "//*[@id=\"acrPopover\"]/span[1]/a";
     String reviewCountXPath = "//*[@id=\"acrCustomerReviewText\"]";
-    String featuresXPath = "//*[@id=\"feature-bullets\"]/ul/li[1]/span";
+    String featuresXPath = "//*[@id=\"feature-bullets\"]";
     String overviewFeatureXPath = "//*[@id=\"productOverview_feature_div\"]/div/table/tbody";
     String productDescriptionXPath = "//*[@id=\"productDescription\"]/p[1]/span";
+    String productDescriptionXPathType2 = "//*[@id=\"aplus\"]";
+    String bookDescFeatureXPath = "//*[@id=\"bookDescription_feature_div\"]";
     String imageXPath = "//*[@id=\"landingImage\"]";
     String imageUrl = getImage(doc, imageXPath);
     Double rating = getRating(doc, ratingXPath);
@@ -44,7 +44,6 @@ public class AmazonParserImpl implements AmazonParser {
     List<String> features = new ArrayList<>();
     walkHelper(doc, featuresXPath, features);
 
-
     List<String> overviewTableData = new ArrayList<>();
     walkHelper(doc, overviewFeatureXPath, overviewTableData);
     overviewTableData = mapTableColumns(overviewTableData);
@@ -52,22 +51,19 @@ public class AmazonParserImpl implements AmazonParser {
     List<String> productDescription = new ArrayList<>();
     walkHelper(doc, productDescriptionXPath, productDescription);
 
-    
+    List<String> productDescriptionType2 = new ArrayList<>();
+    walkHelper(doc, productDescriptionXPathType2, productDescriptionType2);
 
-    String bookDescFeatureXPath = "//*[@id=\"bookDescription_feature_div\"]/div/div[1]/p[1]/span[4]";
-
-
-
-
-    String productDescriptionXPathType2 = "//*[@id=\"aplus\"]/div/div[1]/div/p[1]";
-
-
+    List<String> bookDescription = new ArrayList<>();
+    walkHelper(doc, bookDescFeatureXPath, bookDescription);
   }
 
   private String getImage(Document doc, String imageXPath) {
-    for (Attribute attribute : doc.selectXpath(imageXPath).get(0).attributes()) {
-      if (attribute.getKey().equals("src")) {
-        return attribute.getValue();
+    for (Element element : doc.selectXpath(imageXPath)) {
+      for (Attribute attribute : element.attributes()) {
+        if (attribute.getKey().equals("src")) {
+          return attribute.getValue();
+        }
       }
     }
      return "";
@@ -77,7 +73,9 @@ public class AmazonParserImpl implements AmazonParser {
     return Integer.parseInt(doc.selectXpath(reviewCountXPath)
         .get(0)
         .childNodes().get(0)
-        .toString().replace(" ratings", ""));
+        .toString()
+        .replace(" ratings", "")
+        .replace(",", ""));
   }
 
   private String getSeller(Document doc, String sellerXPath) {
@@ -129,14 +127,18 @@ public class AmazonParserImpl implements AmazonParser {
       if (root instanceof TextNode) {
         String text = ((TextNode) root)
             .text()
+            .replaceAll("[^A-Za-z0-9 ]", "") // Remove all non-alphanumeric characters
             .replace("See more", "")
             .trim()
             .strip();
         if (!ObjectUtils.isEmpty(text)) {
-          allText.add(text);
+          // Only add strings that are longer than two words
+          if (text.split(" ").length > 2) {
+            allText.add(text);
+          }
         }
       } else if (root instanceof  Element) {
-        for (Node childNode : ((Element) root).childNodes()) {
+        for (Node childNode : root.childNodes()) {
           walk(childNode, allText);
         }
       }
