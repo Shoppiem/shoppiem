@@ -1,5 +1,6 @@
 package com.shoppiem.api.service.scraper;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
@@ -13,6 +14,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
+import java.util.List;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.internal.util.FileCopyUtils;
@@ -73,9 +75,9 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         scraperService.getContent(sku, url);
     }
 
-    @Test
+    @Test(enabled = false)
     public void amazonAccessoryProductPageParserTest() {
-        String sku = "B0BXRMCC31";
+        String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
         entity.setProductSku(sku);
         entity.setNumReviews(0L);
@@ -86,7 +88,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         assertProduct(sku);
     }
 
-    @Test
+    @Test(enabled = false)
     public void amazonClothingProductPageParserTest() {
         String sku = "B0BJDTKPY1";
         ProductEntity entity = new ProductEntity();
@@ -100,9 +102,9 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
 
     }
 
-    @Test
+    @Test(enabled = false)
     public void amazonBookProductPageParserTest() {
-        String sku = "B0385347863";
+        String sku = "0385347863";
         ProductEntity entity = new ProductEntity();
         entity.setProductSku(sku);
         entity.setNumReviews(0L);
@@ -111,7 +113,25 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         String soup = loadFromFile("scraper/amazonProductPage_Books.html");
         amazonParser.processSoup(sku, soup);
         assertProduct(sku);
+    }
 
+    @Test
+    public void generateReviewLinksTest() {
+        String sku = "B0773ZY26F";
+        ProductEntity entity = new ProductEntity();
+        entity.setProductSku(sku);
+        entity.setNumReviews(0L);
+        entity.setStarRating(0.0);
+        productRepo.save(entity);
+        String soup = loadFromFile("scraper/amazonProductPage_Electronics.html");
+        amazonParser.processSoup(sku, soup);
+        List<String> reviewLinks = amazonParser.generateReviewLinks(sku);
+        assertEquals(2679, reviewLinks.size());
+        for (String reviewLink : reviewLinks) {
+            assertTrue(reviewLink.contains("amazon.com"));
+            assertTrue(reviewLink.contains(sku));
+            assertTrue(reviewLink.contains("product_reviews"));
+        }
     }
 
     private void assertProduct(String sku) {

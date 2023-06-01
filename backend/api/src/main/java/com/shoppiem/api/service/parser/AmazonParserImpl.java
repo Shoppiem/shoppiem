@@ -84,6 +84,33 @@ public class AmazonParserImpl implements AmazonParser {
     productRepo.save(entity);
   }
 
+  @Override
+  public List<String> generateReviewLinks(String sku) {
+    ProductEntity entity = productRepo.findByProductSku(sku);
+    List<String> urls = new ArrayList<>();
+    if (entity != null) {
+      long numReviews = entity.getNumReviews();
+      long numPages = numReviews / 10;
+      if (numReviews % 10 > 0) {
+        numPages++;
+      }
+      for (int i = 0; i < numPages; i++) {
+        String prefix = entity.getProductUrl().split("/dp/")[0];
+        String url = "";
+        int page = i + 1;
+        if (i == 0) {
+          url = String.format("%s/product-reviews/%s/ref=cm_cr_getr_d_paging_btm_prev_%s?ie=UTF8&reviewerType=all_reviews&pageNumber=%s",
+              prefix, sku, page, page);
+        } else {
+          url = String.format("%s/product-reviews/%s/ref=cm_cr_getr_d_paging_btm_next_%s?ie=UTF8&reviewerType=all_reviews&pageNumber=%s",
+              prefix, sku, page, page);
+        }
+        urls.add(url);
+      }
+    }
+    return urls;
+  }
+
   private String combineDescriptionData(List<List<String>> data) {
     List<String> toCombine = new ArrayList<>();
     for (List<String> item : data) {

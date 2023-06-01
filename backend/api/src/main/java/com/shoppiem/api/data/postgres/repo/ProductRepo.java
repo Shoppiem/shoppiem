@@ -3,6 +3,7 @@ package com.shoppiem.api.data.postgres.repo;
 
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,4 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface ProductRepo extends JpaRepository<ProductEntity, Long> {
   ProductEntity findByProductSku(String sku);
+
+//    @Query(value = "SELECT num_reviews " +
+//      "FROM product " +
+//      "WHERE product_sku = ?1",
+//      nativeQuery = true)
+//  Long findNumReviews(String sku);
 }
