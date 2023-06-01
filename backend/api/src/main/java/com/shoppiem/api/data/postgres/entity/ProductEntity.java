@@ -25,7 +25,7 @@ import org.hibernate.annotations.Type;
 public class ProductEntity {
     @Id
     @SequenceGenerator(name="pk_sequence",sequenceName="product_id_seq", allocationSize=1)
-    @GeneratedValue(strategy= GenerationType.AUTO,generator="pk_sequence_product")
+    @GeneratedValue(strategy= GenerationType.AUTO, generator="pk_sequence_product")
     @Column(name = "id")
     private Long id;
 
@@ -33,6 +33,10 @@ public class ProductEntity {
     @JsonProperty("product_sku")
     @Column(name = "product_sku")
     private String productSku;
+
+    @Basic
+    @Column(name = "seller")
+    private String seller;
 
     @Basic
     @Column(name = "title")
@@ -57,6 +61,14 @@ public class ProductEntity {
     @Basic
     @Column(name = "currency")
     private String currency;
+
+    @Basic
+    @Column(name = "num_reviews")
+    private Long numReviews;
+
+    @Basic
+    @Column(name = "star_rating")
+    private Double starRating;
 
     @Basic
     @Column(name = "updated_at")

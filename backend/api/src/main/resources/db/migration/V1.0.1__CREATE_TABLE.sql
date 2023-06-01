@@ -2,6 +2,26 @@ CREATE SCHEMA IF NOT EXISTS public;
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "vector";
 
+CREATE SEQUENCE IF NOT EXISTS pk_sequence_product
+    start 1
+  increment 1;
+
+CREATE SEQUENCE IF NOT EXISTS pk_sequence_user
+    start 1
+  increment 1;
+
+CREATE SEQUENCE IF NOT EXISTS pk_sequence_review
+    start 1
+  increment 1;
+
+CREATE SEQUENCE IF NOT EXISTS pk_sequence_embedding
+    start 1
+  increment 1;
+
+CREATE SEQUENCE IF NOT EXISTS pk_sequence_feedback
+    start 1
+  increment 1;
+
 CREATE TABLE IF NOT EXISTS public.user (
     id BIGSERIAL NOT NULL primary key,
     uid varchar(255),
@@ -22,11 +42,14 @@ CREATE TABLE IF NOT EXISTS public.product (
     id BIGSERIAL NOT NULL primary key,
     product_sku varchar(255) not null,
     title varchar(255),
-    product_url varchar,
+    seller varchar(255),
+    product_url varchar(255),
     image_url varchar,
     description varchar,
-    price numeric(6,2),
+    price numeric(8,2),
     currency varchar(8),
+    num_reviews bigint not null default 0,
+    star_rating numeric(2,1) not null default 0.0,
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(product_sku)

@@ -1,5 +1,11 @@
 package com.shoppiem.api.service.scraper;
 
+import static org.testng.AssertJUnit.assertEquals;
+import static org.testng.AssertJUnit.assertNotNull;
+import static org.testng.AssertJUnit.assertTrue;
+
+import com.shoppiem.api.data.postgres.entity.ProductEntity;
+import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.service.ServiceTestConfiguration;
 import com.shoppiem.api.service.parser.AmazonParser;
 import com.shoppiem.api.utils.migration.FlywayMigration;
@@ -35,6 +41,9 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
     private AmazonParser amazonParser;
 
     @Autowired
+    private ProductRepo productRepo;
+
+    @Autowired
     private FlywayMigration flywayMigration;
 
     @BeforeClass
@@ -67,7 +76,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
     @Test(enabled = false)
     public void amazonAccessoryProductPageParserTest() {
         String sku = "B0BXRMCC31";
-        String soup = loadFromFile("scraper/amazonProductPage_Accessories.html");
+        String soup = loadFromFile("scraper/amazonProductPage_Electronics.html");
         amazonParser.processSoup(sku, soup);
     }
 
@@ -80,9 +89,26 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
 
     @Test
     public void amazonBookProductPageParserTest() {
-        String sku = "0385347863";
+        String sku = "B0385347863";
+        ProductEntity entity = new ProductEntity();
+        entity.setProductSku(sku);
+        entity.setNumReviews(0L);
+        entity.setStarRating(0.0);
+        productRepo.save(entity);
         String soup = loadFromFile("scraper/amazonProductPage_Books.html");
         amazonParser.processSoup(sku, soup);
+        assertProduct(sku);
+
+    }
+
+    private void assertProduct(String sku) {
+        ProductEntity entity = productRepo.findByProductSku(sku);
+        assertNotNull(entity);
+        assertNotNull(entity.getDescription());
+        assertNotNull(entity.getNumReviews());
+        assertNotNull(entity.getStarRating());
+        assertTrue(entity.getStarRating() >= 4.0);
+        assertTrue(entity.getPrice() > 0);
     }
 
     @SneakyThrows
