@@ -7,7 +7,9 @@ import java.util.List;
  */
 public interface AmazonParser {
   String bodyDelimiter = "\n--------SHOPPIEM_BOUNDARY--------\n";
-  void processSoup(String sku, String soup);
+  void parseProductPage(String sku, String soup);
+
+  void parseReviewPage(Long productId, String soup);
 
   List<String> generateReviewLinks(String sku);
 

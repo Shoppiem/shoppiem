@@ -32,7 +32,7 @@ public class ScraperServiceImpl implements ScraperService {
                 String soup = page.getWebResponse().getContentAsString();
                 switch (merchant) {
                     case AMAZON:
-                        amazonParser.processSoup(sku, soup);
+                        amazonParser.parseProductPage(sku, soup);
                         break;
                     default:
                         break;

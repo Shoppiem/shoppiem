@@ -46,28 +46,24 @@ public class ReviewEntity {
     private String merchant;
 
     @Basic
-    @Column(name = "location")
-    private String location;
+    @Column(name = "country")
+    private String country;
 
     @Basic
     @Column(name = "verified_purchase")
     private Boolean verifiedPurchase = false;
 
     @Basic
-    @Column(name = "likes")
-    private Long likes;
+    @Column(name = "upvotes")
+    private Long upvotes;
 
     @Basic
     @Column(name = "star_rating")
-    private Long starRating;
+    private Integer starRating;
 
     @Basic
-    @Column(name = "reviewer_name")
-    private String reviewerName;
-
-    @Basic
-    @Column(name = "reviewer_handle")
-    private String reviewerHandle;
+    @Column(name = "reviewer")
+    private String reviewer;
 
     @Basic
     @Column(name = "body")

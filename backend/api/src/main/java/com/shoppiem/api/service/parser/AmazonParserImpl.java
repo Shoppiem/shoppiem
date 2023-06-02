@@ -2,11 +2,17 @@ package com.shoppiem.api.service.parser;
 
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.entity.ProductQuestionEntity;
+import com.shoppiem.api.data.postgres.entity.ReviewEntity;
 import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
+import com.shoppiem.api.data.postgres.repo.ReviewRepo;
+import com.shoppiem.api.service.scraper.Merchant;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.util.StringUtils;
@@ -28,9 +34,10 @@ import org.springframework.util.ObjectUtils;
 public class AmazonParserImpl implements AmazonParser {
   private final ProductRepo productRepo;
   private final ProductQuestionRepo questionRepo;
+  private final ReviewRepo reviewRepo;
 
   @Override
-  public void processSoup(String sku, String soup) {
+  public void parseProductPage(String sku, String soup) {
     Document doc = Jsoup.parse(soup);
     String titleXPath = "//*[@id=\"productTitle\"]";
     String sellerXPath = "//*[@id=\"bylineInfo\"]";
@@ -88,6 +95,113 @@ public class AmazonParserImpl implements AmazonParser {
         productDescriptionType2,
         bookDescription)));
     productRepo.save(entity);
+  }
+
+  @Override
+  public void parseReviewPage(Long productId, String soup) {
+    Document doc = Jsoup.parse(soup);
+    String allReviewsXPath = "//*[@id=\"cm_cr-review_list\"]";
+    Map<String, ReviewEntity> reviews = new HashMap<>();
+    ReviewEntity entity = new ReviewEntity();
+    entity.setProductId(productId);
+    for (Element element : doc.selectXpath(allReviewsXPath)) {
+      walkReviewsHelper(element, reviews);
+    }
+    reviewRepo.saveAll(reviews.values().stream().map(it -> {
+      it.setProductId(productId);
+      it.setMerchant(Merchant.AMAZON.name());
+      return it;
+    }).collect(Collectors.toList()));
+  }
+
+  private void walkReviewsHelper(Node root, Map<String, ReviewEntity> reviews) {
+    if (root != null) {
+      for (Attribute attribute : root.attributes()) {
+        if (attribute.getValue().contains("-review-card")) {
+          String reviewId = attribute.getValue().split("-review-card")[0];
+          ReviewEntity entity = new ReviewEntity();
+          entity.setReviewId(reviewId);
+          reviews.put(reviewId, entity);
+          walkReviewCard(root, reviewId, reviews);
+        }
+      }
+      if (root instanceof  Element) {
+        for (Node childNode : root.childNodes()) {
+          walkReviewsHelper(childNode, reviews);
+        }
+      }
+    }
+  }
+
+  private void walkReviewCard(Node root, String reviewId, Map<String, ReviewEntity> reviews) {
+    if (root != null) {
+       if (root instanceof Element) {
+        for (Node childNode : root.childNodes()) {
+          for (Attribute attribute : childNode.attributes()) {
+            if (attribute.getKey().equals("data-hook")) {
+              String value = attribute.getValue();
+              ReviewEntity reviewEntity = reviews.get(reviewId);
+              if (value.equals("review-title")) {
+                List<String> values = new ArrayList<>();
+                walk(childNode, values, 1, true);
+                if (values.size() > 0) {
+                  reviewEntity.setTitle(values.get(0));
+                }
+              } else if (value.equals("review-body")) {
+                List<String> values = new ArrayList<>();
+                walk(childNode, values, 1, true);
+                reviewEntity.setBody(String.join(" ", values));
+              } else if (value.equals("review-date")) {
+                List<String> values = new ArrayList<>();
+                walk(childNode, values, 1, true);
+                if (values.size() > 0) {
+                  String[] tokens = values.get(0).split(" on ");
+                  String country = tokens[0].split("Reviewed in ")[1];
+                  String date = tokens[1];
+//                  reviewEntity.setd.put("date", date);
+                  reviewEntity.setCountry(country);
+                }
+              } else if (value.equals("review-voting-widget")) {
+                List<String> values = new ArrayList<>();
+                walk(childNode, values, 1, true);
+                reviewEntity.setUpvotes(getReviewUpvotes(values));
+              } else if (value.equals("genome-widget")) {
+                List<String> values = new ArrayList<>();
+                walk(childNode, values, 1, true);
+                if (values.size() > 0) {
+                  reviewEntity.setReviewer(values.get(0));
+                }
+              } else if (value.equals("review-star-rating")) {
+                List<String> values = new ArrayList<>();
+                walk(childNode, values, 1, false);
+                if (values.size() > 0) {
+                  reviewEntity.setStarRating(
+                      Math.round(Float.parseFloat(
+                          values.get(0).replace(" out of 5 stars", ""))));
+                }
+              } else if (value.equals("avp-badge")) {
+                List<String> values = new ArrayList<>();
+                walk(childNode, values, 1, false);
+                if (values.size() > 0 && values.get(0).toLowerCase().contains("verified purchase")) {
+                  reviewEntity.setVerifiedPurchase(true);
+                }
+              }
+            }
+          }
+          walkReviewCard(childNode, reviewId, reviews);
+        }
+      }
+    }
+
+  }
+
+  private Long getReviewUpvotes(List<String> values) {
+    for (String s : values) {
+      if (s.contains("people found this helpful")) {
+        return Long.parseLong(s.replace(" people found this helpful", ""));
+      }
+    }
+    return 0L;
   }
 
   private Long getNumQuestionsAnswered(Document doc, String numQuestionsAnsweredXPath) {
