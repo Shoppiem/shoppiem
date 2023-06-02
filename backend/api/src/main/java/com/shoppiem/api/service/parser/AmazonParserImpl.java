@@ -7,10 +7,16 @@ import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.data.postgres.repo.ReviewRepo;
 import com.shoppiem.api.service.scraper.Merchant;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
@@ -158,7 +164,14 @@ public class AmazonParserImpl implements AmazonParser {
                   String[] tokens = values.get(0).split(" on ");
                   String country = tokens[0].split("Reviewed in ")[1];
                   String date = tokens[1];
-//                  reviewEntity.setd.put("date", date);
+                  DateFormat fmt = new SimpleDateFormat("MMMM dd yyyy", Locale.US);
+                  try {
+                    Date d = fmt.parse(date);
+                    reviewEntity.setSubmittedAt(LocalDateTime.ofInstant(d.toInstant(),
+                        ZoneOffset.UTC));
+                  } catch (ParseException e) {
+                    throw new RuntimeException(e);
+                  }
                   reviewEntity.setCountry(country);
                 }
               } else if (value.equals("review-voting-widget")) {
