@@ -71,6 +71,10 @@ public class ProductEntity {
     private Double starRating;
 
     @Basic
+    @Column(name = "num_questions_answered")
+    private Long numQuestionsAnswered;
+
+    @Basic
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 

@@ -11,4 +11,8 @@ public interface AmazonParser {
 
   List<String> generateReviewLinks(String sku);
 
+  List<String> generateProductQuestionLinks(String sku);
+
+  List<String> generateAnswerLinks(String questionId);
+
 }

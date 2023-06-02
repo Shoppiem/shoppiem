@@ -1,6 +1,8 @@
 package com.shoppiem.api.service.parser;
 
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
+import com.shoppiem.api.data.postgres.entity.ProductQuestionEntity;
+import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -25,6 +27,7 @@ import org.springframework.util.ObjectUtils;
 @RequiredArgsConstructor
 public class AmazonParserImpl implements AmazonParser {
   private final ProductRepo productRepo;
+  private final ProductQuestionRepo questionRepo;
 
   @Override
   public void processSoup(String sku, String soup) {
@@ -41,12 +44,14 @@ public class AmazonParserImpl implements AmazonParser {
     String imageXPath = "//*[@id=\"landingImage\"]";
     String priceXPath = "//*[@id=\"a-autoid-5\"]/span";
     String canonicalXPath = "//link[@rel=\"canonical\"]";
+    String numQuestionsAnsweredXPath = "//*[@id=\"askATFLink\"]/span";
     String imageUrl = getImage(doc, imageXPath);
     Double starRating = getStarRating(doc, starRatingXPath);
     String title = getTitle(doc, titleXPath);
     String seller = getSeller(doc, sellerXPath);
     Double price = getPrice(doc, priceXPath);
-    Integer numReviews = getNumReviews(doc, reviewCountXPath);
+    Long numReviews = getNumReviews(doc, reviewCountXPath);
+    Long numQuestionsAnswered = getNumQuestionsAnswered(doc, numQuestionsAnsweredXPath);
     String canonicalUrl = getCanonicalUrl(doc, canonicalXPath);
 
     List<String> features = new ArrayList<>();
@@ -67,7 +72,8 @@ public class AmazonParserImpl implements AmazonParser {
 
     ProductEntity entity = productRepo.findByProductSku(sku);
     entity.setStarRating(starRating);
-    entity.setNumReviews(Long.valueOf(numReviews));
+    entity.setNumReviews(numReviews);
+    entity.setNumQuestionsAnswered(numQuestionsAnswered);
     entity.setCurrency("USD");
     entity.setUpdatedAt(LocalDateTime.now());
     entity.setImageUrl(imageUrl);
@@ -82,6 +88,15 @@ public class AmazonParserImpl implements AmazonParser {
         productDescriptionType2,
         bookDescription)));
     productRepo.save(entity);
+  }
+
+  private Long getNumQuestionsAnswered(Document doc, String numQuestionsAnsweredXPath) {
+    List<String> values = new ArrayList<>();
+    walkHelper(doc, numQuestionsAnsweredXPath, values, 1, false);
+    if (values.size() > 0) {
+      return Long.parseLong(values.get(0).replace(" answered questions", ""));
+    }
+    return 0L;
   }
 
   @Override
@@ -105,6 +120,46 @@ public class AmazonParserImpl implements AmazonParser {
           url = String.format("%s/product-reviews/%s/ref=cm_cr_getr_d_paging_btm_next_%s?ie=UTF8&reviewerType=all_reviews&pageNumber=%s",
               prefix, sku, page, page);
         }
+        urls.add(url);
+      }
+    }
+    return urls;
+  }
+
+  @Override
+  public List<String> generateProductQuestionLinks(String sku) {
+    ProductEntity entity = productRepo.findByProductSku(sku);
+    List<String> urls = new ArrayList<>();
+    if (entity != null) {
+      long numQuestions = entity.getNumQuestionsAnswered();
+      long numPages = numQuestions / 10;
+      if (numQuestions % 10 > 0) {
+        numPages++;
+      }
+      for (int i = 0; i < numPages; i++) {
+        int page = i + 1;
+        String url = String.format("https://www.amazon.com/ask/questions/asin/%s/%s/ref=ask_ql_psf_ql_hza?isAnswered=true",
+            sku, page);
+        urls.add(url);
+      }
+    }
+    return urls;
+  }
+
+  @Override
+  public List<String> generateAnswerLinks(String questionId) {
+    ProductQuestionEntity entity = questionRepo.findByQuestionId(questionId);
+    List<String> urls = new ArrayList<>();
+    if (entity != null) {
+      long numAnswers = entity.getNumAnswers();
+      long numPages = numAnswers / 10;
+      if (numAnswers % 10 > 0) {
+        numPages++;
+      }
+      for (int i = 0; i < numPages; i++) {
+        int page = i + 1;
+        String url = String.format("https://www.amazon.com/ask/questions/%s/%s/ref=ask_al_psf_al_hza",
+            questionId, page);
         urls.add(url);
       }
     }
@@ -164,8 +219,8 @@ public class AmazonParserImpl implements AmazonParser {
      return "";
   }
 
-  private Integer getNumReviews(Document doc, String reviewCountXPath) {
-    return Integer.parseInt(doc.selectXpath(reviewCountXPath)
+  private Long getNumReviews(Document doc, String reviewCountXPath) {
+    return Long.parseLong(doc.selectXpath(reviewCountXPath)
         .get(0)
         .childNodes().get(0)
         .toString()

@@ -1,0 +1,60 @@
+package com.shoppiem.api.data.postgres.entity;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.time.LocalDateTime;
+import javax.persistence.Basic;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.SequenceGenerator;
+import javax.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * @author Bizuwork Melesse
+ * created on 6/1/23
+ *
+ */
+@Getter @Setter
+@Entity
+@Table(schema = "public", name = "product_question")
+public class ProductQuestionEntity {
+    @Id
+    @SequenceGenerator(name="pk_sequence",sequenceName="product_question_id_seq", allocationSize=1)
+    @GeneratedValue(strategy= GenerationType.AUTO, generator="pk_sequence_product_question")
+    @Column(name = "id")
+    private Long id;
+
+    @Basic
+    @JsonProperty("product_id")
+    @Column(name = "product_id")
+    private Long productId;
+
+    @Basic
+    @Column(name = "question_id")
+    private String questionId;
+
+    @Basic
+    @JsonProperty("num_answers")
+    @Column(name = "num_answers")
+    private Long numAnswers;
+
+    @Basic
+    @Column(name = "question")
+    private String question;
+
+    @Basic
+    @Column(name = "asked_at")
+    private LocalDateTime askedAt;
+
+    @Basic
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Basic
+    @Column(name = "created_at")
+    private LocalDateTime createdAt = LocalDateTime.now();
+}
