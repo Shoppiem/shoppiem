@@ -36,19 +36,15 @@ public class ProductAnswerEntity {
     @Basic
     @JsonProperty("product_question_id")
     @Column(name = "product_question_id")
-    private String productQuestionId;
+    private Long productQuestionId;
 
     @Basic
     @Column(name = "answer")
     private String answer;
 
     @Basic
-    @Column(name = "answered_by_handle")
-    private String answeredByHandle;
-
-    @Basic
-    @Column(name = "answered_by_url")
-    private String answeredByUrl;
+    @Column(name = "answered_by")
+    private String answeredBy;
 
     @Basic
     @Column(name = "upvotes")

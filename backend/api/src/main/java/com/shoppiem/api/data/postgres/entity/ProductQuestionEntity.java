@@ -43,6 +43,11 @@ public class ProductQuestionEntity {
     private Long numAnswers;
 
     @Basic
+    @JsonProperty("upvotes")
+    @Column(name = "upvotes")
+    private Long upvotes;
+
+    @Basic
     @Column(name = "question")
     private String question;
 

@@ -4,9 +4,11 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
+import com.shoppiem.api.data.postgres.entity.ProductAnswerEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.entity.ProductQuestionEntity;
 import com.shoppiem.api.data.postgres.entity.ReviewEntity;
+import com.shoppiem.api.data.postgres.repo.ProductAnswerRepo;
 import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.data.postgres.repo.ReviewRepo;
@@ -56,6 +58,9 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
 
     @Autowired
     private ProductQuestionRepo productQuestionRepo;
+
+    @Autowired
+    private ProductAnswerRepo productAnswerRepo;
 
     @BeforeClass
     public void setup() {
@@ -210,6 +215,34 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
             assertNotNull(review.getReviewer());
             assertNotNull(review.getBody());
             assertNotNull(review.getSubmittedAt());
+        }
+    }
+
+    @Test
+    public void parseProductQuestionPage() {
+        String sku = "B0773ZY26F";
+        ProductEntity entity = new ProductEntity();
+        entity.setProductSku(sku);
+        entity.setNumReviews(0L);
+        entity.setStarRating(0.0);
+        productRepo.save(entity);
+        String soup = loadFromFile("scraper/AmazonProductQuestionPage.html");
+        Long productId = entity.getId();
+        amazonParser.parseProductQuestions(productId, soup);
+        List<ProductQuestionEntity> questionEntities = productQuestionRepo.findByProductId(productId);
+        List<ProductAnswerEntity> answerEntities = productAnswerRepo.findByProductId(productId);
+        assertEquals(questionEntities.size(), 10);
+        assertEquals(answerEntities.size(), 10);
+        for (ProductQuestionEntity questionEntity : questionEntities) {
+            assertNotNull(questionEntity.getQuestionId());
+            assertNotNull(questionEntity.getQuestion());
+            assertNotNull(questionEntity.getUpvotes());
+        }
+        for (ProductAnswerEntity answerEntity : answerEntities) {
+            assertNotNull(answerEntity.getAnswer());
+            assertNotNull(answerEntity.getAnsweredBy());
+            assertNotNull(answerEntity.getAnsweredAt());
+            assertNotNull(answerEntity.getUpvotes());
         }
     }
 

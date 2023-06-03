@@ -1,8 +1,10 @@
 package com.shoppiem.api.service.parser;
 
+import com.shoppiem.api.data.postgres.entity.ProductAnswerEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.entity.ProductQuestionEntity;
 import com.shoppiem.api.data.postgres.entity.ReviewEntity;
+import com.shoppiem.api.data.postgres.repo.ProductAnswerRepo;
 import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.data.postgres.repo.ReviewRepo;
@@ -18,8 +20,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.jgit.util.StringUtils;
 import org.jsoup.Jsoup;
@@ -41,6 +46,7 @@ public class AmazonParserImpl implements AmazonParser {
   private final ProductRepo productRepo;
   private final ProductQuestionRepo questionRepo;
   private final ReviewRepo reviewRepo;
+  private final ProductAnswerRepo answerRepo;
 
   @Override
   public void parseProductPage(String sku, String soup) {
@@ -120,6 +126,180 @@ public class AmazonParserImpl implements AmazonParser {
     }).collect(Collectors.toList()));
   }
 
+  @Override
+  public void parseProductQuestions(Long productId, String soup) {
+    Document doc = Jsoup.parse(soup);
+    Map<String, QuestionAnswerContainer> questions = new HashMap<>();
+    for (Node childNode : doc.childNodes()) {
+      questionWalk(childNode, false, questions);
+    }
+    List<ProductQuestionEntity> questionEntities = questions.values()
+        .stream()
+        .map(it -> {
+          ProductQuestionEntity entity = it.getQuestion();
+          entity.setProductId(productId);
+          entity.setNumAnswers(entity.getNumAnswers() != null ? entity.getNumAnswers() : 1);
+          entity.setUpvotes(entity.getUpvotes() != null ? entity.getUpvotes() : 0);
+          return entity;
+    }).collect(Collectors.toList());
+    questionRepo.saveAll(questionEntities);
+
+    // Map the saved question entity IDs to the original question IDs from the DOM
+    Map<String, Long> questionIds = new HashMap<>();
+    for (ProductQuestionEntity questionEntity : questionEntities) {
+      questionIds.put(questionEntity.getQuestionId(), questionEntity.getId());
+    }
+
+    List<ProductAnswerEntity> answerEntities = questions.values()
+        .stream()
+        .map(it -> {
+          ProductAnswerEntity answerEntity = it.getAnswer();
+          answerEntity.setProductId(productId);
+          answerEntity.setProductQuestionId(questionIds.get(it.getQuestion().getQuestionId()));
+          answerEntity.setUpvotes(answerEntity.getUpvotes() != null ? answerEntity.getUpvotes() : 0);
+          return answerEntity;
+    }).collect(Collectors.toList());
+    answerRepo.saveAll(answerEntities);
+  }
+
+  private void questionWalk(Node root, boolean isQuestionDiv,
+      Map<String, QuestionAnswerContainer> questions) {
+    String questionListDivClass = "a-section askTeaserQuestions";
+    String questionCardClass = "a-fixed-left-grid a-spacing-base";
+    if (root instanceof Element) {
+      for (Attribute attribute : root.attributes()) {
+        if (attribute.getKey().equals("class") &&
+            attribute.getValue().equals(questionListDivClass)) {
+          // This is the main div of list of questions and answers
+          isQuestionDiv = true;
+          break;
+        } else if (attribute.getKey().equals("class") &&
+            attribute.getValue().equals(questionCardClass) && isQuestionDiv) {
+          // This is an individual question/answer card
+          questionCardWalk(root, questions, new QuestionId());
+        }
+      }
+      for (Node childNode : root.childNodes()) {
+        questionWalk(childNode, isQuestionDiv, questions);
+      }
+    }
+  }
+
+  private void questionCardWalk(Node root, Map<String, QuestionAnswerContainer> questions,
+      QuestionId questionId) {
+    if (root != null) {
+      if (root instanceof Element) {
+        for (Attribute attribute : root.attributes()) {
+          String key = attribute.getKey();
+          String value = attribute.getValue();
+          ProductQuestionEntity questionEntity = null;
+          ProductAnswerEntity answerEntity = null;
+          String _questionId = questionId.getQuestionId();
+          if (!ObjectUtils.isEmpty(_questionId)) {
+            var container =  questions.get(_questionId);
+            questionEntity = container.getQuestion();
+            answerEntity = container.getAnswer();
+          }
+          if (key.equals("action") && value.contains("/ask/vote")) {
+            _questionId = value.split("/vote/question/")[1].strip();
+            questionId.setQuestionId(_questionId);
+            var container = questions
+                .getOrDefault(_questionId, new QuestionAnswerContainer());
+            questionEntity = container.getQuestion();
+            questionEntity.setQuestionId(_questionId);
+            questions.put(_questionId, container);
+          } else if (!ObjectUtils.isEmpty(_questionId)) {
+            if (key.equals("data-count")) {
+              long upvotes = Long.parseLong(value);
+              questionEntity.setUpvotes(upvotes);
+            } else if (key.equals("id") && value.startsWith("question-")) {
+              List<String> values = new ArrayList<>();
+              walk(root, values, 1, false);
+              questionEntity.setQuestion(values.get(1));
+            } else if (key.equals("id") && value.startsWith("askSeeAllAnswersLink")) {
+              List<String> values = new ArrayList<>();
+              walk(root, values, 1, false);
+              questionEntity.setNumAnswers(getNumAnswers(values));
+            } else if (key.equals("class") && value.startsWith("a-profile-name")) {
+              List<String> values = new ArrayList<>();
+              walk(root, values, 1, false);
+              if (values.size() > 0) {
+                answerEntity.setAnsweredBy(values.get(0));
+              }
+            }
+            else if (key.equals("class") && (value.startsWith("askLongText") ||
+                value.startsWith("a-fixed-left-grid-col a-col-right"))) {
+              List<String> values = new ArrayList<>();
+              walk(root, values, 1, false);
+              answerEntity.setAnswer(getAnswer(values));
+            } else if (key.equals("class") && value.startsWith("a-color-tertiary aok-align-center")) {
+              List<String> values = new ArrayList<>();
+              walk(root, values, 1, false);
+              answerEntity.setAnsweredAt(getAnsweredAt(values));
+            }
+          }
+        }
+        for (Node childNode : root.childNodes()) {
+          questionCardWalk(childNode, questions, questionId);
+        }
+      }
+    }
+  }
+
+  private LocalDateTime getAnsweredAt(List<String> values) {
+    for (String value : values) {
+      String date = value.replaceAll("[^A-Za-z0-9\s]", "").strip();
+      DateFormat fmt = new SimpleDateFormat("MMMM dd yyyy", Locale.US);
+      try {
+        Date d = fmt.parse(date);
+        return LocalDateTime.ofInstant(d.toInstant(),
+            ZoneOffset.UTC);
+      } catch (ParseException e) {
+        e.printStackTrace();
+      }
+    }
+    return null;
+  }
+
+  private String getAnswer(List<String> values) {
+    return values.stream()
+        .map(it -> it.replace("See more", "").strip())
+        .filter(it -> !ObjectUtils.isEmpty(it))
+        .collect(Collectors.toList()).get(0);
+  }
+
+  private Long getNumAnswers(List<String> values) {
+    for (String value : values) {
+      if (value.toLowerCase().contains("see all")) {
+        Long.parseLong(value.replaceAll("[^0-9]", ""));
+      }
+    }
+    return 0L;
+  }
+
+  private long answerWalk(Node root) {
+    if (root != null) {
+      for (Attribute attribute : root.attributes()) {
+        String key = attribute.getKey();
+        String value = attribute.getValue();
+        if (key.equals("class") && value.startsWith("askLongText")) {
+          List<String> values = new ArrayList<>();
+          walk(root, values, 1, false);
+          int x = 1;
+        }
+      }
+      for (Node childNode : root.childNodes()) {
+        answerWalk(childNode);
+      }
+    }
+    return 0L;
+  }
+
+  @Override
+  public void parseProductAnswers(String questionId, String soup) {
+
+  }
+
   private void walkReviewsHelper(Node root, Map<String, ReviewEntity> reviews) {
     if (root != null) {
       for (Attribute attribute : root.attributes()) {
@@ -170,7 +350,7 @@ public class AmazonParserImpl implements AmazonParser {
                     reviewEntity.setSubmittedAt(LocalDateTime.ofInstant(d.toInstant(),
                         ZoneOffset.UTC));
                   } catch (ParseException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                   }
                   reviewEntity.setCountry(country);
                 }
@@ -422,6 +602,17 @@ public class AmazonParserImpl implements AmazonParser {
         }
       }
     }
+  }
+
+  @Getter @Setter
+  private static class QuestionAnswerContainer {
+    private ProductQuestionEntity question = new ProductQuestionEntity();
+    private ProductAnswerEntity answer = new ProductAnswerEntity();
+  }
+
+  @Getter @Setter
+  private static class QuestionId {
+    private String questionId = null;
   }
 
 }

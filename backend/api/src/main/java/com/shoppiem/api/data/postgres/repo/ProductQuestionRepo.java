@@ -2,6 +2,7 @@ package com.shoppiem.api.data.postgres.repo;
 
 
 import com.shoppiem.api.data.postgres.entity.ProductQuestionEntity;
+import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,4 +16,5 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface ProductQuestionRepo extends JpaRepository<ProductQuestionEntity, Long> {
   ProductQuestionEntity findByQuestionId(String questionId);
+  List<ProductQuestionEntity> findByProductId(Long productId);
 }

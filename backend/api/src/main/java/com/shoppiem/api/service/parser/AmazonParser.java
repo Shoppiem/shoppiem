@@ -11,6 +11,10 @@ public interface AmazonParser {
 
   void parseReviewPage(Long productId, String soup);
 
+  void parseProductQuestions(Long productId, String soup);
+
+  void parseProductAnswers(String questionId, String soup);
+
   List<String> generateReviewLinks(String sku);
 
   List<String> generateProductQuestionLinks(String sku);
