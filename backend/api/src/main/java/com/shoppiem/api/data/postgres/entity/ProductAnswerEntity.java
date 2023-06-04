@@ -39,6 +39,10 @@ public class ProductAnswerEntity {
     private Long productQuestionId;
 
     @Basic
+    @Column(name = "answer_id")
+    private String answerId;
+
+    @Basic
     @Column(name = "answer")
     private String answer;
 
@@ -48,7 +52,11 @@ public class ProductAnswerEntity {
 
     @Basic
     @Column(name = "upvotes")
-    private Long upvotes;
+    private Long upvotes = 0L;
+
+    @Basic
+    @Column(name = "downvotes")
+    private Long downvotes = 0L;
 
     @Basic
     @Column(name = "answered_at")

@@ -17,4 +17,5 @@ import org.springframework.transaction.annotation.Transactional;
 public interface ProductAnswerRepo extends JpaRepository<ProductAnswerEntity, Long> {
 
   List<ProductAnswerEntity> findByProductId(Long productId);
+  List<ProductAnswerEntity> findByProductQuestionId(Long questionId);
 }

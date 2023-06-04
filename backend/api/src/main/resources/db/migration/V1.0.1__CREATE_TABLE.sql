@@ -87,7 +87,7 @@ ALTER TABLE public.review OWNER TO root;
 CREATE TABLE IF NOT EXISTS public.product_question (
     id BIGSERIAL NOT NULL,
     product_id bigint not null constraint product_id_fk references public.product (id) on delete cascade,
-    question_id varchar(255),
+    question_id varchar(255) not null,
     question varchar not null,
     num_answers bigint,
     upvotes bigint,
@@ -100,20 +100,18 @@ ALTER TABLE public.product_question OWNER TO root;
 
 CREATE TABLE IF NOT EXISTS public.product_answer (
     id BIGSERIAL NOT NULL,
-    product_id bigint not null constraint product_id_fk references public.product (id) on delete cascade,
     product_question_id bigint not null,
+    product_id bigint not null,
     answer varchar,
+    answer_id varchar(255),
     answered_by varchar(255),
-    upvotes bigint,
+    upvotes bigint default 0,
+    downvotes bigint default 0,
     answered_at timestamptz,
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(product_question_id)
+    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
 ALTER TABLE public.product_answer OWNER TO root;
-
-
-
 
 CREATE TABLE IF NOT EXISTS public.embedding (
     id BIGSERIAL NOT NULL,

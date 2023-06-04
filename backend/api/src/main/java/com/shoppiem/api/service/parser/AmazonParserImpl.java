@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -226,12 +225,16 @@ public class AmazonParserImpl implements AmazonParser {
               if (values.size() > 0) {
                 answerEntity.setAnsweredBy(values.get(0));
               }
-            }
-            else if (key.equals("class") && (value.startsWith("askLongText") ||
-                value.startsWith("a-fixed-left-grid-col a-col-right"))) {
+            }  else if (key.equals("class") && value.startsWith("askLongText")) {
               List<String> values = new ArrayList<>();
               walk(root, values, 1, false);
-              answerEntity.setAnswer(getAnswer(values));
+              answerEntity.setAnswer(getLongAnswer(values));
+            }
+            else if (key.equals("class") && value.startsWith("a-fixed-left-grid-col a-col-right") &&
+                answerEntity.getAnswer() == null) {
+              List<String> values = new ArrayList<>();
+              walk(root, values, 1, false);
+              answerEntity.setAnswer(getShortAnswer(values));
             } else if (key.equals("class") && value.startsWith("a-color-tertiary aok-align-center")) {
               List<String> values = new ArrayList<>();
               walk(root, values, 1, false);
@@ -246,26 +249,46 @@ public class AmazonParserImpl implements AmazonParser {
     }
   }
 
+  private String getShortAnswer(List<String> values) {
+    for (int i = 0; i < values.size() - 1; i++) {
+      if (values.get(i).startsWith("Answer:")) {
+        return values.get(i + 1);
+      }
+    }
+    return "";
+  }
+
   private LocalDateTime getAnsweredAt(List<String> values) {
     for (String value : values) {
-      String date = value.replaceAll("[^A-Za-z0-9\s]", "").strip();
-      DateFormat fmt = new SimpleDateFormat("MMMM dd yyyy", Locale.US);
-      try {
-        Date d = fmt.parse(date);
-        return LocalDateTime.ofInstant(d.toInstant(),
-            ZoneOffset.UTC);
-      } catch (ParseException e) {
-        e.printStackTrace();
+      LocalDateTime time = parseDate(value);
+      if (time != null) {
+        return time;
       }
     }
     return null;
   }
 
-  private String getAnswer(List<String> values) {
+  private LocalDateTime parseDate(String value) {
+    String date = value.replaceAll("[^A-Za-z0-9\s]", "").strip();
+    DateFormat fmt = new SimpleDateFormat("MMMM dd yyyy", Locale.US);
+    try {
+      Date d = fmt.parse(date);
+      return LocalDateTime.ofInstant(d.toInstant(),
+          ZoneOffset.UTC);
+    } catch (ParseException e) {}
+    return null;
+  }
+
+  private String getLongAnswer(List<String> values) {
     return values.stream()
-        .map(it -> it.replace("See more", "").strip())
+        .map(it -> it
+            .replace("See more", "")
+            .replace("see more", "")
+            .replace("See less", "")
+            .replace("see less", "")
+            .strip())
         .filter(it -> !ObjectUtils.isEmpty(it))
-        .collect(Collectors.toList()).get(0);
+        .collect(Collectors.joining(" "));
   }
 
   private Long getNumAnswers(List<String> values) {
@@ -277,28 +300,80 @@ public class AmazonParserImpl implements AmazonParser {
     return 0L;
   }
 
-  private long answerWalk(Node root) {
+  @Override
+  public void parseProductAnswers(String questionId, String soup) {
+    Document doc = Jsoup.parse(soup);
+    Map<String, ProductAnswerEntity> answers = new HashMap<>();
+    for (Node childNode : doc.childNodes()) {
+      walkAnswer(childNode, answers);
+    }
+    ProductQuestionEntity questionEntity = questionRepo.findByQuestionId(questionId);
+    Long productId = questionEntity.getProductId();
+    Long productQuestionId = questionEntity.getId();
+    List<ProductAnswerEntity> entities = answers.values()
+        .stream()
+        .peek(it -> {
+          it.setProductQuestionId(productQuestionId);
+          it.setProductId(productId);
+        }).collect(Collectors.toList());
+    answerRepo.saveAll(entities);
+  }
+
+  private void walkAnswer(Node root, Map<String, ProductAnswerEntity> answers) {
     if (root != null) {
       for (Attribute attribute : root.attributes()) {
         String key = attribute.getKey();
         String value = attribute.getValue();
-        if (key.equals("class") && value.startsWith("askLongText")) {
+        if (key.equals("id") && value.startsWith("answer-")) {
+          String answerId = value.split("answer-")[1];
           List<String> values = new ArrayList<>();
           walk(root, values, 1, false);
-          int x = 1;
+          // Find the date index in the list of values parsed and use that as reference to parse the other
+          // values in the list
+          int dateIndex = findDateIndex(values);
+          if (dateIndex > 0) {
+            ProductAnswerEntity answerEntity = new ProductAnswerEntity();
+            LocalDateTime date = parseDate(values.get(dateIndex));
+            String answeredBy = values.get(dateIndex-1);
+            String answer = String.join(" ", values.subList(0, dateIndex-1))
+                .replace("\n", "");
+            answerEntity.setAnswerId(answerId);
+            answerEntity.setAnsweredAt(date);
+            answerEntity.setAnsweredBy(answeredBy);
+            answerEntity.setAnswer(answer);
+            if (values.get(dateIndex + 1).contains("found this helpful")) {
+              String votes = values.get(dateIndex + 1).split("found this helpful")[0];
+              if (votes.contains("of")) {
+                long upvotes = Long.parseLong(votes.split("of")[0].strip());
+                long totalVotes = Long.parseLong(votes.split("of")[1].strip());
+                long downvotes = totalVotes - upvotes;
+                answerEntity.setUpvotes(upvotes);
+                answerEntity.setDownvotes(downvotes);
+              }
+            }
+            answers.put(answerId, answerEntity);
+          } else {
+            log.error("Unable to parse answer. Date index not found");
+          }
         }
       }
       for (Node childNode : root.childNodes()) {
-        answerWalk(childNode);
+        walkAnswer(childNode, answers);
       }
     }
-    return 0L;
   }
 
-  @Override
-  public void parseProductAnswers(String questionId, String soup) {
-
+  private int findDateIndex(List<String> values) {
+    for (int i = 0; i < values.size(); i++) {
+      LocalDateTime time = parseDate(values.get(i));
+      if (time != null) {
+        return i;
+      }
+    }
+    return -1;
   }
+
+
 
   private void walkReviewsHelper(Node root, Map<String, ReviewEntity> reviews) {
     if (root != null) {

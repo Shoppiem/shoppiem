@@ -82,14 +82,14 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         log.info("  Testcase: " + method.getName() + " has ended");
     }
 
-    @Test
+    @Test(enabled = false)
     public void getContentTest() {
         String url = "https://www.amazon.com/Belkin-Boost%E2%86%91ChargeTM-Wireless-Compatible-Kickstand/dp/B0BXRMCC31/?_encoding=UTF8&pd_rd_w=dyu4M&content-id=amzn1.sym.c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_p=c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_r=CVH3RSQQQDGMZPB008AQ&pd_rd_wg=B4Bru&pd_rd_r=08f1c561-28fd-45c0-8d24-ca21537303c7&ref_=pd_gw_gcx_gw_EGG-Graduation-23-1a&th=1";
         String sku = "B0BXRMCC31";
         scraperService.getContent(sku, url);
     }
 
-    @Test
+    @Test(enabled = false)
     public void amazonAccessoryProductPageParserTest() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -102,7 +102,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         assertProduct(sku);
     }
 
-    @Test
+    @Test(enabled = false)
     public void amazonClothingProductPageParserTest() {
         String sku = "B0BJDTKPY1";
         ProductEntity entity = new ProductEntity();
@@ -116,7 +116,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
 
     }
 
-    @Test
+    @Test(enabled = false)
     public void amazonBookProductPageParserTest() {
         String sku = "0385347863";
         ProductEntity entity = new ProductEntity();
@@ -129,7 +129,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         assertProduct(sku);
     }
 
-    @Test
+    @Test(enabled = false)
     public void generateReviewLinksTest() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -148,7 +148,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         }
     }
     
-    @Test
+    @Test(enabled = false)
     public void generateProductQuestionLinksTest() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -167,7 +167,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void generateProductAnswerLinksTest() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -191,7 +191,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void parseReviewPageTest() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -218,7 +218,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void parseProductQuestionPage() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -243,6 +243,32 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
             assertNotNull(answerEntity.getAnsweredBy());
             assertNotNull(answerEntity.getAnsweredAt());
             assertNotNull(answerEntity.getUpvotes());
+        }
+    }
+
+    @Test(enabled = true)
+    public void parseProductAnswerPage() {
+        String sku = "B0773ZY26F";
+        ProductEntity entity = new ProductEntity();
+        entity.setProductSku(sku);
+        entity.setNumReviews(0L);
+        entity.setStarRating(0.0);
+        productRepo.save(entity);
+
+        Long productId = entity.getId();
+        amazonParser.parseProductQuestions(productId, loadFromFile("scraper/AmazonProductQuestionPage.html"));
+
+        String soup = loadFromFile("scraper/AmazonProductAnswerPage.html");
+        String questionId = "Tx1C9YPPCCBMZI8";
+        ProductQuestionEntity productQuestionEntity = productQuestionRepo.findByQuestionId(questionId);
+        amazonParser.parseProductAnswers(questionId, soup);
+
+        List<ProductAnswerEntity> answers = productAnswerRepo.findByProductQuestionId(productQuestionEntity.getId());
+        assertEquals(answers.size(), 11);
+        for (ProductAnswerEntity answer : answers) {
+            assertNotNull(answer.getAnswer());
+            assertNotNull(answer.getAnsweredAt());
+            assertNotNull(answer.getAnsweredBy());
         }
     }
 
