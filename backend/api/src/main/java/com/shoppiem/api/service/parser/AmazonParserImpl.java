@@ -60,14 +60,13 @@ public class AmazonParserImpl implements AmazonParser {
     String productDescriptionXPathType2 = "//*[@id=\"aplus\"]";
     String bookDescFeatureXPath = "//*[@id=\"bookDescription_feature_div\"]";
     String imageXPath = "//*[@id=\"landingImage\"]";
-    String priceXPath = "//*[@id=\"a-autoid-5\"]/span";
     String canonicalXPath = "//link[@rel=\"canonical\"]";
     String numQuestionsAnsweredXPath = "//*[@id=\"askATFLink\"]/span";
     String imageUrl = getImage(doc, imageXPath);
     Double starRating = getStarRating(doc, starRatingXPath);
     String title = getTitle(doc, titleXPath);
     String seller = getSeller(doc, sellerXPath);
-    Double price = getPrice(doc, priceXPath);
+    Double price = getPrice(doc);
     Long numReviews = getNumReviews(doc, reviewCountXPath);
     Long numQuestionsAnswered = getNumQuestionsAnswered(doc, numQuestionsAnsweredXPath);
     String canonicalUrl = getCanonicalUrl(doc, canonicalXPath);
@@ -577,9 +576,15 @@ public class AmazonParserImpl implements AmazonParser {
     return value;
   }
 
-  private Double getPrice(Document doc, String priceXPath) {
+  private Double getPrice(Document doc) {
+    // TODO: Currently defaulting the currency to USD. The symbol for the actual currency is
+    // in the list returned so use that in the future.
     List<String> priceValues = new ArrayList<>();
-    walkHelper(doc, priceXPath, priceValues, 1, false);
+    for (Node childNode : doc.childNodes()) {
+      if (priceValues.size() == 0) {
+        priceWalk(childNode, priceValues);
+      }
+    }
     for (String value : priceValues) {
       try {
         return Double.parseDouble(value.replace("$", ""));
@@ -588,6 +593,22 @@ public class AmazonParserImpl implements AmazonParser {
       }
     }
     return 0.0;
+  }
+
+  private void priceWalk(Node root, List<String> priceValues) {
+    if (root != null && priceValues.size() == 0) {
+      if (root instanceof Element) {
+        for (Attribute attribute : root.attributes()) {
+          if (attribute.getKey().equals("class") && attribute.getValue().contains("a-price")) {
+            walk(root, priceValues, 1, false);
+            return;
+          }
+        }
+        for (Node childNode : root.childNodes()) {
+          priceWalk(childNode, priceValues);
+        }
+      }
+    }
   }
 
   private String getImage(Document doc, String imageXPath) {

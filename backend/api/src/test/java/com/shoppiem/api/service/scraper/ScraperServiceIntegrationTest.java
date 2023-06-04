@@ -89,8 +89,8 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         scraperService.getContent(sku, url);
     }
 
-    @Test(enabled = false)
-    public void amazonAccessoryProductPageParserTest() {
+    @Test(enabled = true)
+    public void amazonElectronicsProductPageParserTest() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
         entity.setProductSku(sku);
@@ -246,7 +246,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         }
     }
 
-    @Test(enabled = true)
+    @Test(enabled = false)
     public void parseProductAnswerPage() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -279,7 +279,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         assertNotNull(entity.getNumReviews());
         assertNotNull(entity.getStarRating());
         assertTrue(entity.getStarRating() >= 4.0);
-//        assertTrue(entity.getPrice() > 0); TODO: parse the price correctly if necessary
+        assertEquals(entity.getPrice(),  99.68);
     }
 
     @SneakyThrows
