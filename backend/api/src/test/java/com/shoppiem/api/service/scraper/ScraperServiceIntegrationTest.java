@@ -16,11 +16,11 @@ import com.shoppiem.api.service.ServiceTestConfiguration;
 import com.shoppiem.api.service.parser.AmazonParser;
 import com.shoppiem.api.utils.migration.FlywayMigration;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.List;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.flywaydb.core.internal.util.FileCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,7 +70,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
     public void teardown() {
     }
 
-    @SneakyThrows
+
     @BeforeMethod
     public void beforeEachTest(Method method) {
         log.info("  Testcase: " + method.getName() + " has started");
@@ -282,11 +282,18 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         assertEquals(entity.getPrice(),  99.68);
     }
 
-    @SneakyThrows
+
     private String loadFromFile(String path) {
-        InputStream resource = new ClassPathResource(path).getInputStream();
+        InputStream resource = null;
+        try {
+            resource = new ClassPathResource(path).getInputStream();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(resource)) ) {
             return FileCopyUtils.copyToString(reader);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 }

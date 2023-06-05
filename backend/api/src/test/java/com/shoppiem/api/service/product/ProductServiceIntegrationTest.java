@@ -1,13 +1,11 @@
 package com.shoppiem.api.service.product;
 
 
-import com.shoppiem.api.GenericResponse;
 import com.shoppiem.api.ProductCreateResponse;
 import com.shoppiem.api.ProductRequest;
 import com.shoppiem.api.service.ServiceTestConfiguration;
 import com.shoppiem.api.utils.migration.FlywayMigration;
 import java.lang.reflect.Method;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,11 +14,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
@@ -48,7 +42,7 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
     public void teardown() {
     }
 
-    @SneakyThrows
+
     @BeforeMethod
     public void beforeEachTest(Method method) {
         log.info("  Testcase: " + method.getName() + " has started");

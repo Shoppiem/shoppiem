@@ -9,8 +9,9 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.shoppiem.api.props.FirebaseProps;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
@@ -36,9 +37,9 @@ public class FirebaseServiceImpl implements FirebaseService {
     private final ObjectMapper objectMapper;
     private final FirebaseProps firebaseProps;
 
-    @SneakyThrows
     @Override
-    public UserRecord createUser(String email, String password, String phoneNumber, String displayName, String photoUrl) {
+    public UserRecord createUser(String email, String password, String phoneNumber, String displayName, String photoUrl)
+        throws FirebaseAuthException {
         UserRecord.CreateRequest request = new UserRecord.CreateRequest()
                 .setEmail(email)
                 .setEmailVerified(false)
@@ -59,32 +60,39 @@ public class FirebaseServiceImpl implements FirebaseService {
         }
     }
 
-    @SneakyThrows
     @Override
-    public String getIdToken(String uid) {
+    public String getIdToken(String uid) throws FirebaseAuthException {
         String customToken = FirebaseAuth.getInstance().createCustomToken(uid);
         ObjectNode jsonNode = objectMapper.createObjectNode();
         jsonNode.put("token", customToken);
         jsonNode.put("returnSecureToken", true);
         final CloseableHttpClient httpClient = HttpClients.createDefault();
-        final StringEntity params = new StringEntity(jsonNode.toString());
+        final StringEntity params;
+        try {
+            params = new StringEntity(jsonNode.toString());
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
         HttpPost postRequest = new HttpPost(String.format("%s?key=%s", firebaseProps.getCustomTokenVerificationUrl(),
                 firebaseProps.getClientApiKey()));
         postRequest.addHeader("content-type", "application/json");
         postRequest.setEntity(params);
-        Map<String, String> response = objectMapper.readValue(httpClient.execute(postRequest).getEntity().getContent(),
-                typeRef);
-        httpClient.close();
+        Map<String, String> response = null;
+        try {
+            response = objectMapper.readValue(httpClient.execute(postRequest).getEntity().getContent(),
+                    typeRef);
+            httpClient.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         return response.get("idToken");
     }
 
-    @SneakyThrows
     @Override
-    public void deleteUser(String uid) {
+    public void deleteUser(String uid) throws FirebaseAuthException {
         FirebaseAuth.getInstance().deleteUser(uid);
     }
 
-    @SneakyThrows
     @Override
     public void createCustomClaims(String uid, List<String> claims) {
         Map<String, Object> customClaims = new HashMap<>();
@@ -103,9 +111,8 @@ public class FirebaseServiceImpl implements FirebaseService {
         createCustomClaims(uid, claims);
     }
 
-    @SneakyThrows
     @Override
-    public String login(String email, String password) {
+    public String login(String email, String password) throws IOException {
         ObjectNode jsonNode = objectMapper.createObjectNode();
         jsonNode.put("email", email);
         jsonNode.put("password", password);

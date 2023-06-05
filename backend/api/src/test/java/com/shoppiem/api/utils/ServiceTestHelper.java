@@ -1,9 +1,9 @@
 package com.shoppiem.api.utils;
 
 import com.shoppiem.api.UserProfile;
+import java.io.IOException;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.mockito.Mockito;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -35,8 +35,8 @@ public class ServiceTestHelper {
         SecurityContextHolder.setContext(securityContext);
     }
 
-    @SneakyThrows
-    public static String loadFile(String fileName) {
+
+    public static String loadFile(String fileName) throws IOException {
         File file = ResourceUtils.getFile("classpath:testData/" + fileName);
         return new String(Files.readAllBytes(file.toPath()));
     }

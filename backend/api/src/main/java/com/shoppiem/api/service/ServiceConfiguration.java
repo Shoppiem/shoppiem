@@ -3,6 +3,7 @@ package com.shoppiem.api.service;
 
 import com.shoppiem.api.data.DataConfiguration;
 import com.shoppiem.api.service.mapper.MapperConfiguration;
+import com.shoppiem.api.service.messaging.RabbitMQConfiguration;
 import com.shoppiem.api.utils.migration.FlywayMigrationConfiguration;
 
 import lombok.RequiredArgsConstructor;
@@ -23,6 +24,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 @RequiredArgsConstructor
 @EnableAsync
 @Import({
+    RabbitMQConfiguration.class,
     WebSocketConfiguration.class,
     DataConfiguration.class,
     MapperConfiguration.class,

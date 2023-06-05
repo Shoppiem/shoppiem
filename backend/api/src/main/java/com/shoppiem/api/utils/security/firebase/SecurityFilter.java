@@ -7,8 +7,9 @@ import com.shoppiem.api.utils.firebase.FirebaseService;
 import com.shoppiem.api.utils.security.Credentials;
 import com.shoppiem.api.UserProfile;
 import com.shoppiem.api.utils.security.UnsecurePaths;
+import java.io.IOException;
+import javax.servlet.ServletException;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -56,7 +57,6 @@ public class SecurityFilter extends OncePerRequestFilter {
     private final FirebaseService firebaseService;
 
   @Override
-  @SneakyThrows
   protected void doFilterInternal(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse,
                                   FilterChain filterChain){
     // All non-preflight requests must have a valid authorization token
@@ -67,7 +67,11 @@ public class SecurityFilter extends OncePerRequestFilter {
     if (!(methodExcluded || uriExcluded)) {
       verifyToken(httpServletRequest);
     }
-    filterChain.doFilter(httpServletRequest, httpServletResponse);
+    try {
+      filterChain.doFilter(httpServletRequest, httpServletResponse);
+    } catch (IOException | ServletException e) {
+      throw new RuntimeException(e);
+    }
   }
 
     private void verifyToken(HttpServletRequest httpServletRequest) {
@@ -82,7 +86,7 @@ public class SecurityFilter extends OncePerRequestFilter {
                     getAuthorities(user.getRoles()));
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(httpServletRequest));
             SecurityContextHolder.getContext().setAuthentication(authentication);
-        } catch (IllegalArgumentException | FirebaseAuthException e) {
+        } catch (IllegalArgumentException | FirebaseAuthException | IOException e) {
             log.error("SecurityFilter.verifyToken Authentication Error: {}", e.getLocalizedMessage());
         }
     }
@@ -106,7 +110,7 @@ public class SecurityFilter extends OncePerRequestFilter {
         return user;
     }
 
-    private String getBearerToken(HttpServletRequest httpServletRequest) {
+    private String getBearerToken(HttpServletRequest httpServletRequest) throws IOException {
         String bearerToken = "";
         String authorization = httpServletRequest.getHeader("Authorization");
         if (StringUtils.hasText(authorization)) {

@@ -9,7 +9,6 @@ import com.shoppiem.api.props.WebSocketProps;
 import com.shoppiem.api.service.scraper.ScraperService;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
@@ -26,7 +25,6 @@ public class ProductServiceImpl implements ProductService {
   private final SimpMessagingTemplate messagingTemplate;
   private final ScraperService scraperService;
 
-  @SneakyThrows
   @Override
   public ProductCreateResponse createProduct(ProductRequest productRequest) {
     var productSku = parseProductSku(productRequest.getProductUrl());

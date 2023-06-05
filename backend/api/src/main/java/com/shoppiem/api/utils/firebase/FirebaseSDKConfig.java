@@ -6,8 +6,8 @@ import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
 import com.shoppiem.api.props.FirebaseProps;
+import java.io.IOException;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -16,7 +16,6 @@ import org.springframework.context.annotation.Primary;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
@@ -34,8 +33,7 @@ public class FirebaseSDKConfig {
 
     @Bean
     @Primary
-    @SneakyThrows
-    public void firebaseInit() {
+    public void firebaseInit() throws IOException {
         final FirebaseOptions firebaseOptions = FirebaseOptions.builder()
                 .setCredentials(getFirebaseCredentials()).build();
         if (FirebaseApp.getApps().isEmpty()) {
@@ -43,8 +41,7 @@ public class FirebaseSDKConfig {
         }
     }
 
-    @SneakyThrows
-    public GoogleCredentials getFirebaseCredentials() {
+    public GoogleCredentials getFirebaseCredentials() throws IOException {
         final ObjectNode jsonNode = objectMapper.createObjectNode();
         jsonNode.put("type", firebaseProps.getType());
         jsonNode.put("project_id", firebaseProps.getProjectId());

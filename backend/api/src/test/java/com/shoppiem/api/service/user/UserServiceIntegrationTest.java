@@ -7,7 +7,6 @@ import com.shoppiem.api.service.ServiceTestConfiguration;
 import com.shoppiem.api.utils.ServiceTestHelper;
 import com.shoppiem.api.utils.migration.FlywayMigration;
 import com.shoppiem.api.UserProfileResponse;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,9 +59,8 @@ public class UserServiceIntegrationTest extends AbstractTestNGSpringContextTests
         log.info("  Testcase: " + method.getName() + " has ended");
     }
 
-    @SneakyThrows
     @Test
-    public void createUserTest() {
+    public void createUserTest() throws InterruptedException {
         UserProfileResponse response = userService.getOrCreateUserprofile();
         assertThat(response, is(notNullValue()));
         assertThat(response.getProfile().getName(), is(notNullValue()));

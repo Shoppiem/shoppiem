@@ -39,6 +39,34 @@
       }
     },
     "/product": {
+      "get": {
+        "tags": [
+          "product"
+        ],
+        "summary": "RabbitMQ test",
+        "operationId": "testRabbitMQ",
+        "parameters": [
+          {
+            "name": "message",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Test response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "tags": [
           "product"

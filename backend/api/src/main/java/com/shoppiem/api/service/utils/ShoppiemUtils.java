@@ -1,16 +1,16 @@
 package com.shoppiem.api.service.utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Random;
-import lombok.SneakyThrows;
 
 /**
  * @author Biz Melesse created on 1/2/23
  */
 public class ShoppiemUtils {
 
-  @SneakyThrows
-  public static String getCanonicalPath(String path) {
+
+  public static String getCanonicalPath(String path) throws IOException {
     String cPath = new File(path).getCanonicalPath();
     if (cPath.startsWith("/private")) {
       return cPath.replace("/private", "");

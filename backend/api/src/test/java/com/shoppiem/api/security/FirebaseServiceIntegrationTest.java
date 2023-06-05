@@ -3,10 +3,11 @@ package com.shoppiem.api.security;
 
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseAuthException;
 import com.google.firebase.auth.UserRecord;
 import com.shoppiem.api.utils.firebase.FirebaseSDKConfig;
 import com.shoppiem.api.utils.firebase.FirebaseService;
-import lombok.SneakyThrows;
+import java.io.IOException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -49,7 +50,7 @@ public class FirebaseServiceIntegrationTest extends AbstractTestNGSpringContextT
     }
 
     @AfterTest
-    public void teardown() {
+    public void teardown() throws FirebaseAuthException {
         UserRecord user = firebaseService.getUserByEmail(demoUserEmail);
         if (user != null) {
             firebaseService.deleteUser(user.getUid());
@@ -67,13 +68,13 @@ public class FirebaseServiceIntegrationTest extends AbstractTestNGSpringContextT
     }
 
     @Test(priority = 0)
-    public void credentialsParserTest() {
+    public void credentialsParserTest() throws IOException {
         GoogleCredentials googleCredentials =  firebaseSDKConfig.getFirebaseCredentials();
         assertThat(googleCredentials, is(notNullValue()));
     }
 
     @Test(dependsOnMethods = "credentialsParserTest")
-    public void createFirebaseUserTest() {
+    public void createFirebaseUserTest() throws FirebaseAuthException {
         String demoUserPassword = "rip-repo-main";
         String demoUserPhoneNumber = "+11234567890";
         String demoUserAvatar = "https://picsum.photos/200";
@@ -88,7 +89,6 @@ public class FirebaseServiceIntegrationTest extends AbstractTestNGSpringContextT
         assertThat(userRecord.getPhoneNumber(), is(equalTo(demoUserPhoneNumber)));
     }
 
-    @SneakyThrows
     @Test(dependsOnMethods = "createFirebaseUserTest")
     public void createCustomClaimsTest() {
         List<String> claims = Arrays.asList("ROLE_ADMIN", "ROLE_TEST", "ROLE_PREMIUM_USER");
@@ -104,7 +104,7 @@ public class FirebaseServiceIntegrationTest extends AbstractTestNGSpringContextT
         }
     }
 
-    @SneakyThrows
+
     @Test(dependsOnMethods = "createCustomClaimsTest")
     public void updateCustomClaimsTest() {
         final UserRecord userRecord = firebaseService.getUserByEmail(demoUserEmail);
@@ -127,7 +127,7 @@ public class FirebaseServiceIntegrationTest extends AbstractTestNGSpringContextT
     }
 
     @Test(dependsOnMethods = "updateCustomClaimsTest")
-    public void deleteUserTest() {
+    public void deleteUserTest() throws FirebaseAuthException {
         firebaseService.deleteUser(firebaseService.getUserByEmail(demoUserEmail).getUid());
         UserRecord userRecord = firebaseService.getUserByEmail(demoUserEmail);
         assertThat(userRecord, is(nullValue()));

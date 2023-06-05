@@ -12,7 +12,6 @@ import com.shoppiem.api.service.openai.finetune.FineTuneRequest;
 import com.shoppiem.api.service.openai.finetune.FineTuneResult;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,9 +31,9 @@ public class FineTuneTest extends AbstractTestNGSpringContextTests {
     @Autowired
     private OpenAiProps openAiProps;
 
-    @SneakyThrows
+
     @BeforeClass
-    public void setup() {
+    public void setup() throws InterruptedException {
       service = new OpenAiService(openAiProps.getApiKey());
       fileId = service.uploadFile("fine-tune", "src/test/resources/openai/fine-tuning-data.jsonl").getId();
 

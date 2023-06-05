@@ -42,8 +42,8 @@ configure(subprojects.findAll(it ->
 )) {
   group = 'com.shoppiem'
   version = '1.0.0'
-  sourceCompatibility = JavaVersion.VERSION_15
-  targetCompatibility = JavaVersion.VERSION_15
+  sourceCompatibility = JavaVersion.VERSION_19
+  targetCompatibility = JavaVersion.VERSION_19
 
   apply plugin: 'io.spring.dependency-management'
   apply plugin: 'org.springframework.boot'
@@ -54,7 +54,7 @@ configure(subprojects.findAll(it ->
   apply plugin: 'io.swagger.core.v3.swagger-gradle-plugin'
 
   dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-amqp:3.1.0'
+    implementation 'org.springframework.boot:spring-boot-starter-amqp'
     implementation 'org.springframework:spring-websocket:5.3.24'
     implementation 'org.springframework:spring-messaging:5.3.24'
     api 'com.squareup.retrofit2:retrofit:2.9.0'
@@ -79,7 +79,7 @@ configure(subprojects.findAll(it ->
     implementation 'org.postgresql:postgresql:42.2.23'
     implementation 'com.google.firebase:firebase-admin:8.0.1'
     implementation platform("com.amazonaws:aws-java-sdk-bom:${awsSDKVersion}")
-    compileOnly 'org.projectlombok:lombok'
+    compileOnly 'org.projectlombok:lombok:1.18.28'
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
     implementation 'org.mapstruct:mapstruct:1.4.2.Final'
     annotationProcessor 'org.mapstruct:mapstruct-processor:1.4.2.Final'
@@ -90,8 +90,8 @@ configure(subprojects.findAll(it ->
     // Test dependencies
     testImplementation(platform('org.junit:junit-bom:5.8.2'))
     testImplementation('org.junit.jupiter:junit-jupiter')
-    testCompileOnly 'org.projectlombok:lombok:1.18.20'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.20'
+    testCompileOnly 'org.projectlombok:lombok:1.18.28'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.28'
     testImplementation 'org.testng:testng:7.4.0'
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
       exclude module: "org.junit.vintage:junit-vintage-engine"
@@ -217,16 +217,16 @@ task openApiBuilder() {
           outputDir = generatedSourcesDirTypeScript
         }
 
-        projectTasks.register('openApiTypeScriptClientZip', Zip) {
-          dependsOn('openApiGenerateTypeScriptClient')
-          from generatedSourcesDirTypeScript
-          include '**/*.ts'
-          archiveName 'openapi_ts.zip'
-          destinationDir(file(generatedTargetsDirTypesScript))
-        }
+//        projectTasks.register('openApiTypeScriptClientZip', Zip) {
+//          dependsOn('openApiGenerateTypeScriptClient')
+//          from generatedSourcesDirTypeScript
+//          include '**/*.ts'
+//          getArchiveBaseName('openapi_ts.zip')
+//          destinationDir(file(generatedTargetsDirTypesScript))
+//        }
 
         projectTasks.getByName('compileJava')
-          .dependsOn('openApiTypeScriptClientZip')
+//          .dependsOn('openApiTypeScriptClientZip')
           .dependsOn('openApiGenerateTypeScriptClient')
       }
     }
