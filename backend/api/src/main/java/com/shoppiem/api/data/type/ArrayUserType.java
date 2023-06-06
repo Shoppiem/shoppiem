@@ -46,18 +46,24 @@ public class ArrayUserType<T extends Serializable> implements UserType {
     }
 
     @Override
-    public Object nullSafeGet(ResultSet resultSet, String[] names, SharedSessionContractImplementor sharedSessionContractImplementor, Object o) throws HibernateException, SQLException {
-        if (resultSet.wasNull()) {
-            return null;
-        }
-        Array array = resultSet.getArray(names[0]);
-        if (resultSet.getArray(names[0]) == null) {
-            return array;
-        }
-        @SuppressWarnings("unchecked")
-        T javaArray = (T) array.getArray();
-        return javaArray;
+    public Object nullSafeGet(ResultSet rs, int position, SharedSessionContractImplementor session,
+        Object owner) throws SQLException {
+        return null;
     }
+
+//    @Override
+//    public Object nullSafeGet(ResultSet resultSet, String[] names, SharedSessionContractImplementor sharedSessionContractImplementor, Object o) throws HibernateException, SQLException {
+//        if (resultSet.wasNull()) {
+//            return null;
+//        }
+//        Array array = resultSet.getArray(names[0]);
+//        if (resultSet.getArray(names[0]) == null) {
+//            return array;
+//        }
+//        @SuppressWarnings("unchecked")
+//        T javaArray = (T) array.getArray();
+//        return javaArray;
+//    }
 
     @Override
     public void nullSafeSet(PreparedStatement statement, Object value, int index, SharedSessionContractImplementor sharedSessionContractImplementor) throws HibernateException, SQLException {
@@ -83,12 +89,13 @@ public class ArrayUserType<T extends Serializable> implements UserType {
     }
 
     @Override
+    public int getSqlType() {
+        return Types.ARRAY;
+    }
+
+    @Override
     public Class<T> returnedClass() {
         return typeParameterClass;
     }
 
-    @Override
-    public int[] sqlTypes() {
-        return new int[]{Types.ARRAY};
-    }
 }

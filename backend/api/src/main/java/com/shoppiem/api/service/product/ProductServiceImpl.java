@@ -1,13 +1,10 @@
 package com.shoppiem.api.service.product;
 
-import com.shoppiem.api.GenericResponse;
 import com.shoppiem.api.ProductCreateResponse;
 import com.shoppiem.api.ProductRequest;
-import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.props.WebSocketProps;
 import com.shoppiem.api.service.scraper.ScraperService;
-import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -31,7 +28,7 @@ public class ProductServiceImpl implements ProductService {
     var entity = productRepo.findByProductSku(productSku);
     if (entity == null) {
       log.info(productSku);
-      scraperService.getContent(productSku, productRequest.getProductUrl());
+      scraperService.scrape(productSku, productRequest.getProductUrl());
       // Product not found. Scrape this product and its reviews.
       // And then create embeddings for it.
 //      messagingTemplate.convertAndSendToUser(

@@ -3,9 +3,8 @@ package com.shoppiem.api.data.postgres.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.Type;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
@@ -18,8 +17,8 @@ import java.time.LocalDateTime;
 @Table(schema = "public", name = "user")
 public class UserEntity {
     @Id
-    @SequenceGenerator(name="pk_sequence",sequenceName="user_id_seq", allocationSize=1)
-    @GeneratedValue(strategy= GenerationType.AUTO,generator="pk_sequence_user")
+    @SequenceGenerator(name="user_sequence_generator",sequenceName="user_id_seq", allocationSize=1)
+    @GeneratedValue(strategy= GenerationType.AUTO,generator="user_sequence_generator")
     @Column(name = "id")
     private Long id;
     
@@ -40,10 +39,6 @@ public class UserEntity {
     @Basic
     @Column(name = "email")
     private String email;
-
-    @Type(type = "com.shoppiem.api.data.type.ArrayUserType")
-    @Column(name = "roles", columnDefinition = "text[]")
-    Object[] roles;
 
     @Basic
     @Column(name = "updated_at")

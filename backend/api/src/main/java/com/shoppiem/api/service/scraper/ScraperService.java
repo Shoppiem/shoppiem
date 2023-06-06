@@ -17,5 +17,5 @@ public interface ScraperService {
      * @param url
      * @return
      */
-    boolean getContent(String sku, String url);
+    boolean scrape(String sku, String url);
 }

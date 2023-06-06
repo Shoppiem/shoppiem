@@ -2,14 +2,14 @@ package com.shoppiem.api.data.postgres.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
-import javax.persistence.Basic;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.SequenceGenerator;
-import javax.persistence.Table;
+import jakarta.persistence.Basic;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.SequenceGenerator;
+import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
@@ -24,8 +24,8 @@ import org.hibernate.annotations.Type;
 @Table(schema = "public", name = "embedding")
 public class EmbeddingEntity {
     @Id
-    @SequenceGenerator(name="pk_sequence",sequenceName="embedding_id_seq", allocationSize=1)
-    @GeneratedValue(strategy= GenerationType.AUTO,generator="pk_sequence_embedding")
+    @SequenceGenerator(name="embedding_sequence_generator",sequenceName="embedding_id_seq", allocationSize=1)
+    @GeneratedValue(strategy= GenerationType.AUTO,generator="embedding_sequence_generator")
     @Column(name = "id")
     private Long id;
 

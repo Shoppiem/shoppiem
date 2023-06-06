@@ -21,8 +21,9 @@ public class ScraperServiceImpl implements ScraperService {
     private final ScraperUtils scraperUtils;
 
     @Override
-    public boolean getContent(String sku, String url) {
+    public boolean scrape(String sku, String url) {
         try { // TODO: check that the content can be processed before scraping
+            log.info("Scraping {} at {}", sku, url);
             Merchant merchant = getPlatform(url);
             WebClient client = scraperUtils.getWebClient();
             String cleanUrl = cleanupUrl(url);

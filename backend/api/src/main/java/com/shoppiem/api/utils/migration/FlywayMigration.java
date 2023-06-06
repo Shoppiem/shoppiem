@@ -41,6 +41,7 @@ public class FlywayMigration {
     public void migrate(boolean dropSchema) {
         FluentConfiguration flyway = Flyway.configure()
                 .schemas(flywayProps.getSchemas().split(","))
+                .cleanDisabled(flywayProps.getCleanDisabled())
                 .validateOnMigrate(true)
                 .baselineOnMigrate(true)
                 .dataSource(dataSourceProps.getUrl(),

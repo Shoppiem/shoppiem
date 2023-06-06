@@ -47,10 +47,11 @@
         "operationId": "testRabbitMQ",
         "parameters": [
           {
-            "name": "message",
+            "name": "count",
             "in": "query",
             "schema": {
-              "type": "string"
+              "type": "integer",
+              "format": "int32"
             }
           }
         ],

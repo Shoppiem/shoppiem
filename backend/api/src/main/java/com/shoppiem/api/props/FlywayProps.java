@@ -17,4 +17,5 @@ import org.springframework.context.annotation.Primary;
 public class FlywayProps {
     private String schemas;
     private String locations;
+    private Boolean cleanDisabled = true;
 }

@@ -16,7 +16,7 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import javax.persistence.EntityManagerFactory;
+import jakarta.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 import java.util.HashMap;
 import java.util.Map;
@@ -55,7 +55,8 @@ public class PostgresDBDataConfiguration {
 
         // JPA & Hibernate
         Map<String, Object> properties = new HashMap<>();
-        properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQL9Dialect");
+//        int x = org.hibernate.dialect.PostgreSQL10Dialect.class.
+        properties.put("hibernate.dialect", "org.hibernate.dialect.PostgreSQL10Dialect");
         properties.put("hibernate.show-sql", true);
         int batchSize = 20;
         properties.put("hibernate.jdbc.batch_size", batchSize);
