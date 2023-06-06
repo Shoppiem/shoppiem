@@ -3,6 +3,7 @@ package com.shoppiem.api.service.messaging;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.dto.ScrapingJobDto;
+import com.shoppiem.api.props.ScraperProps;
 import com.shoppiem.api.service.scraper.ScraperService;
 import io.netty.util.internal.ObjectUtil;
 import java.util.concurrent.ExecutionException;
@@ -23,6 +24,7 @@ import org.springframework.util.ObjectUtils;
 public class Consumer {
   private final ObjectMapper objectMapper;
   private final ScraperService scraperService;
+  private final ScraperProps scraperProps;
 
   /**
    * The number of concurrent scraping requests must not exceed a certain
@@ -32,19 +34,21 @@ public class Consumer {
    */
   public static volatile AtomicInteger scrapingJobsInProgress = new AtomicInteger(0);
 
-  private final Executor executor = Executors.newThreadPerTaskExecutor(
-      Thread.ofVirtual().name("routine-", 0).factory());
-
   public void consume(String message) {
-    while (scrapingJobsInProgress.get() >= 10) {
-      try {
-        Thread.sleep(10L);
-      } catch (InterruptedException e) {
-        log.error(e.getLocalizedMessage());
+    log.info("Consumer new event received: {}", message);
+//    synchronized (this) {
+      while (scrapingJobsInProgress.get() >= scraperProps.getThreadCount()) {
+        try {
+          Thread.sleep(10L);
+        } catch (InterruptedException e) {
+          log.error(e.getLocalizedMessage());
+        }
       }
-    }
-    scrapingJobsInProgress.incrementAndGet();
+      int val = scrapingJobsInProgress.incrementAndGet();
+      log.info("scrapingJobsInProgress: {}", val);
+//    }
     handleJob(message);
+    log.info("returned from consumer.....");
   }
 
   private void handleJob(String message) {
@@ -57,12 +61,12 @@ public class Consumer {
       }
       if (r != null) {
         try (var executor = Executors.newThreadPerTaskExecutor(factory)) {
-          var task = executor.submit(r);
-          try {
-            task.get();
-          } catch (InterruptedException | ExecutionException e) {
-            throw new RuntimeException(e);
-          }
+           executor.submit(r);
+//          try {
+////            task.get();
+//          } catch (InterruptedException | ExecutionException e) {
+//            throw new RuntimeException(e);
+//          }
         }
       }
     } catch (JsonProcessingException e) {

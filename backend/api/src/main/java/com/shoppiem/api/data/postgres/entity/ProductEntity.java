@@ -66,6 +66,10 @@ public class ProductEntity {
     private Long numReviews;
 
     @Basic
+    @Column(name = "is_ready")
+    private Boolean isReady = false;
+
+    @Basic
     @Column(name = "star_rating")
     private Double starRating;
 
