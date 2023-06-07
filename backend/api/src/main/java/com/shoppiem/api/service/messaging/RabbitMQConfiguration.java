@@ -62,7 +62,7 @@ public class RabbitMQConfiguration {
   }
 
   @Bean
-  MessageListenerAdapter listenerAdapter() {
+  MessageListenerAdapter scrapingJobListener() {
     return new MessageListenerAdapter(consumer, "consume");
   }
 
