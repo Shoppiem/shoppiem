@@ -5,12 +5,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.dto.ScrapingJobDto;
 import com.shoppiem.api.props.ScraperProps;
 import com.shoppiem.api.service.scraper.ScraperService;
+import com.shoppiem.api.service.utils.JobSemaphore;
 import io.netty.util.internal.ObjectUtil;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantLock;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
@@ -24,50 +30,22 @@ import org.springframework.util.ObjectUtils;
 public class Consumer {
   private final ObjectMapper objectMapper;
   private final ScraperService scraperService;
-  private final ScraperProps scraperProps;
+  private final JobSemaphore jobSemaphore;
 
-  /**
-   * The number of concurrent scraping requests must not exceed a certain
-   * number. This number depends on the subscription plan we have for proxy
-   * rotation and how many scraping threads they recommend. We need to block
-   * the consumer until a slot becomes available.
-   */
-  public static volatile AtomicInteger scrapingJobsInProgress = new AtomicInteger(0);
-
-  public void consume(String message) {
-    log.info("Consumer new event received: {}", message);
-//    synchronized (this) {
-      while (scrapingJobsInProgress.get() >= scraperProps.getThreadCount()) {
-        try {
-          Thread.sleep(10L);
-        } catch (InterruptedException e) {
-          log.error(e.getLocalizedMessage());
-        }
-      }
-      int val = scrapingJobsInProgress.incrementAndGet();
-      log.info("scrapingJobsInProgress: {}", val);
-//    }
+  public void consume(String message) throws InterruptedException {
+    jobSemaphore.getSemaphore().acquire();
     handleJob(message);
-    log.info("returned from consumer.....");
   }
 
   private void handleJob(String message) {
     try {
       ScrapingJobDto job = objectMapper.readValue(message, ScrapingJobDto.class);
       Runnable r = null;
-      var factory = Thread.ofVirtual().name("routine-", 0).factory();
       if (!ObjectUtils.isEmpty(job.getProductSku())) {
         r = () -> scraperService.scrape(job.getProductSku(), job.getUrl());
       }
       if (r != null) {
-        try (var executor = Executors.newThreadPerTaskExecutor(factory)) {
-           executor.submit(r);
-//          try {
-////            task.get();
-//          } catch (InterruptedException | ExecutionException e) {
-//            throw new RuntimeException(e);
-//          }
-        }
+        Thread.startVirtualThread(r);
       }
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());

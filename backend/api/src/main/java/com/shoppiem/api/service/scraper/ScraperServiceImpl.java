@@ -4,6 +4,7 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.shoppiem.api.service.messaging.Consumer;
 import com.shoppiem.api.service.parser.AmazonParser;
+import com.shoppiem.api.service.utils.JobSemaphore;
 import java.net.MalformedURLException;
 import java.net.URL;
 import lombok.RequiredArgsConstructor;
@@ -20,31 +21,29 @@ import org.springframework.stereotype.Service;
 public class ScraperServiceImpl implements ScraperService {
     private final AmazonParser amazonParser;
     private final ScraperUtils scraperUtils;
+    private final JobSemaphore jobSemaphore;
 
     @Override
     public boolean scrape(String sku, String url) {
         try { // TODO: check that the content can be processed before scraping
             log.info("Scraping {} at {}", sku, url);
-            Thread.sleep(10000L);
-            Consumer.scrapingJobsInProgress.decrementAndGet();
-            log.info("Returning: {}", url);
-            return false;
-//            Merchant merchant = getPlatform(url);
-//            WebClient client = scraperUtils.getWebClient();
-//            String cleanUrl = cleanupUrl(url);
-//            HtmlPage page = client.getPage(cleanUrl);
-//            int statusCode = page.getWebResponse().getStatusCode();
-//            if (statusCode >= 200 && statusCode < 400 ) {
-//                String soup = page.getWebResponse().getContentAsString();
-//                switch (merchant) {
-//                    case AMAZON:
-//                        amazonParser.parseProductPage(sku, soup);
-//                        break;
-//                    default:
-//                        break;
-//                }
-//            }
-//            return true;
+            Merchant merchant = getPlatform(url);
+            WebClient client = scraperUtils.getWebClient();
+            String cleanUrl = cleanupUrl(url);
+            HtmlPage page = client.getPage(cleanUrl);
+            int statusCode = page.getWebResponse().getStatusCode();
+            if (statusCode >= 200 && statusCode < 400 ) {
+                String soup = page.getWebResponse().getContentAsString();
+                switch (merchant) {
+                    case AMAZON:
+                        amazonParser.parseProductPage(sku, soup);
+                        break;
+                    default:
+                        break;
+                }
+            }
+            jobSemaphore.getSemaphore().release();
+            return true;
         } catch (Exception e) {
             log.error(e.getLocalizedMessage());
         }

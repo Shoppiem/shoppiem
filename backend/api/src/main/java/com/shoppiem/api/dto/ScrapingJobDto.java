@@ -11,4 +11,5 @@ public class ScrapingJobDto {
   private String url;
   private String productSku;
   private String questionId;
+  private String id;
 }

@@ -41,6 +41,7 @@ public class ProductController implements ProductApi {
     for (int i = 0; i < count; i++) {
       ScrapingJobDto job = new ScrapingJobDto();
       job.setProductSku(ShoppiemUtils.generateUid());
+      job.setId(job.getProductSku());
       job.setUrl("http://example.com/" + i);
       try {
         String jobString = objectMapper.writeValueAsString(job);

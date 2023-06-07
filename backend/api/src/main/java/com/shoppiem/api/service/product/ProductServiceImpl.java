@@ -37,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
     if (entity == null) {
       ScrapingJobDto job = new ScrapingJobDto();
       job.setProductSku(ShoppiemUtils.generateUid());
+      job.setId(job.getProductSku());
       job.setUrl(productRequest.getProductUrl());
       try {
         String jobString = objectMapper.writeValueAsString(job);
