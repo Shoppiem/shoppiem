@@ -1,5 +1,6 @@
 package com.shoppiem.api.service.parser;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.data.postgres.entity.ProductAnswerEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.entity.ProductQuestionEntity;
@@ -8,6 +9,7 @@ import com.shoppiem.api.data.postgres.repo.ProductAnswerRepo;
 import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.data.postgres.repo.ReviewRepo;
+import com.shoppiem.api.props.RabbitMQProps;
 import com.shoppiem.api.service.scraper.Merchant;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -32,6 +34,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -46,6 +49,9 @@ public class AmazonParserImpl implements AmazonParser {
   private final ProductQuestionRepo questionRepo;
   private final ReviewRepo reviewRepo;
   private final ProductAnswerRepo answerRepo;
+  private final ObjectMapper objectMapper;
+  private final RabbitTemplate rabbitTemplate;
+  private final RabbitMQProps rabbitMQProps;
 
   @Override
   public void parseProductPage(String sku, String soup) {
@@ -105,6 +111,12 @@ public class AmazonParserImpl implements AmazonParser {
         productDescriptionType2,
         bookDescription)));
     productRepo.save(entity);
+    createScrapingJobs(entity);
+  }
+
+  @Override
+  public void createScrapingJobs(ProductEntity entity) {
+//    generateReviewLinks(entity);
   }
 
   @Override

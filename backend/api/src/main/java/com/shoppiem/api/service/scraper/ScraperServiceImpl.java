@@ -2,11 +2,11 @@ package com.shoppiem.api.service.scraper;
 
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
-import com.shoppiem.api.service.messaging.Consumer;
 import com.shoppiem.api.service.parser.AmazonParser;
 import com.shoppiem.api.service.utils.JobSemaphore;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ public class ScraperServiceImpl implements ScraperService {
     private final JobSemaphore jobSemaphore;
 
     @Override
-    public boolean scrape(String sku, String url) {
+    public void scrape(String sku, String url) {
         try { // TODO: check that the content can be processed before scraping
             log.info("Scraping {} at {}", sku, url);
             Merchant merchant = getPlatform(url);
@@ -34,20 +34,15 @@ public class ScraperServiceImpl implements ScraperService {
             int statusCode = page.getWebResponse().getStatusCode();
             if (statusCode >= 200 && statusCode < 400 ) {
                 String soup = page.getWebResponse().getContentAsString();
-                switch (merchant) {
-                    case AMAZON:
-                        amazonParser.parseProductPage(sku, soup);
-                        break;
-                    default:
-                        break;
+                if (Objects.requireNonNull(merchant) == Merchant.AMAZON) {
+                    amazonParser.parseProductPage(sku, soup);
                 }
             }
-            jobSemaphore.getSemaphore().release();
-            return true;
         } catch (Exception e) {
             log.error(e.getLocalizedMessage());
+        } finally {
+            jobSemaphore.getSemaphore().release();
         }
-        return false;
     }
 
     private String cleanupUrl(String url) {

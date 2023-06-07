@@ -1,5 +1,6 @@
 package com.shoppiem.api.service.parser;
 
+import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import java.util.List;
 
 /**
@@ -8,6 +9,8 @@ import java.util.List;
 public interface AmazonParser {
   String bodyDelimiter = "\n--------SHOPPIEM_BOUNDARY--------\n";
   void parseProductPage(String sku, String soup);
+
+  void createScrapingJobs(ProductEntity entity);
 
   void parseReviewPage(Long productId, String soup);
 

@@ -6,6 +6,7 @@ import com.shoppiem.api.ProductCreateResponse;
 import com.shoppiem.api.ProductRequest;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.dto.ScrapingJobDto;
+import com.shoppiem.api.dto.ScrapingJobDto.JobType;
 import com.shoppiem.api.props.RabbitMQProps;
 import com.shoppiem.api.service.utils.ShoppiemUtils;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class ProductServiceImpl implements ProductService {
       job.setProductSku(ShoppiemUtils.generateUid());
       job.setId(job.getProductSku());
       job.setUrl(productRequest.getProductUrl());
+      job.setType(JobType.PRODUCT_PAGE);
       try {
         String jobString = objectMapper.writeValueAsString(job);
         rabbitTemplate.convertAndSend(
