@@ -58,7 +58,7 @@ public class AmazonParserImpl implements AmazonParser {
   private final RabbitMQProps rabbitMQProps;
 
   @Override
-  public void parseProductPage(String sku, String soup) {
+  public void parseProductPage(String sku, String soup, boolean scheduleJobs) {
     Document doc = Jsoup.parse(soup);
     String titleXPath = "//*[@id=\"productTitle\"]";
     String sellerXPath = "//*[@id=\"bylineInfo\"]";
@@ -115,7 +115,9 @@ public class AmazonParserImpl implements AmazonParser {
         productDescriptionType2,
         bookDescription)));
     productRepo.save(entity);
-    createScrapingJobs(entity);
+    if (scheduleJobs) {
+//      createScrapingJobs(entity);
+    }
   }
 
   @Override
@@ -155,7 +157,7 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
   @Override
-  public void parseReviewPage(ProductEntity productEntity, String soup) {
+  public void parseReviewPage(ProductEntity productEntity, String soup, boolean scheduleJobs) {
     Document doc = Jsoup.parse(soup);
     String allReviewsXPath = "//*[@id=\"cm_cr-review_list\"]";
     Map<String, ReviewEntity> reviews = new HashMap<>();
@@ -172,7 +174,7 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
   @Override
-  public void parseProductQuestions(ProductEntity productEntity, String soup) {
+  public void parseProductQuestions(ProductEntity productEntity, String soup, boolean scheduleJobs) {
     Document doc = Jsoup.parse(soup);
     Map<String, QuestionAnswerContainer> questions = new HashMap<>();
     for (Node childNode : doc.childNodes()) {

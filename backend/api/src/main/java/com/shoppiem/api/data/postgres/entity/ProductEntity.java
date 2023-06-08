@@ -55,7 +55,7 @@ public class ProductEntity {
 
     @Basic
     @Column(name = "price")
-    private Double price;
+    private Double price = 0.0;
 
     @Basic
     @Column(name = "currency")
@@ -63,7 +63,7 @@ public class ProductEntity {
 
     @Basic
     @Column(name = "num_reviews")
-    private Long numReviews;
+    private Long numReviews = 0L;
 
     @Basic
     @Column(name = "is_ready")
@@ -75,7 +75,7 @@ public class ProductEntity {
 
     @Basic
     @Column(name = "num_questions_answered")
-    private Long numQuestionsAnswered;
+    private Long numQuestionsAnswered = 0L;
 
     @Basic
     @Column(name = "updated_at")

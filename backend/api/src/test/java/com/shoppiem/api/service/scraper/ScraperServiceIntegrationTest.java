@@ -90,7 +90,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         scraperService.scrape(sku, url, JobType.PRODUCT_PAGE);
     }
 
-    @Test(enabled = true)
+    @Test
     public void amazonElectronicsProductPageParserTest() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -99,11 +99,11 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = loadFromFile("scraper/amazonProductPage_Electronics.html");
-        amazonParser.parseProductPage(sku, soup);
-        assertProduct(sku);
+        amazonParser.parseProductPage(sku, soup, false);
+        assertProduct(sku, 99.68);
     }
 
-    @Test(enabled = false)
+    @Test
     public void amazonClothingProductPageParserTest() {
         String sku = "B0BJDTKPY1";
         ProductEntity entity = new ProductEntity();
@@ -112,12 +112,12 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = loadFromFile("scraper/amazonProductPage_Clothing.html");
-        amazonParser.parseProductPage(sku, soup);
-        assertProduct(sku);
+        amazonParser.parseProductPage(sku, soup, false);
+        assertProduct(sku, 25.99);
 
     }
 
-    @Test(enabled = false)
+    @Test
     public void amazonBookProductPageParserTest() {
         String sku = "0385347863";
         ProductEntity entity = new ProductEntity();
@@ -126,11 +126,11 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = loadFromFile("scraper/amazonProductPage_Books.html");
-        amazonParser.parseProductPage(sku, soup);
-        assertProduct(sku);
+        amazonParser.parseProductPage(sku, soup, false);
+        assertProduct(sku, 14.49);
     }
 
-    @Test(enabled = false)
+    @Test
     public void generateReviewLinksTest() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -139,7 +139,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = loadFromFile("scraper/amazonProductPage_Electronics.html");
-        amazonParser.parseProductPage(sku, soup);
+        amazonParser.parseProductPage(sku, soup, false);
         List<String> reviewLinks = amazonParser.generateReviewLinks(entity);
         assertEquals(2679, reviewLinks.size());
         for (String reviewLink : reviewLinks) {
@@ -149,7 +149,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         }
     }
     
-    @Test(enabled = false)
+    @Test
     public void generateProductQuestionLinksTest() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -158,8 +158,8 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = loadFromFile("scraper/amazonProductPage_Electronics.html");
-        amazonParser.parseProductPage(sku, soup);
-        List<String> questionLinks = amazonParser.generateProductQuestionLinks(entity);
+        amazonParser.parseProductPage(sku, soup, false);
+        List<String> questionLinks = amazonParser.generateProductQuestionLinks(productRepo.findByProductSku(sku));
         assertEquals(90, questionLinks.size());
         for (String reviewLink : questionLinks) {
             assertTrue(reviewLink.contains("amazon.com"));
@@ -168,7 +168,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         }
     }
 
-    @Test(enabled = false)
+    @Test
     public void generateProductAnswerLinksTest() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -192,7 +192,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         }
     }
 
-    @Test(enabled = false)
+    @Test
     public void parseReviewPageTest() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -201,7 +201,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = loadFromFile("scraper/AmazonProductReviewPage.html");
-        amazonParser.parseReviewPage(entity, soup);
+        amazonParser.parseReviewPage(entity, soup, false);
 
         List<ReviewEntity> reviews = reviewRepo.findAllByProductId(entity.getId());
         assertEquals(10, reviews.size());
@@ -219,7 +219,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         }
     }
 
-    @Test(enabled = false)
+    @Test
     public void parseProductQuestionPage() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -229,7 +229,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         productRepo.save(entity);
         String soup = loadFromFile("scraper/AmazonProductQuestionPage.html");
         Long productId = entity.getId();
-        amazonParser.parseProductQuestions(entity, soup);
+        amazonParser.parseProductQuestions(entity, soup, false);
         List<ProductQuestionEntity> questionEntities = productQuestionRepo.findByProductId(productId);
         List<ProductAnswerEntity> answerEntities = productAnswerRepo.findByProductId(productId);
         assertEquals(questionEntities.size(), 10);
@@ -247,7 +247,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         }
     }
 
-    @Test(enabled = false)
+    @Test
     public void parseProductAnswerPage() {
         String sku = "B0773ZY26F";
         ProductEntity entity = new ProductEntity();
@@ -256,7 +256,8 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
 
-        amazonParser.parseProductQuestions(entity, loadFromFile("scraper/AmazonProductQuestionPage.html"));
+        amazonParser.parseProductQuestions(entity, loadFromFile("scraper/AmazonProductQuestionPage.html"),
+            false);
 
         String soup = loadFromFile("scraper/AmazonProductAnswerPage.html");
         String questionId = "Tx1C9YPPCCBMZI8";
@@ -272,14 +273,14 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         }
     }
 
-    private void assertProduct(String sku) {
+    private void assertProduct(String sku, double price) {
         ProductEntity entity = productRepo.findByProductSku(sku);
         assertNotNull(entity);
         assertNotNull(entity.getDescription());
         assertNotNull(entity.getNumReviews());
         assertNotNull(entity.getStarRating());
         assertTrue(entity.getStarRating() >= 4.0);
-        assertEquals(entity.getPrice(),  99.68);
+        assertEquals(price, entity.getPrice());
     }
 
 

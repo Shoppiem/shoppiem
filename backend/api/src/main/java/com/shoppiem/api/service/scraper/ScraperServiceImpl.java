@@ -41,10 +41,11 @@ public class ScraperServiceImpl implements ScraperService {
                 if (Objects.requireNonNull(merchant) == Merchant.AMAZON) {
                     ProductEntity entity = productRepo.findByProductSku(sku);
                     switch (type) {
-                        case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, soup);
-                        case REVIEW_PAGE -> amazonParser.parseReviewPage(entity, soup);
+                        case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, soup, true);
+                        case REVIEW_PAGE -> amazonParser.parseReviewPage(entity, soup, true);
+                        case QUESTION_PAGE -> amazonParser.parseProductQuestions(entity, soup, true);
                         case ANSWER_PAGE -> amazonParser.parseProductAnswers(sku, soup);
-                        case QUESTION_PAGE -> amazonParser.parseProductQuestions(entity, soup);
+
                     }
 
                 }

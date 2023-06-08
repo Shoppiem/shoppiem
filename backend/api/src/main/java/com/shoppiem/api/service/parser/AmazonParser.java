@@ -8,13 +8,13 @@ import java.util.List;
  */
 public interface AmazonParser {
   String bodyDelimiter = "\n--------SHOPPIEM_BOUNDARY--------\n";
-  void parseProductPage(String sku, String soup);
+  void parseProductPage(String sku, String soup, boolean scheduleJobs);
 
   void createScrapingJobs(ProductEntity entity);
 
-  void parseReviewPage(ProductEntity entity, String soup);
+  void parseReviewPage(ProductEntity entity, String soup, boolean scheduleJobs);
 
-  void parseProductQuestions(ProductEntity entity, String soup);
+  void parseProductQuestions(ProductEntity entity, String soup, boolean scheduleJobs);
 
   void parseProductAnswers(String questionId, String soup);
 
