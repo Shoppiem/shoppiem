@@ -129,7 +129,7 @@ public class AmazonParserImpl implements AmazonParser {
     List<String> reviewUrls = generateReviewLinks(entity);
     List<String> questionUrls = generateProductQuestionLinks(entity);
     if (reviewUrls.size() > 0) {
-      String url = "https://reviews.com"; //reviewUrls.get(0);
+      String url = reviewUrls.get(0);
       ScrapingJobDto job = new ScrapingJobDto();
       job.setProductSku(entity.getProductSku());
       job.setId(ShoppiemUtils.generateUid());
@@ -138,7 +138,6 @@ public class AmazonParserImpl implements AmazonParser {
       jobs.add(job);
     }
     for (String url : questionUrls) {
-      url = "https://hello.com";
       ScrapingJobDto job = new ScrapingJobDto();
       job.setProductSku(entity.getProductSku());
       job.setId(ShoppiemUtils.generateUid());
@@ -199,7 +198,6 @@ public class AmazonParserImpl implements AmazonParser {
         reviewUrls.remove(0); // We already scraped the first page so no need to do it again
         List<ScrapingJobDto> jobs = new ArrayList<>();
         for (String url : reviewUrls) {
-          url = "https://reviews.com";
           ScrapingJobDto job = new ScrapingJobDto();
           job.setProductSku(entity.getProductSku());
           job.setId(ShoppiemUtils.generateUid());
