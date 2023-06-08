@@ -23,10 +23,6 @@ public class Consumer {
 
   public void consume(String message) throws InterruptedException {
     jobSemaphore.getSemaphore().acquire();
-    handleJob(message);
-  }
-
-  private void handleJob(String message) {
     try {
       ScrapingJobDto job = objectMapper.readValue(message, ScrapingJobDto.class);
       Thread.startVirtualThread(() ->
@@ -35,5 +31,4 @@ public class Consumer {
       log.error(e.getLocalizedMessage());
     }
   }
-
 }
