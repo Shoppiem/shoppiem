@@ -70,6 +70,10 @@ public class ProductEntity {
     private Boolean isReady = false;
 
     @Basic
+    @Column(name = "all_reviews_scheduled")
+    private Boolean allReviewsScheduled = false;
+
+    @Basic
     @Column(name = "star_rating")
     private Double starRating = 0.0;
 

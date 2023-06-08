@@ -83,11 +83,11 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         log.info("  Testcase: " + method.getName() + " has ended");
     }
 
-    @Test(enabled = false)
+    @Test
     public void getContentTest() {
         String url = "https://www.amazon.com/Belkin-Boost%E2%86%91ChargeTM-Wireless-Compatible-Kickstand/dp/B0BXRMCC31/?_encoding=UTF8&pd_rd_w=dyu4M&content-id=amzn1.sym.c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_p=c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_r=CVH3RSQQQDGMZPB008AQ&pd_rd_wg=B4Bru&pd_rd_r=08f1c561-28fd-45c0-8d24-ca21537303c7&ref_=pd_gw_gcx_gw_EGG-Graduation-23-1a&th=1";
         String sku = "B0BXRMCC31";
-        scraperService.scrape(sku, url, JobType.PRODUCT_PAGE);
+        scraperService.scrape(sku, url, JobType.PRODUCT_PAGE, false);
     }
 
     @Test
@@ -140,7 +140,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         productRepo.save(entity);
         String soup = loadFromFile("scraper/amazonProductPage_Electronics.html");
         amazonParser.parseProductPage(sku, soup, false);
-        List<String> reviewLinks = amazonParser.generateReviewLinks(entity);
+        List<String> reviewLinks = amazonParser.generateReviewLinks(productRepo.findByProductSku(sku));
         assertEquals(2679, reviewLinks.size());
         for (String reviewLink : reviewLinks) {
             assertTrue(reviewLink.contains("amazon.com"));
@@ -201,7 +201,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = loadFromFile("scraper/AmazonProductReviewPage.html");
-        amazonParser.parseReviewPage(entity, soup, false);
+        amazonParser.parseReviewPage(entity, soup);
 
         List<ReviewEntity> reviews = reviewRepo.findAllByProductId(entity.getId());
         assertEquals(10, reviews.size());

@@ -19,5 +19,5 @@ public interface ScraperService {
      * @param url
      * @return
      */
-    void scrape(String sku, String url, JobType type);
+    void scrape(String sku, String url, JobType type, boolean scheduleJobs);
 }

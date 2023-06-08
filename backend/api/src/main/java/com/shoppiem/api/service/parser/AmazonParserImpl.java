@@ -98,8 +98,8 @@ public class AmazonParserImpl implements AmazonParser {
     walkHelper(doc, bookDescFeatureXPath, bookDescription, 3, true);
 
     ProductEntity entity = productRepo.findByProductSku(sku);
-    entity.setStarRating(starRating);
     entity.setNumReviews(numReviews);
+    entity.setStarRating(starRating);
     entity.setNumQuestionsAnswered(numQuestionsAnswered);
     entity.setCurrency("USD");
     entity.setUpdatedAt(LocalDateTime.now());
@@ -116,17 +116,20 @@ public class AmazonParserImpl implements AmazonParser {
         bookDescription)));
     productRepo.save(entity);
     if (scheduleJobs) {
-//      createScrapingJobs(entity);
+      scheduleScrapingJobs(entity);
     }
   }
 
   @Override
-  public void createScrapingJobs(ProductEntity entity) {
+  public void scheduleScrapingJobs(ProductEntity entity) {
+    // Set the number of reviews to cover only the first page of the reviews if numReviews is greater
+    // than 0. The real review count is on that page, which we will have to scrape first and parse
+    // downstream.
+    List<ScrapingJobDto> jobs = new ArrayList<>();
     List<String> reviewUrls = generateReviewLinks(entity);
     List<String> questionUrls = generateProductQuestionLinks(entity);
-    List<ScrapingJobDto> jobs = new ArrayList<>();
-    for (String url : reviewUrls) {
-      url = "https://hello.com";
+    if (reviewUrls.size() > 0) {
+      String url = "https://reviews.com"; //reviewUrls.get(0);
       ScrapingJobDto job = new ScrapingJobDto();
       job.setProductSku(entity.getProductSku());
       job.setId(ShoppiemUtils.generateUid());
@@ -143,6 +146,10 @@ public class AmazonParserImpl implements AmazonParser {
       job.setType(JobType.QUESTION_PAGE);
       jobs.add(job);
     }
+    submitJobs(jobs);
+  }
+
+  private void submitJobs(List<ScrapingJobDto> jobs) {
     for (ScrapingJobDto job : jobs) {
       try {
         String jobString = objectMapper.writeValueAsString(job);
@@ -157,12 +164,15 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
   @Override
-  public void parseReviewPage(ProductEntity productEntity, String soup, boolean scheduleJobs) {
+  public void parseReviewPage(ProductEntity productEntity, String soup) {
     Document doc = Jsoup.parse(soup);
     String allReviewsXPath = "//*[@id=\"cm_cr-review_list\"]";
     Map<String, ReviewEntity> reviews = new HashMap<>();
     ReviewEntity entity = new ReviewEntity();
     entity.setProductId(productEntity.getId());
+    if (!productEntity.getAllReviewsScheduled()) {
+      scheduleReviewScraping(soup, productEntity.getProductSku());
+    }
     for (Element element : doc.selectXpath(allReviewsXPath)) {
       walkReviewsHelper(element, reviews);
     }
@@ -171,6 +181,37 @@ public class AmazonParserImpl implements AmazonParser {
       it.setMerchant(Merchant.AMAZON.name());
       return it;
     }).collect(Collectors.toList()));
+  }
+
+  private void scheduleReviewScraping(String soup, String productSku) {
+    try {
+      long numReviews = Long.parseLong(soup.substring(
+              soup.indexOf("total ratings"), soup.indexOf("with reviews"))
+          .split("total ratings")[1]
+          .replace(",","").strip());
+      if (numReviews > 0) {
+        ProductEntity entity = productRepo.findByProductSku(productSku);
+        entity.setNumReviews(numReviews);
+        entity.setAllReviewsScheduled(true);
+        productRepo.save(entity);
+        log.info("Total reviews: {}", numReviews);
+        List<String> reviewUrls = generateReviewLinks(entity);
+        reviewUrls.remove(0); // We already scraped the first page so no need to do it again
+        List<ScrapingJobDto> jobs = new ArrayList<>();
+        for (String url : reviewUrls) {
+          url = "https://reviews.com";
+          ScrapingJobDto job = new ScrapingJobDto();
+          job.setProductSku(entity.getProductSku());
+          job.setId(ShoppiemUtils.generateUid());
+          job.setUrl(url);
+          job.setType(JobType.REVIEW_PAGE);
+          jobs.add(job);
+        }
+        submitJobs(jobs);
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
   }
 
   @Override

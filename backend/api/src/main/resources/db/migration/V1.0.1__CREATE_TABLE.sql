@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS public.product (
     price numeric(8,2),
     currency varchar(8),
     num_reviews bigint default 0,
+    all_reviews_scheduled boolean not null default false,
     is_ready boolean default false,
     num_questions_answered bigint default 0,
     star_rating numeric(2,1) not null default 0.0,

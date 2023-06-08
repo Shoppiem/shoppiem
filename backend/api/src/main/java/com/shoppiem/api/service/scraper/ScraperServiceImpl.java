@@ -28,7 +28,7 @@ public class ScraperServiceImpl implements ScraperService {
     private final ProductRepo productRepo;
 
     @Override
-    public void scrape(String sku, String url, JobType type) {
+    public void scrape(String sku, String url, JobType type, boolean scheduleJobs) {
         try { // TODO: check that the content can be processed before scraping
             log.info("Scraping {} at {}", sku, url);
             Merchant merchant = getPlatform(url);
@@ -41,9 +41,9 @@ public class ScraperServiceImpl implements ScraperService {
                 if (Objects.requireNonNull(merchant) == Merchant.AMAZON) {
                     ProductEntity entity = productRepo.findByProductSku(sku);
                     switch (type) {
-                        case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, soup, true);
-                        case REVIEW_PAGE -> amazonParser.parseReviewPage(entity, soup, true);
-                        case QUESTION_PAGE -> amazonParser.parseProductQuestions(entity, soup, true);
+                        case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, soup, scheduleJobs);
+                        case QUESTION_PAGE -> amazonParser.parseProductQuestions(entity, soup, scheduleJobs);
+                        case REVIEW_PAGE -> amazonParser.parseReviewPage(entity, soup);
                         case ANSWER_PAGE -> amazonParser.parseProductAnswers(sku, soup);
 
                     }
