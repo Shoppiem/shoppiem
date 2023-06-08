@@ -22,6 +22,6 @@ public class JobSemaphore {
   private final ScraperProps scraperProps;
 
   @Getter
-  private final Semaphore semaphore = new Semaphore(1000);
+  private final Semaphore semaphore = new Semaphore(scraperProps.getThreadCount());
 
 }
