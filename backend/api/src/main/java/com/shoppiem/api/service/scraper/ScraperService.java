@@ -1,5 +1,7 @@
 package com.shoppiem.api.service.scraper;
 
+import com.shoppiem.api.dto.ScrapingJobDto.JobType;
+
 /**
  * @author Bizuwork Melesse
  * created on 6/17/22
@@ -17,5 +19,5 @@ public interface ScraperService {
      * @param url
      * @return
      */
-    void scrape(String sku, String url);
+    void scrape(String sku, String url, JobType type);
 }

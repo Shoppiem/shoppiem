@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.ProductCreateResponse;
 import com.shoppiem.api.ProductRequest;
+import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.dto.ScrapingJobDto;
 import com.shoppiem.api.dto.ScrapingJobDto.JobType;
@@ -31,9 +32,12 @@ public class ProductServiceImpl implements ProductService {
     var productSku = parseProductSku(productRequest.getProductUrl());
     var entity = productRepo.findByProductSku(productSku);
     if (entity == null) {
+      entity = new ProductEntity();
+      entity.setProductSku(productSku);
+      productRepo.save(entity);
       ScrapingJobDto job = new ScrapingJobDto();
-      job.setProductSku(ShoppiemUtils.generateUid());
-      job.setId(job.getProductSku());
+      job.setProductSku(productSku);
+      job.setId(ShoppiemUtils.generateUid());
       job.setUrl(productRequest.getProductUrl());
       job.setType(JobType.PRODUCT_PAGE);
       try {

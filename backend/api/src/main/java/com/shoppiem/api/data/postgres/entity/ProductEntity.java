@@ -71,7 +71,7 @@ public class ProductEntity {
 
     @Basic
     @Column(name = "star_rating")
-    private Double starRating;
+    private Double starRating = 0.0;
 
     @Basic
     @Column(name = "num_questions_answered")

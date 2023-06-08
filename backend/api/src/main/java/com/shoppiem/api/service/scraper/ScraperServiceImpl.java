@@ -2,6 +2,9 @@ package com.shoppiem.api.service.scraper;
 
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
+import com.shoppiem.api.data.postgres.entity.ProductEntity;
+import com.shoppiem.api.data.postgres.repo.ProductRepo;
+import com.shoppiem.api.dto.ScrapingJobDto.JobType;
 import com.shoppiem.api.service.parser.AmazonParser;
 import com.shoppiem.api.service.utils.JobSemaphore;
 import java.net.MalformedURLException;
@@ -22,9 +25,10 @@ public class ScraperServiceImpl implements ScraperService {
     private final AmazonParser amazonParser;
     private final ScraperUtils scraperUtils;
     private final JobSemaphore jobSemaphore;
+    private final ProductRepo productRepo;
 
     @Override
-    public void scrape(String sku, String url) {
+    public void scrape(String sku, String url, JobType type) {
         try { // TODO: check that the content can be processed before scraping
             log.info("Scraping {} at {}", sku, url);
             Merchant merchant = getPlatform(url);
@@ -35,7 +39,14 @@ public class ScraperServiceImpl implements ScraperService {
             if (statusCode >= 200 && statusCode < 400 ) {
                 String soup = page.getWebResponse().getContentAsString();
                 if (Objects.requireNonNull(merchant) == Merchant.AMAZON) {
-                    amazonParser.parseProductPage(sku, soup);
+                    ProductEntity entity = productRepo.findByProductSku(sku);
+                    switch (type) {
+                        case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, soup);
+                        case REVIEW_PAGE -> amazonParser.parseReviewPage(entity, soup);
+                        case ANSWER_PAGE -> amazonParser.parseProductAnswers(sku, soup);
+                        case QUESTION_PAGE -> amazonParser.parseProductQuestions(entity, soup);
+                    }
+
                 }
             }
         } catch (Exception e) {

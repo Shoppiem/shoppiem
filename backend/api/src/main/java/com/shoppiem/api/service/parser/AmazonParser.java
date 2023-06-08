@@ -12,15 +12,15 @@ public interface AmazonParser {
 
   void createScrapingJobs(ProductEntity entity);
 
-  void parseReviewPage(Long productId, String soup);
+  void parseReviewPage(ProductEntity entity, String soup);
 
-  void parseProductQuestions(Long productId, String soup);
+  void parseProductQuestions(ProductEntity entity, String soup);
 
   void parseProductAnswers(String questionId, String soup);
 
-  List<String> generateReviewLinks(String sku);
+  List<String> generateReviewLinks(ProductEntity entity);
 
-  List<String> generateProductQuestionLinks(String sku);
+  List<String> generateProductQuestionLinks(ProductEntity entity);
 
   List<String> generateAnswerLinks(String questionId);
 

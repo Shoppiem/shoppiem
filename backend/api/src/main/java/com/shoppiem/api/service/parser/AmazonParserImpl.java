@@ -1,5 +1,6 @@
 package com.shoppiem.api.service.parser;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.data.postgres.entity.ProductAnswerEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
@@ -9,8 +10,11 @@ import com.shoppiem.api.data.postgres.repo.ProductAnswerRepo;
 import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.data.postgres.repo.ReviewRepo;
+import com.shoppiem.api.dto.ScrapingJobDto;
+import com.shoppiem.api.dto.ScrapingJobDto.JobType;
 import com.shoppiem.api.props.RabbitMQProps;
 import com.shoppiem.api.service.scraper.Merchant;
+import com.shoppiem.api.service.utils.ShoppiemUtils;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -116,33 +120,65 @@ public class AmazonParserImpl implements AmazonParser {
 
   @Override
   public void createScrapingJobs(ProductEntity entity) {
-//    generateReviewLinks(entity);
+    List<String> reviewUrls = generateReviewLinks(entity);
+    List<String> questionUrls = generateProductQuestionLinks(entity);
+    List<ScrapingJobDto> jobs = new ArrayList<>();
+    for (String url : reviewUrls) {
+      url = "https://hello.com";
+      ScrapingJobDto job = new ScrapingJobDto();
+      job.setProductSku(entity.getProductSku());
+      job.setId(ShoppiemUtils.generateUid());
+      job.setUrl(url);
+      job.setType(JobType.REVIEW_PAGE);
+      jobs.add(job);
+    }
+    for (String url : questionUrls) {
+      url = "https://hello.com";
+      ScrapingJobDto job = new ScrapingJobDto();
+      job.setProductSku(entity.getProductSku());
+      job.setId(ShoppiemUtils.generateUid());
+      job.setUrl(url);
+      job.setType(JobType.QUESTION_PAGE);
+      jobs.add(job);
+    }
+    for (ScrapingJobDto job : jobs) {
+      try {
+        String jobString = objectMapper.writeValueAsString(job);
+        rabbitTemplate.convertAndSend(
+            rabbitMQProps.getTopicExchange(),
+            rabbitMQProps.getRoutingKeyPrefix() + job.getProductSku(),
+            jobString);
+      } catch (JsonProcessingException e) {
+        log.error(e.getLocalizedMessage());
+      }
+    }
   }
 
   @Override
-  public void parseReviewPage(Long productId, String soup) {
+  public void parseReviewPage(ProductEntity productEntity, String soup) {
     Document doc = Jsoup.parse(soup);
     String allReviewsXPath = "//*[@id=\"cm_cr-review_list\"]";
     Map<String, ReviewEntity> reviews = new HashMap<>();
     ReviewEntity entity = new ReviewEntity();
-    entity.setProductId(productId);
+    entity.setProductId(productEntity.getId());
     for (Element element : doc.selectXpath(allReviewsXPath)) {
       walkReviewsHelper(element, reviews);
     }
     reviewRepo.saveAll(reviews.values().stream().map(it -> {
-      it.setProductId(productId);
+      it.setProductId(productEntity.getId());
       it.setMerchant(Merchant.AMAZON.name());
       return it;
     }).collect(Collectors.toList()));
   }
 
   @Override
-  public void parseProductQuestions(Long productId, String soup) {
+  public void parseProductQuestions(ProductEntity productEntity, String soup) {
     Document doc = Jsoup.parse(soup);
     Map<String, QuestionAnswerContainer> questions = new HashMap<>();
     for (Node childNode : doc.childNodes()) {
       questionWalk(childNode, false, questions);
     }
+    Long productId = productEntity.getId();
     List<ProductQuestionEntity> questionEntities = questions.values()
         .stream()
         .map(it -> {
@@ -493,10 +529,10 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
   @Override
-  public List<String> generateReviewLinks(String sku) {
-    ProductEntity entity = productRepo.findByProductSku(sku);
+  public List<String> generateReviewLinks(ProductEntity entity) {
     List<String> urls = new ArrayList<>();
     if (entity != null) {
+      String sku = entity.getProductSku();
       long numReviews = entity.getNumReviews();
       long numPages = numReviews / 10;
       if (numReviews % 10 > 0) {
@@ -520,10 +556,10 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
   @Override
-  public List<String> generateProductQuestionLinks(String sku) {
-    ProductEntity entity = productRepo.findByProductSku(sku);
+  public List<String> generateProductQuestionLinks(ProductEntity entity) {
     List<String> urls = new ArrayList<>();
     if (entity != null) {
+      String sku = entity.getProductSku();
       long numQuestions = entity.getNumQuestionsAnswered();
       long numPages = numQuestions / 10;
       if (numQuestions % 10 > 0) {

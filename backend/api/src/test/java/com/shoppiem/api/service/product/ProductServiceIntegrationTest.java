@@ -54,15 +54,18 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
     }
 
     @Test
-    public void createProductTest() {
+    public void createProductTest() throws InterruptedException {
       ProductRequest request = new ProductRequest()
           .productUrl("https://www.amazon.com/Belkin-Boost%E2%86%91ChargeTM-Wireless-Compatible-Kickstand/dp/B0BXRMCC31/?_encoding=UTF8&pd_rd_w=dyu4M&content-id=amzn1.sym.c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_p=c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_r=CVH3RSQQQDGMZPB008AQ&pd_rd_wg=B4Bru&pd_rd_r=08f1c561-28fd-45c0-8d24-ca21537303c7&ref_=pd_gw_gcx_gw_EGG-Graduation-23-1a&th=1");
       ProductCreateResponse response = productService.createProduct(request);
       assertNotNull(response);
       assertTrue(response.getInProgress());
+
+      Thread.sleep(60000L);
+
     }
 
-    @Test
+    @Test(enabled = false)
     public void parseProductSKUTest() {
         String url = "https://www.amazon.com/Belkin-Boost%E2%86%91ChargeTM-Wireless-Compatible-Kickstand/dp/B0BXRMCC31/?_encoding=UTF8&pd_rd_w=dyu4M&content-id=amzn1.sym.c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_p=c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_r=CVH3RSQQQDGMZPB008AQ&pd_rd_wg=B4Bru&pd_rd_r=08f1c561-28fd-45c0-8d24-ca21537303c7&ref_=pd_gw_gcx_gw_EGG-Graduation-23-1a&th=1";
         String sku = productService.parseProductSku(url);

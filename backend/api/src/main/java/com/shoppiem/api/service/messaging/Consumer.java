@@ -29,15 +29,8 @@ public class Consumer {
   private void handleJob(String message) {
     try {
       ScrapingJobDto job = objectMapper.readValue(message, ScrapingJobDto.class);
-      JobType type = job.getType();
-      switch (type) {
-        case PRODUCT_PAGE -> Thread.startVirtualThread(
-            () -> scraperService.scrape(job.getProductSku(), job.getUrl()));
-        case REVIEW_PAGE -> {}
-        case ANSWER_PAGE -> {}
-        case QUESTION_PAGE -> {}
-        case default -> {}
-      }
+      Thread.startVirtualThread(() ->
+          scraperService.scrape(job.getProductSku(), job.getUrl(), JobType.PRODUCT_PAGE));
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
     }

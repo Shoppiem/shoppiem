@@ -12,6 +12,7 @@ import com.shoppiem.api.data.postgres.repo.ProductAnswerRepo;
 import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.data.postgres.repo.ReviewRepo;
+import com.shoppiem.api.dto.ScrapingJobDto.JobType;
 import com.shoppiem.api.service.ServiceTestConfiguration;
 import com.shoppiem.api.service.parser.AmazonParser;
 import com.shoppiem.api.utils.migration.FlywayMigration;
@@ -22,11 +23,11 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.util.List;
 import lombok.extern.slf4j.Slf4j;
-import org.flywaydb.core.internal.util.FileCopyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.test.context.testng.AbstractTestNGSpringContextTests;
+import org.springframework.util.FileCopyUtils;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
@@ -86,7 +87,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
     public void getContentTest() {
         String url = "https://www.amazon.com/Belkin-Boost%E2%86%91ChargeTM-Wireless-Compatible-Kickstand/dp/B0BXRMCC31/?_encoding=UTF8&pd_rd_w=dyu4M&content-id=amzn1.sym.c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_p=c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_r=CVH3RSQQQDGMZPB008AQ&pd_rd_wg=B4Bru&pd_rd_r=08f1c561-28fd-45c0-8d24-ca21537303c7&ref_=pd_gw_gcx_gw_EGG-Graduation-23-1a&th=1";
         String sku = "B0BXRMCC31";
-        scraperService.scrape(sku, url);
+        scraperService.scrape(sku, url, JobType.PRODUCT_PAGE);
     }
 
     @Test(enabled = true)
@@ -139,7 +140,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         productRepo.save(entity);
         String soup = loadFromFile("scraper/amazonProductPage_Electronics.html");
         amazonParser.parseProductPage(sku, soup);
-        List<String> reviewLinks = amazonParser.generateReviewLinks(sku);
+        List<String> reviewLinks = amazonParser.generateReviewLinks(entity);
         assertEquals(2679, reviewLinks.size());
         for (String reviewLink : reviewLinks) {
             assertTrue(reviewLink.contains("amazon.com"));
@@ -158,7 +159,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         productRepo.save(entity);
         String soup = loadFromFile("scraper/amazonProductPage_Electronics.html");
         amazonParser.parseProductPage(sku, soup);
-        List<String> questionLinks = amazonParser.generateProductQuestionLinks(sku);
+        List<String> questionLinks = amazonParser.generateProductQuestionLinks(entity);
         assertEquals(90, questionLinks.size());
         for (String reviewLink : questionLinks) {
             assertTrue(reviewLink.contains("amazon.com"));
@@ -200,7 +201,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = loadFromFile("scraper/AmazonProductReviewPage.html");
-        amazonParser.parseReviewPage(entity.getId(), soup);
+        amazonParser.parseReviewPage(entity, soup);
 
         List<ReviewEntity> reviews = reviewRepo.findAllByProductId(entity.getId());
         assertEquals(10, reviews.size());
@@ -228,7 +229,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         productRepo.save(entity);
         String soup = loadFromFile("scraper/AmazonProductQuestionPage.html");
         Long productId = entity.getId();
-        amazonParser.parseProductQuestions(productId, soup);
+        amazonParser.parseProductQuestions(entity, soup);
         List<ProductQuestionEntity> questionEntities = productQuestionRepo.findByProductId(productId);
         List<ProductAnswerEntity> answerEntities = productAnswerRepo.findByProductId(productId);
         assertEquals(questionEntities.size(), 10);
@@ -255,8 +256,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
 
-        Long productId = entity.getId();
-        amazonParser.parseProductQuestions(productId, loadFromFile("scraper/AmazonProductQuestionPage.html"));
+        amazonParser.parseProductQuestions(entity, loadFromFile("scraper/AmazonProductQuestionPage.html"));
 
         String soup = loadFromFile("scraper/AmazonProductAnswerPage.html");
         String questionId = "Tx1C9YPPCCBMZI8";
