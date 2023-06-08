@@ -29,7 +29,6 @@ import java.util.concurrent.Executors;
 @RequiredArgsConstructor
 public class RootConfiguration {
   private final FlywayMigration flywayMigration;
-  public static final ExecutorService executor = Executors.newCachedThreadPool();
 
   @PostConstruct
   public void onStart() {

@@ -1,6 +1,7 @@
-package com.shoppiem.api.service.messaging;
+package com.shoppiem.api.service;
 
 import com.shoppiem.api.props.RabbitMQProps;
+import com.shoppiem.api.service.messaging.Consumer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
@@ -20,7 +21,6 @@ import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 @RequiredArgsConstructor
 public class RabbitMQConfiguration {
 
-  private final Consumer consumer;
   private final RabbitMQProps rabbitMQProps;
 
   @Bean
@@ -59,11 +59,6 @@ public class RabbitMQConfiguration {
     container.setQueueNames(rabbitMQProps.getJobQueue());
     container.setMessageListener(listenerAdapter);
     return container;
-  }
-
-  @Bean
-  MessageListenerAdapter scrapingJobListener() {
-    return new MessageListenerAdapter(consumer, "consume");
   }
 
 }
