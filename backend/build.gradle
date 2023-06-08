@@ -4,7 +4,6 @@ plugins {
   id 'org.springframework.boot' version '3.1.0'
   id "io.spring.dependency-management" version '1.0.11.RELEASE'
   id "org.flywaydb.flyway" version "7.15.0"
-  id 'jacoco'
   id 'groovy'
 }
 
@@ -49,7 +48,6 @@ configure(subprojects.findAll(it ->
   apply plugin: 'org.springframework.boot'
   apply plugin: 'java-library'
   apply plugin: 'application'
-  apply plugin: 'jacoco'
   apply plugin: 'org.openapi.generator'
   apply plugin: 'io.swagger.core.v3.swagger-gradle-plugin'
 
@@ -69,7 +67,6 @@ configure(subprojects.findAll(it ->
     implementation 'org.jsoup:jsoup:1.15.1'
     implementation 'net.sourceforge.htmlunit:htmlunit:2.62.0'
     implementation 'org.seleniumhq.selenium:selenium-java:4.2.2'
-//    implementation 'com.vladmihalcea:hibernate-types-52:2.19.2'
     implementation 'io.springfox:springfox-boot-starter:3.0.0'
     implementation 'javax.validation:validation-api:2.0.1.Final'
     implementation 'org.openapitools:jackson-databind-nullable:0.2.1'
@@ -113,7 +110,6 @@ configure(subprojects.findAll(it ->
   tasks.withType(JavaCompile) {
     options.compilerArgs = [
             "--enable-preview"
-      // '-Amapstruct.suppressGeneratorTimestamp=true'
     ]
   }
 
@@ -129,6 +125,7 @@ configure(subprojects.findAll(it ->
     ]
     reports.html.required = true
     reports.junitXml.required = false
+    jvmArgs(['--enable-preview'])
   }
 
   run {
@@ -149,19 +146,9 @@ configure(subprojects.findAll(it ->
     launchScript()
   }
 
-  jacocoTestReport {
-    dependsOn test
-    reports {
-      xml.required = false
-      csv.required = false
-      html.required = false
-      html.outputLocation = layout.buildDirectory.dir('jacocoHtml')
-    }
-  }
-
   compileJava {
     options.encoding = 'UTF-8'
-    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation" << "--enable-preview"
+    options.compilerArgs << "-Xlint:unchecked" << "-Xlint:deprecation"
   }
 
   compileTestJava {
