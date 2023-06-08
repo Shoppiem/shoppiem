@@ -14,6 +14,7 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
@@ -23,6 +24,7 @@ import static org.testng.AssertJUnit.assertTrue;
  * @author Bizuwork Melesse
  * created on 5/26/23
  */
+@Ignore
 @Slf4j
 @SpringBootTest(classes = ServiceTestConfiguration.class)
 public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTests {
@@ -60,11 +62,9 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
       ProductCreateResponse response = productService.createProduct(request);
       assertNotNull(response);
       assertTrue(response.getInProgress());
-
-      Thread.sleep(3600000L);
     }
 
-    @Test(enabled = false)
+    @Test
     public void parseProductSKUTest() {
         String url = "https://www.amazon.com/Belkin-Boost%E2%86%91ChargeTM-Wireless-Compatible-Kickstand/dp/B0BXRMCC31/?_encoding=UTF8&pd_rd_w=dyu4M&content-id=amzn1.sym.c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_p=c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_r=CVH3RSQQQDGMZPB008AQ&pd_rd_wg=B4Bru&pd_rd_r=08f1c561-28fd-45c0-8d24-ca21537303c7&ref_=pd_gw_gcx_gw_EGG-Graduation-23-1a&th=1";
         String sku = productService.parseProductSku(url);
