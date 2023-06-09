@@ -53,8 +53,7 @@ CREATE TABLE IF NOT EXISTS public.review (
     body varchar,
     submitted_at timestamptz,
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(review_id, product_id)
+    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
   );
 ALTER TABLE public.review OWNER TO root;
 
@@ -67,8 +66,7 @@ CREATE TABLE IF NOT EXISTS public.product_question (
     upvotes bigint,
     asked_at timestamptz,
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE(question_id)
+    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ALTER TABLE public.product_question OWNER TO root;
 
