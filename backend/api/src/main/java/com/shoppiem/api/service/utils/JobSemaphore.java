@@ -2,7 +2,6 @@ package com.shoppiem.api.service.utils;
 
 import com.shoppiem.api.props.ScraperProps;
 import java.util.concurrent.Semaphore;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -21,7 +20,14 @@ public class JobSemaphore {
    */
   private final ScraperProps scraperProps;
 
-  @Getter
-  private final Semaphore semaphore = new Semaphore(scraperProps.getThreadCount());
+  private Semaphore semaphore = null;
+
+
+  public Semaphore getSemaphore() {
+    if (semaphore == null) {
+      semaphore = new Semaphore(5);
+    }
+    return semaphore;
+  }
 
 }
