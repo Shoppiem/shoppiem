@@ -39,6 +39,7 @@ public class ProductServiceImpl implements ProductService {
       job.setProductSku(productSku);
       job.setId(ShoppiemUtils.generateUid());
       job.setUrl(productRequest.getProductUrl());
+//      job.setUrl("https://" + ShoppiemUtils.generateUid() + ".com");
       job.setType(JobType.PRODUCT_PAGE);
       try {
         String jobString = objectMapper.writeValueAsString(job);

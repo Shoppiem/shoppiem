@@ -24,7 +24,8 @@ public class ScraperUtils {
 
     public WebClient getWebClient() {
         // User user agent
-        BrowserVersionBuilder browserVersion = new BrowserVersion.BrowserVersionBuilder(BrowserVersion.CHROME);
+        BrowserVersionBuilder browserVersion = new BrowserVersion.BrowserVersionBuilder(BrowserVersion.CHROME)
+            .setUserAgent(scraperProps.getUserAgent());
         browserVersion.setUserAgent(scraperProps.getUserAgent());
         WebClient webClient = new WebClient(browserVersion.build());
         webClient.addRequestHeader("User-Agent", scraperProps.getUserAgent());
@@ -34,7 +35,7 @@ public class ScraperUtils {
         ProxyConfig proxyConfig = new ProxyConfig(proxyIpWithPort.getFirst(), proxyIpWithPort.getSecond(), "http");
         webClient.getOptions().setProxyConfig(proxyConfig);
 
-        webClient.getOptions().setCssEnabled(false);
+        webClient.getOptions().setCssEnabled(true);
         webClient.getOptions().setJavaScriptEnabled(false);
         webClient.getOptions().setThrowExceptionOnScriptError(false);
         webClient.getOptions().setPrintContentOnFailingStatusCode(false);

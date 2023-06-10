@@ -21,6 +21,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -128,6 +129,8 @@ public class AmazonParserImpl implements AmazonParser {
     List<ScrapingJobDto> jobs = new ArrayList<>();
     List<String> reviewUrls = generateReviewLinks(entity);
     List<String> questionUrls = generateProductQuestionLinks(entity);
+    Collections.shuffle(reviewUrls);
+    Collections.shuffle(questionUrls);
     if (reviewUrls.size() > 0) {
       String url = reviewUrls.get(0);
       ScrapingJobDto job = new ScrapingJobDto();
@@ -196,6 +199,7 @@ public class AmazonParserImpl implements AmazonParser {
         log.info("Total reviews: {}", numReviews);
         List<String> reviewUrls = generateReviewLinks(entity);
         reviewUrls.remove(0); // We already scraped the first page so no need to do it again
+        Collections.shuffle(reviewUrls);
         List<ScrapingJobDto> jobs = new ArrayList<>();
         for (String url : reviewUrls) {
           ScrapingJobDto job = new ScrapingJobDto();

@@ -20,13 +20,14 @@ public class Consumer {
   private final ObjectMapper objectMapper;
   private final ScraperService scraperService;
   private final JobSemaphore jobSemaphore;
+  private final int numRetries = 10;
 
   public void consume(String message) throws InterruptedException {
     jobSemaphore.getSemaphore().acquire();
     try {
       ScrapingJobDto job = objectMapper.readValue(message, ScrapingJobDto.class);
       Thread.startVirtualThread(() ->
-          scraperService.scrape(job.getProductSku(), job.getUrl(), job.getType(), true));
+          scraperService.scrape(job.getProductSku(), job.getUrl(), job.getType(), true, numRetries));
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
     }
