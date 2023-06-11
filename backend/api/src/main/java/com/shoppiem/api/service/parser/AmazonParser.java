@@ -10,7 +10,9 @@ public interface AmazonParser {
   String bodyDelimiter = "\n--------SHOPPIEM_BOUNDARY--------\n";
   void parseProductPage(String sku, String soup, boolean scheduleJobs);
 
-  void scheduleScrapingJobs(ProductEntity entity);
+  void scheduleQandAScraping(ProductEntity entity);
+
+  void scheduleInitialReviewScraping(ProductEntity entity);
 
   void parseReviewPage(ProductEntity entity, String soup);
 

@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -117,28 +118,16 @@ public class AmazonParserImpl implements AmazonParser {
         bookDescription)));
     productRepo.save(entity);
     if (scheduleJobs) {
-      scheduleScrapingJobs(entity);
+      scheduleQandAScraping(entity);
+      scheduleInitialReviewScraping(entity);
     }
   }
 
   @Override
-  public void scheduleScrapingJobs(ProductEntity entity) {
-    // Set the number of reviews to cover only the first page of the reviews if numReviews is greater
-    // than 0. The real review count is on that page, which we will have to scrape first and parse
-    // downstream.
+  public void scheduleQandAScraping(ProductEntity entity) {
     List<ScrapingJobDto> jobs = new ArrayList<>();
-    List<String> reviewUrls = generateReviewLinks(entity);
     List<String> questionUrls = generateProductQuestionLinks(entity);
     Collections.shuffle(questionUrls);
-    if (reviewUrls.size() > 0) {
-      String url = reviewUrls.get(0);
-      ScrapingJobDto job = new ScrapingJobDto();
-      job.setProductSku(entity.getProductSku());
-      job.setId(ShoppiemUtils.generateUid());
-      job.setUrl(url);
-      job.setType(JobType.REVIEW_PAGE);
-      jobs.add(job);
-    }
     for (String url : questionUrls) {
       ScrapingJobDto job = new ScrapingJobDto();
       job.setProductSku(entity.getProductSku());
@@ -150,6 +139,29 @@ public class AmazonParserImpl implements AmazonParser {
     submitJobs(jobs);
   }
 
+  @Override
+  public void scheduleInitialReviewScraping(ProductEntity entity) {
+    // Set the number of reviews to cover only the first page of the reviews if numReviews is greater
+    // than 0. The real review count is on that page, which we will have to scrape first and parse
+    // downstream.
+    List<ScrapingJobDto> jobs = new ArrayList<>();
+    List<String> reviewUrls = generateReviewLinks(entity);
+    if (reviewUrls.size() > 0) {
+      String url = reviewUrls.get(0);
+      ScrapingJobDto job = new ScrapingJobDto();
+      job.setProductSku(entity.getProductSku());
+      job.setId(ShoppiemUtils.generateUid());
+      job.setUrl(url);
+      job.setType(JobType.REVIEW_PAGE);
+      jobs.add(job);
+      submitJobs(jobs);
+    } else {
+      log.info("Product {} has no reviews. Skipping review scraping...",
+          entity.getProductSku());
+    }
+  }
+
+  
   private void submitJobs(List<ScrapingJobDto> jobs) {
     for (ScrapingJobDto job : jobs) {
       try {
@@ -172,7 +184,7 @@ public class AmazonParserImpl implements AmazonParser {
     ReviewEntity entity = new ReviewEntity();
     entity.setProductId(productEntity.getId());
     if (!productEntity.getAllReviewsScheduled()) {
-      scheduleReviewScraping(soup, productEntity.getProductSku());
+      scheduleAllReviewScraping(soup, productEntity.getProductSku());
     }
     for (Element element : doc.selectXpath(allReviewsXPath)) {
       walkReviewsHelper(element, reviews);
@@ -184,35 +196,51 @@ public class AmazonParserImpl implements AmazonParser {
     }).collect(Collectors.toList()));
   }
 
-  private void scheduleReviewScraping(String soup, String productSku) {
+  private void scheduleAllReviewScraping(String soup, String productSku) {
+    long numReviews = 0;
+    ProductEntity entity = productRepo.findByProductSku(productSku);
     try {
-      long numReviews = Long.parseLong(soup.substring(
+       numReviews = Long.parseLong(soup.substring(
               soup.indexOf("total ratings"), soup.indexOf("with reviews"))
           .split("total ratings")[1]
           .replace(",","").strip());
-      if (numReviews > 0) {
-        ProductEntity entity = productRepo.findByProductSku(productSku);
-        entity.setNumReviews(numReviews);
-        entity.setAllReviewsScheduled(true);
-        productRepo.save(entity);
-        log.info("Total reviews: {}", numReviews);
-        List<String> reviewUrls = generateReviewLinks(entity);
-        reviewUrls.remove(0); // We already scraped the first page so no need to do it again
-        Collections.shuffle(reviewUrls);
-        List<ScrapingJobDto> jobs = new ArrayList<>();
-        for (String url : reviewUrls) {
-          ScrapingJobDto job = new ScrapingJobDto();
-          job.setProductSku(entity.getProductSku());
-          job.setId(ShoppiemUtils.generateUid());
-          job.setUrl(url);
-          job.setType(JobType.REVIEW_PAGE);
-          jobs.add(job);
-        }
-        submitJobs(jobs);
-      }
     } catch (Exception e) {
       e.printStackTrace();
+      long duration = getRandomSleepTime();
+      log.info("Sleeping for {} ms and re-trying initial review scraping for {}",
+          duration, productSku);
+      try {
+        Thread.sleep(duration);
+      } catch (InterruptedException ex) {
+        log.error(ex.getLocalizedMessage());
+      }
+      scheduleInitialReviewScraping(entity);
     }
+    if (numReviews > 0) {
+      entity.setNumReviews(numReviews);
+      entity.setAllReviewsScheduled(true);
+      productRepo.save(entity);
+      log.info("Total reviews: {}", numReviews);
+      List<String> reviewUrls = generateReviewLinks(entity);
+      reviewUrls.remove(0); // We already scraped the first page so no need to do it again
+      Collections.shuffle(reviewUrls);
+      List<ScrapingJobDto> jobs = new ArrayList<>();
+      for (String url : reviewUrls) {
+        ScrapingJobDto job = new ScrapingJobDto();
+        job.setProductSku(entity.getProductSku());
+        job.setId(ShoppiemUtils.generateUid());
+        job.setUrl(url);
+        job.setType(JobType.REVIEW_PAGE);
+        jobs.add(job);
+      }
+      submitJobs(jobs);
+    }
+  }
+
+  private long getRandomSleepTime() {
+    int min = 10;
+    int max = 1000;
+    return new Random().nextLong((max - min) + 1) + min;
   }
 
   @Override
