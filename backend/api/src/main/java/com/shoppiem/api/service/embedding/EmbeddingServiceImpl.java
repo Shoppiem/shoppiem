@@ -15,6 +15,7 @@ import com.shoppiem.api.service.openai.OpenAiService;
 import com.shoppiem.api.service.openai.embedding.Embedding;
 import com.shoppiem.api.service.openai.embedding.EmbeddingRequest;
 import com.shoppiem.api.service.openai.embedding.EmbeddingResult;
+import com.shoppiem.api.service.parser.AmazonParser;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -76,7 +77,38 @@ public class EmbeddingServiceImpl implements EmbeddingService {
 
   @Override
   public void embedProduct(ProductEntity productEntity) {
+    // Split product embedding by the boundary
+    List<String> input = new ArrayList<>(List.of(productEntity
+        .getDescription().
+        split(AmazonParser.bodyDelimiter)));
+    input.add(productEntity.getTitle());
+    double price = productEntity.getPrice();
+    input.add(String.format("This product costs $%s. The price of this product is $%s. "
+            + "How much it costs is $%s",
+        price, price, price));
+    EmbeddingRequest embeddingRequest = createEmbeddingRequest(productEntity.getProductSku());
+    embeddingRequest.setInput(input);
+    EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
 
+    List<EmbeddingEntity> embeddingEntities = new ArrayList<>();
+    List<Embedding> data = result.getData();
+    for (int i = 0; i <data.size(); i++) {
+      List<Double> vector = data.get(i).getEmbedding();
+      String text = input.get(i);
+      EmbeddingEntity embedding = new EmbeddingEntity();
+      embedding.setEmbedding(vector.toArray(new Double[0]));
+      embedding.setReviewId(-1L);
+      embedding.setQuestionId(-1L);
+      embedding.setAnswerId(-1L);
+      embedding.setProductId(productEntity.getId());
+      embedding.setText(text);
+      embeddingEntities.add(embedding);
+    }
+    ProductEntity productEntityToUpdate = productRepo.findByProductSku(productEntity.getProductSku());
+    productEntityToUpdate.setHasEmbedding(true);
+    embeddingRepo.deleteAll(embeddingRepo.findAllProductDetailEmbeddings(productEntity.getId()));
+    embeddingRepo.saveAll(embeddingEntities);
+    productRepo.save(productEntityToUpdate);
   }
 
   @Override
@@ -117,6 +149,8 @@ public class EmbeddingServiceImpl implements EmbeddingService {
         embedding.setEmbedding(vector.toArray(new Double[0]));
         embedding.setReviewId(reviewId);
         embedding.setProductId(productId);
+        embedding.setQuestionId(-1L);
+        embedding.setAnswerId(-1L);
         embedding.setText(text);
         embeddingEntities.add(embedding);
         reviewEntityMap.get(reviewId).setHasEmbedding(true);

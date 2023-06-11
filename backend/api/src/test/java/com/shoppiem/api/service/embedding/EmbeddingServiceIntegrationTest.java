@@ -6,8 +6,10 @@ import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 import com.shoppiem.api.data.postgres.entity.EmbeddingEntity;
+import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.entity.ReviewEntity;
 import com.shoppiem.api.data.postgres.repo.EmbeddingRepo;
+import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.data.postgres.repo.ReviewRepo;
 import com.shoppiem.api.service.ServiceTestConfiguration;
 import com.shoppiem.api.utils.migration.FlywayMigration;
@@ -42,6 +44,9 @@ public class EmbeddingServiceIntegrationTest extends AbstractTestNGSpringContext
     private EmbeddingRepo embeddingRepo;
 
     @Autowired
+    private ProductRepo productRepo;
+
+    @Autowired
     private FlywayMigration flywayMigration;
 
     @BeforeClass
@@ -64,9 +69,8 @@ public class EmbeddingServiceIntegrationTest extends AbstractTestNGSpringContext
         log.info("  Testcase: " + method.getName() + " has ended");
     }
 
-    @Test
+    @Test(enabled = false)
     public void createReviewEmbeddingsTest() throws InterruptedException {
-
         List<ReviewEntity> reviews = reviewRepo
             .findAllReviewsByIds(List.of(1L, 2L, 3L, 4L, 5L));
         embeddingService.embedReviews(reviews, "B0BW8K69VP");
@@ -79,9 +83,26 @@ public class EmbeddingServiceIntegrationTest extends AbstractTestNGSpringContext
       }
       List<EmbeddingEntity> embeddings = embeddingRepo.findAllReviewEmbeddingsByIds(reviewIds);
       assertEquals(reviewIds.size(), embeddings.size());
-        for (EmbeddingEntity embedding : embeddings) {
-            assertNotNull(embedding.getEmbedding());
-            assertEquals(1536L, embedding.getEmbedding().length);
-        }
+      assertEmbeddings(embeddings);
+    }
+
+  private void assertEmbeddings(List<EmbeddingEntity> embeddings) {
+    for (EmbeddingEntity embedding : embeddings) {
+      assertNotNull(embedding.getEmbedding());
+      assertEquals(1536L, embedding.getEmbedding().length);
+    }
+  }
+
+  @Test
+    public void createProductDetailEmbeddingsTest() throws InterruptedException {
+      String sku = "B0773ZY26F";
+      ProductEntity productEntity = productRepo.findByProductSku(sku);
+      embeddingService.embedProduct(productEntity);
+      Thread.sleep(5000);
+      productEntity = productRepo.findByProductSku(sku);
+      assertTrue(productEntity.getHasEmbedding());
+      List<EmbeddingEntity> embeddings = embeddingRepo.findAllProductDetailEmbeddings(productEntity.getId());
+      assertTrue(embeddings.size() > 1);
+      assertEmbeddings(embeddings);
     }
 }

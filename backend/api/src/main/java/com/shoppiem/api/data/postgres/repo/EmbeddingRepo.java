@@ -26,6 +26,16 @@ public interface EmbeddingRepo extends JpaRepository<EmbeddingEntity, Long> {
       nativeQuery = true)
   List<EmbeddingEntity> findAllReviewEmbeddingsByIds(List<Long> reviewIds);
 
+  @Query(value = "SELECT * " +
+      "FROM embedding " +
+      "WHERE product_id = ?1 "
+      + "AND review_id = -1 "
+      + "AND question_id = -1 "
+      + "AND answer_id = -1",
+      nativeQuery = true)
+  List<EmbeddingEntity> findAllProductDetailEmbeddings(Long productId);
+
+
 //  Optional<ProjectEntity> findByProjectUid(String projectUid);
 //  @Query(value = "SELECT * " +
 //      "FROM project " +
