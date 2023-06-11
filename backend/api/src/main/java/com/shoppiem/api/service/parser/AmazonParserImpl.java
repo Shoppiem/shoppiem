@@ -129,7 +129,6 @@ public class AmazonParserImpl implements AmazonParser {
     List<ScrapingJobDto> jobs = new ArrayList<>();
     List<String> reviewUrls = generateReviewLinks(entity);
     List<String> questionUrls = generateProductQuestionLinks(entity);
-    Collections.shuffle(reviewUrls);
     Collections.shuffle(questionUrls);
     if (reviewUrls.size() > 0) {
       String url = reviewUrls.get(0);
