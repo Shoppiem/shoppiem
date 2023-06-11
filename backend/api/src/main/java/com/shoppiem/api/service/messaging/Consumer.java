@@ -3,7 +3,6 @@ package com.shoppiem.api.service.messaging;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.dto.ScrapingJobDto;
-import com.shoppiem.api.dto.ScrapingJobDto.JobType;
 import com.shoppiem.api.service.scraper.ScraperService;
 import com.shoppiem.api.service.utils.JobSemaphore;
 import lombok.RequiredArgsConstructor;
@@ -20,14 +19,14 @@ public class Consumer {
   private final ObjectMapper objectMapper;
   private final ScraperService scraperService;
   private final JobSemaphore jobSemaphore;
-  private final int numRetries = 10;
+  private final int numRetries = 5;
 
   public void consume(String message) throws InterruptedException {
     jobSemaphore.getSemaphore().acquire();
     try {
       ScrapingJobDto job = objectMapper.readValue(message, ScrapingJobDto.class);
       Thread.startVirtualThread(() ->
-          scraperService.scrape(job.getProductSku(), job.getUrl(), job.getType(), true, numRetries));
+          scraperService.scrape(job.getProductSku(), job.getUrl(), job.getType(), true, numRetries, false));
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
     }

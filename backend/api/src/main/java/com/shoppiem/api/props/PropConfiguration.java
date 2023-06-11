@@ -22,7 +22,8 @@ import org.springframework.context.annotation.Configuration;
     UserProps.class,
     IpAddressProps.class,
     ScraperProps.class,
-    RabbitMQProps.class
+    RabbitMQProps.class,
+    InfaticaProps.class
 })
 public class PropConfiguration {
 }

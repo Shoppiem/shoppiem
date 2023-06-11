@@ -25,7 +25,7 @@ public class JobSemaphore {
 
   public Semaphore getSemaphore() {
     if (semaphore == null) {
-      semaphore = new Semaphore(10);
+      semaphore = new Semaphore(scraperProps.getThreadCount());
     }
     return semaphore;
   }
