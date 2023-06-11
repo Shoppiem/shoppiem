@@ -1,6 +1,7 @@
 package com.shoppiem.api.data.postgres.repo;
 
 import com.shoppiem.api.data.postgres.entity.EmbeddingEntity;
+import com.shoppiem.api.data.postgres.entity.ReviewEntity;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -18,6 +19,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional
 public interface EmbeddingRepo extends JpaRepository<EmbeddingEntity, Long> {
+
+  @Query(value = "SELECT DISTINCT ON (review_id) * " +
+      "FROM embedding " +
+      "WHERE review_id IN(?1)",
+      nativeQuery = true)
+  List<EmbeddingEntity> findAllReviewEmbeddingsByIds(List<Long> reviewIds);
 
 //  Optional<ProjectEntity> findByProjectUid(String projectUid);
 //  @Query(value = "SELECT * " +

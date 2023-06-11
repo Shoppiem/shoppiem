@@ -53,6 +53,7 @@ configure(subprojects.findAll(it ->
 
   dependencies {
     implementation 'org.hibernate:hibernate-core:6.2.4.Final'
+    implementation 'com.vladmihalcea:hibernate-types-60:2.21.1'
     implementation "org.springframework.security:spring-security-web"
     implementation "org.springframework.security:spring-security-config"
     implementation 'org.apache.httpcomponents:fluent-hc:4.5.14'

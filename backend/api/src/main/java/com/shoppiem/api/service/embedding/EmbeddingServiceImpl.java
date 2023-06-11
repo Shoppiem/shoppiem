@@ -23,6 +23,7 @@ import java.time.Duration;
 import javax.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.type.descriptor.java.DoubleJavaType;
 import org.springframework.stereotype.Service;
 
 /**
@@ -40,7 +41,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
   private final OpenAiProps openAiProps;
   private final EmbeddingRepo embeddingRepo;
   private OpenAiService openAiService;
-  private final int batchSize = 2;
+  private final int batchSize = 10;
 
   @PostConstruct
   public void onStart() {
@@ -113,13 +114,14 @@ public class EmbeddingServiceImpl implements EmbeddingService {
         Long reviewId = reviewIds.get(i);
         String text = input.get(i);
         EmbeddingEntity embedding = new EmbeddingEntity();
-        embedding.setEmbedding(vector);
+        embedding.setEmbedding(vector.toArray(new Double[0]));
         embedding.setReviewId(reviewId);
         embedding.setProductId(productId);
         embedding.setText(text);
         embeddingEntities.add(embedding);
         reviewEntityMap.get(reviewId).setHasEmbedding(true);
       }
+      embeddingRepo.deleteAll(embeddingRepo.findAllReviewEmbeddingsByIds(reviewIds));
       embeddingRepo.saveAll(embeddingEntities);
       reviewRepo.saveAll(reviewEntityMap.values());
     }
