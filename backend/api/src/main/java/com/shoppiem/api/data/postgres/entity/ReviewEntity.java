@@ -70,6 +70,10 @@ public class ReviewEntity {
     private String body;
 
     @Basic
+    @Column(name = "has_embedding")
+    private Boolean hasEmbedding = false;
+
+    @Basic
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 

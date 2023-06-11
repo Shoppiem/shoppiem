@@ -70,6 +70,10 @@ public class ProductEntity {
     private Boolean isReady = false;
 
     @Basic
+    @Column(name = "has_embedding")
+    private Boolean hasEmbedding = false;
+
+    @Basic
     @Column(name = "all_reviews_scheduled")
     private Boolean allReviewsScheduled = false;
 

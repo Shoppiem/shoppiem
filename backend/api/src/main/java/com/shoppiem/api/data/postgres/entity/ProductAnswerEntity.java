@@ -59,6 +59,10 @@ public class ProductAnswerEntity {
     private Long downvotes = 0L;
 
     @Basic
+    @Column(name = "has_embedding")
+    private Boolean hasEmbedding = false;
+
+    @Basic
     @Column(name = "answered_at")
     private LocalDateTime answeredAt;
 

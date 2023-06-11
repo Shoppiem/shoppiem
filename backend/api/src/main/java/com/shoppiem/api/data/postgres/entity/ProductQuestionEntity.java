@@ -52,6 +52,10 @@ public class ProductQuestionEntity {
     private String question;
 
     @Basic
+    @Column(name = "has_embedding")
+    private Boolean hasEmbedding = false;
+
+    @Basic
     @Column(name = "asked_at")
     private LocalDateTime askedAt;
 

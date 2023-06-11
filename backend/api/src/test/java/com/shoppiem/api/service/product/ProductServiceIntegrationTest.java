@@ -37,7 +37,7 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
 
     @BeforeClass
     public void setup() {
-//        flywayMigration.migrate(true);
+        flywayMigration.migrate(false);
     }
 
     @AfterTest

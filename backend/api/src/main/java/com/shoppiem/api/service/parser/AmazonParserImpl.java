@@ -13,6 +13,7 @@ import com.shoppiem.api.data.postgres.repo.ReviewRepo;
 import com.shoppiem.api.dto.ScrapingJobDto;
 import com.shoppiem.api.dto.ScrapingJobDto.JobType;
 import com.shoppiem.api.props.RabbitMQProps;
+import com.shoppiem.api.service.embedding.EmbeddingService;
 import com.shoppiem.api.service.scraper.Merchant;
 import com.shoppiem.api.service.utils.ShoppiemUtils;
 import java.text.DateFormat;
@@ -58,6 +59,7 @@ public class AmazonParserImpl implements AmazonParser {
   private final ObjectMapper objectMapper;
   private final RabbitTemplate rabbitTemplate;
   private final RabbitMQProps rabbitMQProps;
+  private final EmbeddingService embeddingService;
 
   @Override
   public void parseProductPage(String sku, String soup, boolean scheduleJobs) {
@@ -117,6 +119,7 @@ public class AmazonParserImpl implements AmazonParser {
         productDescriptionType2,
         bookDescription)));
     productRepo.save(entity);
+    Thread.startVirtualThread(() -> embeddingService.embedProduct(entity));
     if (scheduleJobs) {
       scheduleQandAScraping(entity);
       scheduleInitialReviewScraping(entity);
@@ -161,7 +164,7 @@ public class AmazonParserImpl implements AmazonParser {
     }
   }
 
-  
+
   private void submitJobs(List<ScrapingJobDto> jobs) {
     for (ScrapingJobDto job : jobs) {
       try {
@@ -189,11 +192,13 @@ public class AmazonParserImpl implements AmazonParser {
     for (Element element : doc.selectXpath(allReviewsXPath)) {
       walkReviewsHelper(element, reviews);
     }
-    reviewRepo.saveAll(reviews.values().stream().map(it -> {
+    List<ReviewEntity> allReviews = reviews.values().stream().map(it -> {
       it.setProductId(productEntity.getId());
       it.setMerchant(Merchant.AMAZON.name());
       return it;
-    }).collect(Collectors.toList()));
+    }).collect(Collectors.toList());
+    reviewRepo.saveAll(allReviews);
+    Thread.startVirtualThread(() -> embeddingService.embedReviews(allReviews));
   }
 
   private void scheduleAllReviewScraping(String soup, String productSku) {
@@ -278,6 +283,7 @@ public class AmazonParserImpl implements AmazonParser {
           return answerEntity;
     }).collect(Collectors.toList());
     answerRepo.saveAll(answerEntities);
+    Thread.startVirtualThread(() -> embeddingService.embedQuestionsAndAnswers(questionEntities, answerEntities));
   }
 
   private void questionWalk(Node root, boolean isQuestionDiv,
