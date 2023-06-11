@@ -23,4 +23,12 @@ public interface ReviewRepo extends JpaRepository<ReviewEntity, Long> {
       "WHERE product_id = ?1 AND has_embedding = false",
       nativeQuery = true)
       List<ReviewEntity> findAllReviewsToEmbed(Long productId);
+
+  @Query(value = "SELECT * " +
+      "FROM review " +
+      "WHERE id IN(?1)",
+      nativeQuery = true)
+  List<ReviewEntity> findAllReviewsByIds(List<Long> reviewIds);
+
+
 }

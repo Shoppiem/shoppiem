@@ -198,7 +198,8 @@ public class AmazonParserImpl implements AmazonParser {
       return it;
     }).collect(Collectors.toList());
     reviewRepo.saveAll(allReviews);
-    Thread.startVirtualThread(() -> embeddingService.embedReviews(allReviews));
+    Thread.startVirtualThread(() ->
+        embeddingService.embedReviews(allReviews, productEntity.getProductSku()));
   }
 
   private void scheduleAllReviewScraping(String soup, String productSku) {
@@ -283,7 +284,9 @@ public class AmazonParserImpl implements AmazonParser {
           return answerEntity;
     }).collect(Collectors.toList());
     answerRepo.saveAll(answerEntities);
-    Thread.startVirtualThread(() -> embeddingService.embedQuestionsAndAnswers(questionEntities, answerEntities));
+    Thread.startVirtualThread(() ->
+        embeddingService.embedQuestionsAndAnswers(questionEntities, answerEntities,
+        productEntity.getProductSku()));
   }
 
   private void questionWalk(Node root, boolean isQuestionDiv,
@@ -535,7 +538,7 @@ public class AmazonParserImpl implements AmazonParser {
                 }
               } else if (value.equals("review-body")) {
                 List<String> values = new ArrayList<>();
-                walk(childNode, values, 1, true);
+                walk(childNode, values, 1, false);
                 reviewEntity.setBody(String.join(" ", values));
               } else if (value.equals("review-date")) {
                 List<String> values = new ArrayList<>();
@@ -810,7 +813,7 @@ public class AmazonParserImpl implements AmazonParser {
             .trim()
             .strip();
         if (alphanumeric) {
-          text = text.replaceAll("[^A-Za-z0-9 ]", ""); // Remove all non-alphanumeric characters
+          text = text.replaceAll("[^A-Za-z0-9. ]", ""); // Remove all non-alphanumeric characters
         }
         if (!ObjectUtils.isEmpty(text)) {
           // Only add strings that are longer than two words

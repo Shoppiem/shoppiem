@@ -12,8 +12,8 @@ import java.util.List;
 public interface EmbeddingService {
   void embedByProductSku(String productSku);
   void embedProduct(ProductEntity productEntity);
-  void embedReviews(List<ReviewEntity> reviewsToEmbed);
+  void embedReviews(List<ReviewEntity> reviewsToEmbed, String productSku);
   void embedQuestionsAndAnswers(List<ProductQuestionEntity> questionsToEmbed,
-      List<ProductAnswerEntity> answersToEmbed);
+      List<ProductAnswerEntity> answersToEmbed, String productSku);
 
 }

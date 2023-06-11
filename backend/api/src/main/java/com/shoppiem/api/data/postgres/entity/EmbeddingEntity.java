@@ -1,6 +1,7 @@
 package com.shoppiem.api.data.postgres.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.shoppiem.api.data.type.ArrayUserType;
 import java.time.LocalDateTime;
 import jakarta.persistence.Basic;
 import jakarta.persistence.Column;
@@ -10,6 +11,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
+import java.util.List;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Type;
@@ -40,9 +42,24 @@ public class EmbeddingEntity {
     private Long reviewId;
 
     @Basic
+    @JsonProperty("question_id")
+    @Column(name = "question_id")
+    private Long questionId;
+
+    @Basic
+    @JsonProperty("answer_id")
+    @Column(name = "answer_id")
+    private Long answerId;
+
+//    @Type(parameters = {"com.thorben.janssen.PostgreSqlStringArrayType"})
     @JsonProperty("embedding")
     @Column(name = "embedding")
-    private Object embedding;
+    private List<Double> embedding;
+
+    @Basic
+    @JsonProperty("text")
+    @Column(name = "text")
+    private String text;
 
     @Basic
     @Column(name = "updated_at")

@@ -17,6 +17,11 @@ import org.springframework.context.annotation.Primary;
 public class OpenAiProps {
     private int numRetries = 5;
     private String apiKey;
+    private String embeddingModel;
+    private long requestTimeoutSeconds = 120;
+
+
+
     private double temp = 0.5;
     private int maxTokens = 2048;
     private int chunkSize = 1024; //words
@@ -27,6 +32,6 @@ public class OpenAiProps {
     private String promptRecipe = "Generate  recipe steps and ingredient list with quantity form the following text:";
     private String user = "shoppiem";
     private int descriptionCharacterLimit = 256;
-    private int requestTimeoutSeconds = 300;
+
     private int paragraphThresholdCharCount = 1000;
 }

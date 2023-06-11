@@ -10,7 +10,7 @@ import java.util.List;
  * https://beta.openai.com/docs/api-reference/embeddings/create
  */
 @Builder
-@NoArgsConstructor
+@NoArgsConstructor(force = true)
 @AllArgsConstructor
 @Data
 public class EmbeddingRequest {
