@@ -28,6 +28,12 @@ public interface EmbeddingRepo extends JpaRepository<EmbeddingEntity, Long> {
 
   @Query(value = "SELECT * " +
       "FROM embedding " +
+      "WHERE answer_id IN(?1)",
+      nativeQuery = true)
+  List<EmbeddingEntity> findAllQandAEmbeddingsByIds(List<Long> answerIds);
+
+  @Query(value = "SELECT * " +
+      "FROM embedding " +
       "WHERE product_id = ?1 "
       + "AND review_id = -1 "
       + "AND question_id = -1 "

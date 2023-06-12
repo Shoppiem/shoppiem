@@ -21,11 +21,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.time.Duration;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.type.descriptor.java.DoubleJavaType;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author Biz Melesse created on 6/10/23
@@ -183,7 +187,70 @@ public class EmbeddingServiceImpl implements EmbeddingService {
   @Override
   public void embedQuestionsAndAnswers(List<ProductQuestionEntity> questionsToEmbed,
       List<ProductAnswerEntity> answersToEmbed, String productSku) {
+    List<QAndA> qAndAS = inMemoryJoin(questionsToEmbed, answersToEmbed);
+    List<String> input = new ArrayList<>();
+    for (QAndA qAndA : qAndAS) {
+      input.add(String.format("%s %s",
+          qAndA.getQuestion(), qAndA.getAnswer()));
+    }
+    EmbeddingRequest embeddingRequest = createEmbeddingRequest(productSku);
+    embeddingRequest.setInput(input);
+    EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
 
+    List<EmbeddingEntity> embeddingEntities = new ArrayList<>();
+    List<Embedding> data = result.getData();
+    for (int i = 0; i <data.size(); i++) {
+      List<Double> vector = data.get(i).getEmbedding();
+      String text = input.get(i);
+      EmbeddingEntity embedding = new EmbeddingEntity();
+      embedding.setEmbedding(vector.toArray(new Double[0]));
+      embedding.setReviewId(-1L);
+      embedding.setQuestionId(qAndAS.get(i).getQuestionId());
+      embedding.setAnswerId(qAndAS.get(i).getAnswerId());
+      embedding.setProductId(qAndAS.get(i).getProductId());
+      embedding.setText(text);
+      embeddingEntities.add(embedding);
+    }
+    List<Long> questionIds = qAndAS
+        .stream()
+        .map(QAndA::getQuestionId).toList();
+    List<Long> answerIds = qAndAS
+        .stream()
+        .map(QAndA::getAnswerId).toList();
+    List<ProductQuestionEntity> questionEntities = questionRepo.findQuestionsByIds(questionIds);
+    List<ProductAnswerEntity> answerEntities = answerRepo.findAnswersByIds(answerIds);
+    questionEntities = questionEntities.stream()
+        .peek(it -> it.setHasEmbedding(true))
+        .collect(Collectors.toList());
+    answerEntities = answerEntities.stream()
+        .peek(it -> it.setHasEmbedding(true))
+        .collect(Collectors.toList());
+    embeddingRepo.deleteAll(embeddingRepo.findAllQandAEmbeddingsByIds(answerIds));
+    embeddingRepo.saveAll(embeddingEntities);
+    questionRepo.saveAll(questionEntities);
+    answerRepo.saveAll(answerEntities);
+  }
+
+  private List<QAndA> inMemoryJoin(List<ProductQuestionEntity> questionsToEmbed,
+      List<ProductAnswerEntity> answersToEmbed) {
+    Map<Long, ProductQuestionEntity> questionMap = new HashMap<>();
+    for (ProductQuestionEntity q : questionsToEmbed) {
+      questionMap.put(q.getId(), q);
+    }
+    List<QAndA> qAndAS = new ArrayList<>();
+    for (ProductAnswerEntity answer : answersToEmbed) {
+      ProductQuestionEntity question = questionMap.get(answer.getProductQuestionId());
+      if (!ObjectUtils.isEmpty(question.getQuestion()) &&
+      !ObjectUtils.isEmpty(answer.getAnswer())) {
+        qAndAS.add(new QAndA(
+            question.getQuestion(),
+            answer.getAnswer(),
+            question.getId(),
+            answer.getId(),
+            question.getProductId()));
+      }
+    }
+    return qAndAS;
   }
 
   private List<List<?>> getBatches(List<?> entities) {
@@ -200,5 +267,16 @@ public class EmbeddingServiceImpl implements EmbeddingService {
       batches.add(batch);
     }
     return batches;
+  }
+
+  @Getter
+  @Setter
+  @AllArgsConstructor
+  private static class QAndA {
+    private String question;
+    private String answer;
+    private Long questionId;
+    private Long answerId;
+    private Long productId;
   }
 }

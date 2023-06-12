@@ -24,4 +24,10 @@ public interface ProductQuestionRepo extends JpaRepository<ProductQuestionEntity
       "WHERE product_id = ?1 AND has_embedding = false",
       nativeQuery = true)
   List<ProductQuestionEntity> findAllQuestionsToEmbed(Long productId);
+
+  @Query(value = "SELECT * " +
+      "FROM product_question " +
+      "WHERE id IN(?1)",
+      nativeQuery = true)
+  List<ProductQuestionEntity> findQuestionsByIds(List<Long> questionIds);
 }

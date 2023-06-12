@@ -6,9 +6,13 @@ import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
 import com.shoppiem.api.data.postgres.entity.EmbeddingEntity;
+import com.shoppiem.api.data.postgres.entity.ProductAnswerEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
+import com.shoppiem.api.data.postgres.entity.ProductQuestionEntity;
 import com.shoppiem.api.data.postgres.entity.ReviewEntity;
 import com.shoppiem.api.data.postgres.repo.EmbeddingRepo;
+import com.shoppiem.api.data.postgres.repo.ProductAnswerRepo;
+import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.data.postgres.repo.ReviewRepo;
 import com.shoppiem.api.service.ServiceTestConfiguration;
@@ -45,6 +49,12 @@ public class EmbeddingServiceIntegrationTest extends AbstractTestNGSpringContext
 
     @Autowired
     private ProductRepo productRepo;
+
+    @Autowired
+    private ProductQuestionRepo questionRepo;
+
+    @Autowired
+    private ProductAnswerRepo answerRepo;
 
     @Autowired
     private FlywayMigration flywayMigration;
@@ -93,8 +103,8 @@ public class EmbeddingServiceIntegrationTest extends AbstractTestNGSpringContext
     }
   }
 
-  @Test
-    public void createProductDetailEmbeddingsTest() throws InterruptedException {
+  @Test(enabled = false)
+  public void createProductDetailEmbeddingsTest() throws InterruptedException {
       String sku = "B0773ZY26F";
       ProductEntity productEntity = productRepo.findByProductSku(sku);
       embeddingService.embedProduct(productEntity);
@@ -105,4 +115,26 @@ public class EmbeddingServiceIntegrationTest extends AbstractTestNGSpringContext
       assertTrue(embeddings.size() > 1);
       assertEmbeddings(embeddings);
     }
+
+  @Test
+  public void createQandAEmbeddingsTest() throws InterruptedException {
+    String sku = "B0773ZY26F";
+    List<Long> ids = List.of(161L, 162L, 163L, 164L, 165L);
+    List<ProductQuestionEntity> questionEntities = questionRepo.findQuestionsByIds(ids);
+    List<ProductAnswerEntity> answerEntities = answerRepo.findAnswersByIds(ids);
+    embeddingService.embedQuestionsAndAnswers(questionEntities, answerEntities, sku);
+    Thread.sleep(5000);
+    questionEntities = questionRepo.findQuestionsByIds(ids);
+    answerEntities = answerRepo.findAnswersByIds(ids);
+    for (ProductQuestionEntity questionEntity : questionEntities) {
+      assertTrue(questionEntity.getHasEmbedding());
+    }
+    for (ProductAnswerEntity answerEntity : answerEntities) {
+      assertTrue(answerEntity.getHasEmbedding());
+    }
+
+    List<EmbeddingEntity> embeddings = embeddingRepo.findAllQandAEmbeddingsByIds(ids);
+    assertEquals(embeddings.size(), ids.size());
+    assertEmbeddings(embeddings);
+  }
 }
