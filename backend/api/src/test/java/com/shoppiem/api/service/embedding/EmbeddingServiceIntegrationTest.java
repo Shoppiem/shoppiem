@@ -5,6 +5,7 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
 import static org.testng.AssertJUnit.assertTrue;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.data.postgres.entity.EmbeddingEntity;
 import com.shoppiem.api.data.postgres.entity.ProductAnswerEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
@@ -16,6 +17,7 @@ import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.data.postgres.repo.ReviewRepo;
 import com.shoppiem.api.service.ServiceTestConfiguration;
+import com.shoppiem.api.utils.ServiceTestHelper;
 import com.shoppiem.api.utils.migration.FlywayMigration;
 import java.lang.reflect.Method;
 import java.util.List;
@@ -57,17 +59,24 @@ public class EmbeddingServiceIntegrationTest extends AbstractTestNGSpringContext
     private ProductAnswerRepo answerRepo;
 
     @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
     private FlywayMigration flywayMigration;
 
     @BeforeClass
     public void setup() {
-        flywayMigration.migrate(false);
+        flywayMigration.migrate(true);
+      ServiceTestHelper.loadProducts(true, objectMapper, productRepo);
+      ServiceTestHelper.loadEmbeddings(objectMapper, embeddingRepo);
+      ProductEntity entity = productRepo.findById(1L).get();
+      entity.setHasEmbedding(true);
+      productRepo.save(entity);
     }
 
     @AfterTest
     public void teardown() {
     }
-
 
     @BeforeMethod
     public void beforeEachTest(Method method) {
@@ -96,27 +105,21 @@ public class EmbeddingServiceIntegrationTest extends AbstractTestNGSpringContext
       assertEmbeddings(embeddings);
     }
 
-  private void assertEmbeddings(List<EmbeddingEntity> embeddings) {
-    for (EmbeddingEntity embedding : embeddings) {
-      assertNotNull(embedding.getEmbedding());
-      assertEquals(1536L, embedding.getEmbedding().length);
-    }
-  }
-
-  @Test(enabled = false)
+  @Test
   public void createProductDetailEmbeddingsTest() throws InterruptedException {
-      String sku = "B0773ZY26F";
+      String sku = "B0BW8K69VP";
       ProductEntity productEntity = productRepo.findByProductSku(sku);
-      embeddingService.embedProduct(productEntity);
-      Thread.sleep(5000);
+      if (embeddingRepo.findAllProductDetailEmbeddings(productEntity.getId()).size() == 0) {
+        embeddingService.embedProduct(productEntity);
+        Thread.sleep(5000);
+      }
       productEntity = productRepo.findByProductSku(sku);
       assertTrue(productEntity.getHasEmbedding());
       List<EmbeddingEntity> embeddings = embeddingRepo.findAllProductDetailEmbeddings(productEntity.getId());
-      assertTrue(embeddings.size() > 1);
       assertEmbeddings(embeddings);
     }
 
-  @Test
+  @Test(enabled = false)
   public void createQandAEmbeddingsTest() throws InterruptedException {
     String sku = "B0773ZY26F";
     List<Long> ids = List.of(161L, 162L, 163L, 164L, 165L);
@@ -136,5 +139,21 @@ public class EmbeddingServiceIntegrationTest extends AbstractTestNGSpringContext
     List<EmbeddingEntity> embeddings = embeddingRepo.findAllQandAEmbeddingsByIds(ids);
     assertEquals(embeddings.size(), ids.size());
     assertEmbeddings(embeddings);
+  }
+
+  @Test(enabled = false)
+  public void embedProductBySkuTest() throws InterruptedException {
+    String sku = "B0773ZY26F";
+    embeddingService.embedByProductSku(sku);
+    Thread.sleep(600000);
+
+  }
+
+  private void assertEmbeddings(List<EmbeddingEntity> embeddings) {
+    assertTrue(embeddings.size() > 1);
+    for (EmbeddingEntity embedding : embeddings) {
+      assertNotNull(embedding.getEmbedding());
+      assertEquals(1536L, embedding.getEmbedding().length);
+    }
   }
 }

@@ -2,6 +2,7 @@ package com.shoppiem.api.controller;
 
 import com.shoppiem.api.ProductApi;
 import com.shoppiem.api.ProductCreateResponse;
+import com.shoppiem.api.ProductFromDataRequest;
 import com.shoppiem.api.ProductRequest;
 import com.shoppiem.api.service.product.ProductService;
 import lombok.RequiredArgsConstructor;
@@ -23,5 +24,11 @@ public class ProductController implements ProductApi {
   @Override
   public ResponseEntity<ProductCreateResponse> createProduct(ProductRequest productRequest) {
     return ResponseEntity.ok(productService.createProduct(productRequest));
+  }
+
+  @Override
+  public ResponseEntity<ProductCreateResponse> createProductFromData(
+      ProductFromDataRequest productFromDataRequest) {
+    return ResponseEntity.ok(productService.createProductFromData(productFromDataRequest, true));
   }
 }

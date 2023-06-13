@@ -60,19 +60,18 @@ public class ScraperServiceImpl implements ScraperService {
     @Override
     public void scrape(String sku, String url, JobType type, boolean scheduleJobs, int numRetries,
         boolean headless) {
-        String cleanUrl = cleanupUrl(url);
         try {
-            log.info("Scraping {} at {}", sku, cleanUrl);
-            Merchant merchant = getPlatform(cleanUrl);
+            log.info("Scraping {} at {}", sku, url);
+            Merchant merchant = getPlatform(url);
             String soup;
             if (headless) {
-                soup = downloadPageHeadless(cleanUrl);
+                soup = downloadPageHeadless(url);
             } else {
-                soup = downloadPage(cleanUrl);
+                soup = downloadPage(url);
             }
             if (Objects.requireNonNull(merchant) == Merchant.AMAZON) {
                 ProductEntity entity = productRepo.findByProductSku(sku);
-                saveFile(soup,  cleanUrl);
+                saveFile(soup,  url);
                 switch (type) {
                     case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, soup, scheduleJobs);
                     case QUESTION_PAGE -> amazonParser.parseProductQuestions(entity, soup, scheduleJobs);
@@ -82,13 +81,13 @@ public class ScraperServiceImpl implements ScraperService {
                 }
             }
         } catch (Exception e) {
-            log.error("{}: {}", e.getLocalizedMessage(), cleanUrl);
+            log.error("{}: {}", e.getLocalizedMessage(), url);
             if (numRetries > 0) {
-                log.info("Retrying {}", cleanUrl);
+                log.info("Retrying {}", url);
                 scrape(sku, url, type, scheduleJobs, numRetries - 1, headless);
                 Thread.sleep(2000L);
             } else {
-                log.info("Retries exhausted for {}", cleanUrl);
+                log.info("Retries exhausted for {}", url);
             }
         } finally {
             jobSemaphore.getSemaphore().release();
@@ -197,14 +196,6 @@ public class ScraperServiceImpl implements ScraperService {
         }
     }
 
-    private String cleanupUrl(String url) {
-        try {
-            URL parsedUrl = new URL(url);
-            return String.format("%s://%s%s", parsedUrl.getProtocol(), parsedUrl.getHost(), parsedUrl.getPath());
-        } catch (MalformedURLException e) {
-            return url;
-        }
-    }
 
     private Merchant getPlatform(String url) {
         URL parsedUrl = null;

@@ -42,10 +42,12 @@ public class ProductEntity {
     private String title;
 
     @Basic
+    @JsonProperty("product_url")
     @Column(name = "product_url")
     private String productUrl;
 
     @Basic
+    @JsonProperty("image_url")
     @Column(name = "image_url")
     private String imageUrl;
 
@@ -62,6 +64,7 @@ public class ProductEntity {
     private String currency;
 
     @Basic
+    @JsonProperty("num_reviews")
     @Column(name = "num_reviews")
     private Long numReviews = 0L;
 
@@ -78,10 +81,12 @@ public class ProductEntity {
     private Boolean allReviewsScheduled = false;
 
     @Basic
+    @JsonProperty("star_rating")
     @Column(name = "star_rating")
     private Double starRating = 0.0;
 
     @Basic
+    @JsonProperty("num_questions_answered")
     @Column(name = "num_questions_answered")
     private Long numQuestionsAnswered = 0L;
 

@@ -34,4 +34,12 @@ public class ShoppiemUtils {
     int index = random.nextInt(uidAlphabet.length());
     return uidAlphabet.charAt(index);
   }
+
+  public static String truncate(String value) {
+    int maxLength = 255;
+    if (value.length() > maxLength) {
+      return value.substring(0, maxLength);
+    }
+    return value;
+  }
 }

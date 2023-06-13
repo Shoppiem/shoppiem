@@ -1,11 +1,17 @@
 package com.shoppiem.api.service.product;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.ProductCreateResponse;
+import com.shoppiem.api.ProductFromDataRequest;
 import com.shoppiem.api.ProductRequest;
+import com.shoppiem.api.data.postgres.entity.ProductEntity;
+import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.service.ServiceTestConfiguration;
+import com.shoppiem.api.utils.ServiceTestHelper;
 import com.shoppiem.api.utils.migration.FlywayMigration;
 import java.lang.reflect.Method;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -14,7 +20,6 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertNotNull;
@@ -24,7 +29,6 @@ import static org.testng.AssertJUnit.assertTrue;
  * @author Bizuwork Melesse
  * created on 5/26/23
  */
-//@Ignore
 @Slf4j
 @SpringBootTest(classes = ServiceTestConfiguration.class)
 public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTests {
@@ -35,9 +39,18 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
     @Autowired
     private FlywayMigration flywayMigration;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private ProductRepo productRepo;
+
+    private List<ProductEntity> productEntities;
+
     @BeforeClass
     public void setup() {
-        flywayMigration.migrate(false);
+        flywayMigration.migrate(true);
+        productEntities = ServiceTestHelper.loadProducts(false, objectMapper, null);
     }
 
     @AfterTest
@@ -55,7 +68,7 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
         log.info("  Testcase: " + method.getName() + " has ended");
     }
 
-    @Test
+    @Test(enabled = false)
     public void createProductTest() throws InterruptedException {
       ProductRequest request = new ProductRequest()
           .productUrl("https://www.amazon.com/Sceptre-E248W-19203R-Monitor-Speakers-Metallic/dp/B0773ZY26F/ref=cm_cr_arp_d_product_top?ie=UTF8");
@@ -66,7 +79,39 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
       Thread.sleep(3600000);
     }
 
+    @Test(enabled = false)
+    public void createProductFromDataTest() {
+        ProductEntity productEntity = productEntities
+            .stream()
+            .filter(it -> it.getProductSku().equals("B0BW8K69VP"))
+            .findFirst()
+            .get();
+        ProductFromDataRequest request = new ProductFromDataRequest()
+            .productUrl(productEntity.getProductUrl())
+            .currency(productEntity.getCurrency())
+            .description(productEntity.getDescription())
+            .price(productEntity.getPrice())
+            .numReviews(productEntity.getNumReviews())
+            .imageUrl(productEntity.getImageUrl())
+            .numQuestionsAnswered(productEntity.getNumQuestionsAnswered())
+            .seller(productEntity.getSeller())
+            .starRating(productEntity.getStarRating())
+            .title(productEntity.getTitle());
+        ProductCreateResponse response = productService.createProductFromData(request, false);
+        assertNotNull(response);
+        assertTrue(response.getInProgress());
+    }
+
     @Test
+    public void scheduleJobsTest() throws InterruptedException {
+        String sku = "B0BW8K69VP";
+        productRepo.saveAll(productEntities);
+        ProductEntity productEntity = productRepo.findByProductSku(sku);
+        productService.scheduleJobs(productEntity);
+        Thread.sleep(3600000);
+    }
+
+    @Test(enabled = false)
     public void parseProductSKUTest() {
         String url = "https://www.amazon.com/Belkin-Boost%E2%86%91ChargeTM-Wireless-Compatible-Kickstand/dp/B0BXRMCC31/?_encoding=UTF8&pd_rd_w=dyu4M&content-id=amzn1.sym.c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_p=c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_r=CVH3RSQQQDGMZPB008AQ&pd_rd_wg=B4Bru&pd_rd_r=08f1c561-28fd-45c0-8d24-ca21537303c7&ref_=pd_gw_gcx_gw_EGG-Graduation-23-1a&th=1";
         String sku = productService.parseProductSku(url);

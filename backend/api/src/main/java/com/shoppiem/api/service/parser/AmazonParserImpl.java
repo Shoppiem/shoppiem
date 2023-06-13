@@ -111,7 +111,7 @@ public class AmazonParserImpl implements AmazonParser {
     entity.setPrice(price);
     entity.setProductUrl(canonicalUrl);
     entity.setSeller(seller);
-    entity.setTitle(truncate(title));
+    entity.setTitle(ShoppiemUtils.truncate(title));
     entity.setDescription(combineDescriptionData(List.of(
         features,
         overviewTableData,
@@ -192,10 +192,9 @@ public class AmazonParserImpl implements AmazonParser {
     for (Element element : doc.selectXpath(allReviewsXPath)) {
       walkReviewsHelper(element, reviews);
     }
-    List<ReviewEntity> allReviews = reviews.values().stream().map(it -> {
+    List<ReviewEntity> allReviews = reviews.values().stream().peek(it -> {
       it.setProductId(productEntity.getId());
       it.setMerchant(Merchant.AMAZON.name());
-      return it;
     }).collect(Collectors.toList());
     reviewRepo.saveAll(allReviews);
     Thread.startVirtualThread(() ->
@@ -697,13 +696,6 @@ public class AmazonParserImpl implements AmazonParser {
     return "";
   }
 
-  private String truncate(String value) {
-    int maxLength = 255;
-    if (value.length() > maxLength) {
-      return value.substring(0, maxLength);
-    }
-    return value;
-  }
 
   private Double getPrice(Document doc) {
     // TODO: Currently defaulting the currency to USD. The symbol for the actual currency is

@@ -19,7 +19,7 @@ public class Consumer {
   private final ObjectMapper objectMapper;
   private final ScraperService scraperService;
   private final JobSemaphore jobSemaphore;
-  private final int numRetries = 5;
+  private final int numRetries = 3;
 
   public void consume(String message) throws InterruptedException {
     jobSemaphore.getSemaphore().acquire();

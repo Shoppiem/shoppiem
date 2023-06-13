@@ -46,7 +46,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
   private final OpenAiProps openAiProps;
   private final EmbeddingRepo embeddingRepo;
   private OpenAiService openAiService;
-  private final int batchSize = 10;
+  private final int batchSize = 50;
 
   @PostConstruct
   public void onStart() {
@@ -90,8 +90,13 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     input.add(String.format("This product costs $%s. The price of this product is $%s. "
             + "How much it costs is $%s",
         price, price, price));
+    input = input
+        .stream()
+        .map(this::clean)
+        .collect(Collectors.toList());
     EmbeddingRequest embeddingRequest = createEmbeddingRequest(productEntity.getProductSku());
     embeddingRequest.setInput(input);
+    log.info("Embedding product {}", productEntity.getProductSku());
     EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
 
     List<EmbeddingEntity> embeddingEntities = new ArrayList<>();
@@ -126,15 +131,17 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     Long productId = productEntity.getId();
     List<List<?>> batches = getBatches(reviewsToEmbed);
     for (List<?> batch : batches) {
+      log.info("Embedding a new batch of reviews");
       EmbeddingRequest embeddingRequest = createEmbeddingRequest(productSku);
       List<String> input = new ArrayList<>();
       List<Long> reviewIds = new ArrayList<>();
       for (Object o : batch) {
         ReviewEntity review = (ReviewEntity) o;
-        reviewIds.add(review.getId());
         String text = clean(review.getTitle() + " " + review.getBody());
-        log.info("Text: {}", text);
-        input.add(text);
+        if (!ObjectUtils.isEmpty(text)) {
+          reviewIds.add(review.getId());
+          input.add(text);
+        }
       }
       embeddingRequest.setInput(input);
       EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
@@ -181,54 +188,61 @@ public class EmbeddingServiceImpl implements EmbeddingService {
   }
 
   private String clean(String s) {
-    return s.replaceAll("[^A-Za-z0-9 ]", ""); // Remove all non-alphanumeric characters
+    return s
+        .strip()
+        .replaceAll("[^A-Za-z0-9. ]", ""); // Remove all non-alphanumeric characters
   }
 
   @Override
   public void embedQuestionsAndAnswers(List<ProductQuestionEntity> questionsToEmbed,
       List<ProductAnswerEntity> answersToEmbed, String productSku) {
     List<QAndA> qAndAS = inMemoryJoin(questionsToEmbed, answersToEmbed);
-    List<String> input = new ArrayList<>();
-    for (QAndA qAndA : qAndAS) {
-      input.add(String.format("%s %s",
-          qAndA.getQuestion(), qAndA.getAnswer()));
-    }
-    EmbeddingRequest embeddingRequest = createEmbeddingRequest(productSku);
-    embeddingRequest.setInput(input);
-    EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
+    List<List<?>> batches = getBatches(qAndAS);
+    for (List<?> batch : batches) {
+      log.info("Embedding a new batch of questions");
+      EmbeddingRequest embeddingRequest = createEmbeddingRequest(productSku);
+      List<String> input = new ArrayList<>();
+      for (Object o : batch) {
+        QAndA qAndA = (QAndA) o;
+        input.add(String.format("%s %s",
+            qAndA.getQuestion(), qAndA.getAnswer()));
 
-    List<EmbeddingEntity> embeddingEntities = new ArrayList<>();
-    List<Embedding> data = result.getData();
-    for (int i = 0; i <data.size(); i++) {
-      List<Double> vector = data.get(i).getEmbedding();
-      String text = input.get(i);
-      EmbeddingEntity embedding = new EmbeddingEntity();
-      embedding.setEmbedding(vector.toArray(new Double[0]));
-      embedding.setReviewId(-1L);
-      embedding.setQuestionId(qAndAS.get(i).getQuestionId());
-      embedding.setAnswerId(qAndAS.get(i).getAnswerId());
-      embedding.setProductId(qAndAS.get(i).getProductId());
-      embedding.setText(text);
-      embeddingEntities.add(embedding);
+      }
+      embeddingRequest.setInput(input);
+      EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
+      List<EmbeddingEntity> embeddingEntities = new ArrayList<>();
+      List<Embedding> data = result.getData();
+      for (int i = 0; i < data.size(); i++) {
+        List<Double> vector = data.get(i).getEmbedding();
+        String text = input.get(i);
+        EmbeddingEntity embedding = new EmbeddingEntity();
+        embedding.setEmbedding(vector.toArray(new Double[0]));
+        embedding.setReviewId(-1L);
+        embedding.setQuestionId(qAndAS.get(i).getQuestionId());
+        embedding.setAnswerId(qAndAS.get(i).getAnswerId());
+        embedding.setProductId(qAndAS.get(i).getProductId());
+        embedding.setText(text);
+        embeddingEntities.add(embedding);
+      }
+      List<Long> questionIds = qAndAS
+          .stream()
+          .map(QAndA::getQuestionId).toList();
+      List<Long> answerIds = qAndAS
+          .stream()
+          .map(QAndA::getAnswerId).toList();
+      List<ProductQuestionEntity> questionEntities = questionRepo.findQuestionsByIds(questionIds);
+      List<ProductAnswerEntity> answerEntities = answerRepo.findAnswersByIds(answerIds);
+      questionEntities = questionEntities.stream()
+          .peek(it -> it.setHasEmbedding(true))
+          .collect(Collectors.toList());
+      answerEntities = answerEntities.stream()
+          .peek(it -> it.setHasEmbedding(true))
+          .collect(Collectors.toList());
+      embeddingRepo.deleteAll(embeddingRepo.findAllQandAEmbeddingsByIds(answerIds));
+      embeddingRepo.saveAll(embeddingEntities);
+      questionRepo.saveAll(questionEntities);
+      answerRepo.saveAll(answerEntities);
     }
-    List<Long> questionIds = qAndAS
-        .stream()
-        .map(QAndA::getQuestionId).toList();
-    List<Long> answerIds = qAndAS
-        .stream()
-        .map(QAndA::getAnswerId).toList();
-    List<ProductQuestionEntity> questionEntities = questionRepo.findQuestionsByIds(questionIds);
-    List<ProductAnswerEntity> answerEntities = answerRepo.findAnswersByIds(answerIds);
-    questionEntities = questionEntities.stream()
-        .peek(it -> it.setHasEmbedding(true))
-        .collect(Collectors.toList());
-    answerEntities = answerEntities.stream()
-        .peek(it -> it.setHasEmbedding(true))
-        .collect(Collectors.toList());
-    embeddingRepo.deleteAll(embeddingRepo.findAllQandAEmbeddingsByIds(answerIds));
-    embeddingRepo.saveAll(embeddingEntities);
-    questionRepo.saveAll(questionEntities);
-    answerRepo.saveAll(answerEntities);
   }
 
   private List<QAndA> inMemoryJoin(List<ProductQuestionEntity> questionsToEmbed,
