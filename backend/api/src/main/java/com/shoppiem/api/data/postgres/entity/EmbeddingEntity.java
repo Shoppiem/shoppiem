@@ -55,15 +55,21 @@ public class EmbeddingEntity {
     private Double[] embedding;
 
     @Basic
-    @JsonProperty("text")
     @Column(name = "text")
     private String text;
 
     @Basic
+    @JsonProperty("product_sku")
+    @Column(name = "product_sku")
+    private String productSku;
+
+    @Basic
+    @JsonProperty("updated_at")
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Basic
+    @JsonProperty("created_at")
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

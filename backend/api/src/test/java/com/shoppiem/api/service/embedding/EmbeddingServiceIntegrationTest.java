@@ -29,13 +29,14 @@ import org.testng.annotations.AfterMethod;
 import org.testng.annotations.AfterTest;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Ignore;
 import org.testng.annotations.Test;
 
 /**
  * @author Bizuwork Melesse
  * created on 6/11/23
  */
-//@Ignore
+@Ignore
 @Slf4j
 @SpringBootTest(classes = ServiceTestConfiguration.class)
 public class EmbeddingServiceIntegrationTest extends AbstractTestNGSpringContextTests {

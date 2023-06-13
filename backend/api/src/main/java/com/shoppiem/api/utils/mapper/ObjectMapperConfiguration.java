@@ -3,12 +3,11 @@ package com.shoppiem.api.utils.mapper;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import java.time.LocalDateTime;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-
-import java.time.OffsetDateTime;
 
 /**
  * @author Bizuwork Melesse
@@ -21,8 +20,8 @@ public class ObjectMapperConfiguration {
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         JavaTimeModule javaTimeModule = new JavaTimeModule();
-        javaTimeModule.addSerializer(OffsetDateTime.class, new OffsetDateTimeSerializer());
-        javaTimeModule.addDeserializer(OffsetDateTime.class, new OffsetDateTimeDeserializer());
+        javaTimeModule.addSerializer(LocalDateTime.class, new LocalDateTimeSerializer());
+        javaTimeModule.addDeserializer(LocalDateTime.class, new LocalDateTimeDeserializer());
         mapper.registerModule(javaTimeModule);
         mapper.registerModule(new JsonNullableModule());
         mapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);

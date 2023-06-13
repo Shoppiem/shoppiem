@@ -1,13 +1,11 @@
 package com.shoppiem.api.data.postgres.repo;
 
 import com.shoppiem.api.data.postgres.entity.EmbeddingEntity;
-import com.shoppiem.api.data.postgres.entity.ReviewEntity;
+import com.shoppiem.api.data.postgres.projection.EmbeddingProjection;
 import java.util.List;
-import java.util.Optional;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,40 +39,19 @@ public interface EmbeddingRepo extends JpaRepository<EmbeddingEntity, Long> {
       nativeQuery = true)
   List<EmbeddingEntity> findAllProductDetailEmbeddings(Long productId);
 
-
-//  Optional<ProjectEntity> findByProjectUid(String projectUid);
-//  @Query(value = "SELECT * " +
-//      "FROM project " +
-//      "WHERE user_id = ?1 AND processed = true "
-//      + "ORDER BY created_at DESC ",
-//      nativeQuery = true)
-//  List<ProjectEntity> findAllProjectsByUserId(String userId);
-//
-//  @Query(value = "SELECT * " +
-//      "FROM project " +
-//      "WHERE user_id = ?1 AND project_uid = ?2 AND processed = true ",
-//      nativeQuery = true)
-//  Optional<ProjectEntity> findProjectByUserIdAndProjectUid(String userId, String projectId);
-//
-//  @Query(value = "SELECT * " +
-//      "FROM project " +
-//      "WHERE user_id = ?1 AND processed = false "
-//      + "ORDER BY created_at DESC "
-//      + "LIMIT 1 ",
-//      nativeQuery = true)
-//  Optional<ProjectEntity> findPendingJob(String userId);
-//
-//  @Query(value = "SELECT "
-//      + "p.project_uid as projectUid, "
-//      + "p.project_name as projectName, "
-//      + "p.created_at as projectCreatedAt, "
-//      + "mc.permalink as contentUrl, "
-//      + "u.email as email, "
-//      + "u.full_name as fullName, "
-//      + "u.created_at as registeredOn " +
-//      "FROM public.project p "
-//      + "JOIN public.user u ON u.firebase_id = p.user_id "
-//      + "INNER JOIN public.media_content mc ON mc.project_id = p.id ",
-//      nativeQuery = true)
-//  Page<UserProjectProjection> findAllUserProjects(Pageable pageable);
+  @Query(value = "SELECT "
+      + "e.id AS id, "
+      + "e.text AS content, "
+      + "1 - (e.embedding <=> cast(:queryVector AS vector)) AS similarity "
+      + "FROM embedding e "
+      + "  WHERE (1 - (e.embedding <=> cast(:queryVector AS vector)) > :matchThreshold) "
+      + "   AND e.product_sku = :userProductSku "
+      + "  ORDER BY similarity DESC "
+      + "  LIMIT :matchCount",
+      nativeQuery = true)
+  List<EmbeddingProjection> findEmbeddings(
+      @Param("queryVector") String queryVector,
+      @Param("matchThreshold") float matchThreshold,
+      @Param("matchCount") int matchCount,
+      @Param("userProductSku") String userProductSku);
 }

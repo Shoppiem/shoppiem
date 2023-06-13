@@ -38,6 +38,7 @@ public class ReviewEntity {
     private String title;
 
     @Basic
+    @JsonProperty("review_id")
     @Column(name = "review_id")
     private String reviewId;
 
@@ -50,6 +51,7 @@ public class ReviewEntity {
     private String country;
 
     @Basic
+    @JsonProperty("verified_purchase")
     @Column(name = "verified_purchase")
     private Boolean verifiedPurchase = false;
 
@@ -58,6 +60,7 @@ public class ReviewEntity {
     private Long upvotes;
 
     @Basic
+    @JsonProperty("star_rating")
     @Column(name = "star_rating")
     private Integer starRating;
 
@@ -70,18 +73,22 @@ public class ReviewEntity {
     private String body;
 
     @Basic
+    @JsonProperty("has_embedding")
     @Column(name = "has_embedding")
     private Boolean hasEmbedding = false;
 
     @Basic
+    @JsonProperty("submitted_at")
     @Column(name = "submitted_at")
     private LocalDateTime submittedAt;
 
     @Basic
+    @JsonProperty("updated_at")
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Basic
+    @JsonProperty("created_at")
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

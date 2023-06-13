@@ -5,6 +5,7 @@ import com.shoppiem.api.data.postgres.entity.ProductAnswerEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.entity.ProductQuestionEntity;
 import com.shoppiem.api.data.postgres.entity.ReviewEntity;
+import com.shoppiem.api.data.postgres.projection.EmbeddingProjection;
 import com.shoppiem.api.data.postgres.repo.EmbeddingRepo;
 import com.shoppiem.api.data.postgres.repo.ProductAnswerRepo;
 import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
@@ -17,6 +18,7 @@ import com.shoppiem.api.service.openai.embedding.EmbeddingRequest;
 import com.shoppiem.api.service.openai.embedding.EmbeddingResult;
 import com.shoppiem.api.service.parser.AmazonParser;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,6 +54,31 @@ public class EmbeddingServiceImpl implements EmbeddingService {
   public void onStart() {
     openAiService = new OpenAiService(openAiProps.getApiKey(),
         Duration.ofSeconds(openAiProps.getRequestTimeoutSeconds()));
+  }
+
+  @Override
+  public Double[] embedUserQuery(String query, String productSku) {
+    List<String> input = List.of(query);
+    EmbeddingRequest embeddingRequest = createEmbeddingRequest(productSku);
+    embeddingRequest.setInput(input);
+    log.info("Embedding user query for product {}: {}", productSku, query);
+    EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
+    if (result.getData().size() > 0) {
+      List<Double> vector = result.getData().get(0).getEmbedding();
+      return vector.toArray(new Double[0]);
+    }
+    return new Double[0];
+  }
+
+  @Override
+  public List<String> fetchEmbeddings(String query, String productSku) {
+    Double[] userQueryVector = embedUserQuery(query, productSku);
+    List<EmbeddingProjection> embeddingsFound = embeddingRepo.findEmbeddings(
+        Arrays.toString(userQueryVector), 0.5f, 5, productSku);
+    return embeddingsFound
+        .stream()
+        .map(EmbeddingProjection::getContent)
+        .collect(Collectors.toList());
   }
 
   @Override
@@ -111,6 +138,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
       embedding.setAnswerId(-1L);
       embedding.setProductId(productEntity.getId());
       embedding.setText(text);
+      embedding.setProductSku(productEntity.getProductSku());
       embeddingEntities.add(embedding);
     }
     ProductEntity productEntityToUpdate = productRepo.findByProductSku(productEntity.getProductSku());
@@ -163,6 +191,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
         embedding.setQuestionId(-1L);
         embedding.setAnswerId(-1L);
         embedding.setText(text);
+        embedding.setProductSku(productEntity.getProductSku());
         embeddingEntities.add(embedding);
         reviewEntityMap.get(reviewId).setHasEmbedding(true);
       }
@@ -196,7 +225,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
   @Override
   public void embedQuestionsAndAnswers(List<ProductQuestionEntity> questionsToEmbed,
       List<ProductAnswerEntity> answersToEmbed, String productSku) {
-    List<QAndA> qAndAS = inMemoryJoin(questionsToEmbed, answersToEmbed);
+    List<QAndA> qAndAS = inMemoryJoin(questionsToEmbed, answersToEmbed, productSku);
     List<List<?>> batches = getBatches(qAndAS);
     for (List<?> batch : batches) {
       log.info("Embedding a new batch of questions");
@@ -222,6 +251,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
         embedding.setAnswerId(qAndAS.get(i).getAnswerId());
         embedding.setProductId(qAndAS.get(i).getProductId());
         embedding.setText(text);
+        embedding.setProductSku(qAndAS.get(i).getProductSku());
         embeddingEntities.add(embedding);
       }
       List<Long> questionIds = qAndAS
@@ -246,7 +276,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
   }
 
   private List<QAndA> inMemoryJoin(List<ProductQuestionEntity> questionsToEmbed,
-      List<ProductAnswerEntity> answersToEmbed) {
+      List<ProductAnswerEntity> answersToEmbed, String productSku) {
     Map<Long, ProductQuestionEntity> questionMap = new HashMap<>();
     for (ProductQuestionEntity q : questionsToEmbed) {
       questionMap.put(q.getId(), q);
@@ -261,7 +291,8 @@ public class EmbeddingServiceImpl implements EmbeddingService {
             answer.getAnswer(),
             question.getId(),
             answer.getId(),
-            question.getProductId()));
+            question.getProductId(),
+            productSku));
       }
     }
     return qAndAS;
@@ -292,5 +323,6 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     private Long questionId;
     private Long answerId;
     private Long productId;
+    private String productSku;
   }
 }

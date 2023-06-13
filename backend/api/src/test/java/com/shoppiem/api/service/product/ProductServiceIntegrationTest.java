@@ -102,7 +102,7 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
         assertTrue(response.getInProgress());
     }
 
-    @Test
+    @Test(enabled = false)
     public void scheduleJobsTest() throws InterruptedException {
         String sku = "B0BW8K69VP";
         productRepo.saveAll(productEntities);

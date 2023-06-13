@@ -91,10 +91,12 @@ public class ProductEntity {
     private Long numQuestionsAnswered = 0L;
 
     @Basic
+    @JsonProperty("updated_at")
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Basic
+    @JsonProperty("created_at")
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

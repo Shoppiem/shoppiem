@@ -5,9 +5,15 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.UserProfile;
 import com.shoppiem.api.data.postgres.entity.EmbeddingEntity;
+import com.shoppiem.api.data.postgres.entity.ProductAnswerEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
+import com.shoppiem.api.data.postgres.entity.ProductQuestionEntity;
+import com.shoppiem.api.data.postgres.entity.ReviewEntity;
 import com.shoppiem.api.data.postgres.repo.EmbeddingRepo;
+import com.shoppiem.api.data.postgres.repo.ProductAnswerRepo;
+import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
+import com.shoppiem.api.data.postgres.repo.ReviewRepo;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,6 +95,39 @@ public class ServiceTestHelper {
             List<EmbeddingEntity> embeddingEntities = objectMapper.readValue(
                 ServiceTestHelper.loadFromFile("scraper/tables/embedding.json"), typeRef);
             embeddingRepo.saveAll(embeddingEntities);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void loadReviews(ObjectMapper objectMapper, ReviewRepo repo) {
+        TypeReference<List<ReviewEntity>> typeRef = new TypeReference<>() {};
+        try {
+            List<ReviewEntity> entities = objectMapper.readValue(
+                ServiceTestHelper.loadFromFile("scraper/tables/review.json"), typeRef);
+            repo.saveAll(entities);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void loadQuestions(ObjectMapper objectMapper, ProductQuestionRepo repo) {
+        TypeReference<List<ProductQuestionEntity>> typeRef = new TypeReference<>() {};
+        try {
+            List<ProductQuestionEntity> entities = objectMapper.readValue(
+                ServiceTestHelper.loadFromFile("scraper/tables/product_question.json"), typeRef);
+            repo.saveAll(entities);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void loadAnswers(ObjectMapper objectMapper, ProductAnswerRepo repo) {
+        TypeReference<List<ProductAnswerEntity>> typeRef = new TypeReference<>() {};
+        try {
+            List<ProductAnswerEntity> entities = objectMapper.readValue(
+                ServiceTestHelper.loadFromFile("scraper/tables/product_answer.json"), typeRef);
+            repo.saveAll(entities);
         } catch (JsonProcessingException e) {
             throw new RuntimeException(e);
         }

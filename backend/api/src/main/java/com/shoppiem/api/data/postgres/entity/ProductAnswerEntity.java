@@ -39,6 +39,7 @@ public class ProductAnswerEntity {
     private Long productQuestionId;
 
     @Basic
+    @JsonProperty("answer_id")
     @Column(name = "answer_id")
     private String answerId;
 
@@ -47,6 +48,7 @@ public class ProductAnswerEntity {
     private String answer;
 
     @Basic
+    @JsonProperty("answered_by")
     @Column(name = "answered_by")
     private String answeredBy;
 
@@ -59,18 +61,22 @@ public class ProductAnswerEntity {
     private Long downvotes = 0L;
 
     @Basic
+    @JsonProperty("has_embedding")
     @Column(name = "has_embedding")
     private Boolean hasEmbedding = false;
 
     @Basic
+    @JsonProperty("answered_at")
     @Column(name = "answered_at")
     private LocalDateTime answeredAt;
 
     @Basic
+    @JsonProperty("updated_at")
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Basic
+    @JsonProperty("created_at")
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

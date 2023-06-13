@@ -34,6 +34,7 @@ public class ProductQuestionEntity {
     private Long productId;
 
     @Basic
+    @JsonProperty("question_id")
     @Column(name = "question_id")
     private String questionId;
 
@@ -52,18 +53,22 @@ public class ProductQuestionEntity {
     private String question;
 
     @Basic
+    @JsonProperty("has_embedding")
     @Column(name = "has_embedding")
     private Boolean hasEmbedding = false;
 
     @Basic
+    @JsonProperty("asked_at")
     @Column(name = "asked_at")
     private LocalDateTime askedAt;
 
     @Basic
+    @JsonProperty("updated_at")
     @Column(name = "updated_at")
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     @Basic
+    @JsonProperty("created_at")
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }
