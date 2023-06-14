@@ -30,6 +30,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -60,6 +61,16 @@ public class AmazonParserImpl implements AmazonParser {
   private final RabbitTemplate rabbitTemplate;
   private final RabbitMQProps rabbitMQProps;
   private final EmbeddingService embeddingService;
+
+  @PostConstruct
+  public void populateIdCache() {
+    for (ReviewEntity reviewEntity : reviewRepo.findAll()) {
+      existingReviewIds.put(reviewEntity.getReviewId(), true);
+    }
+    for (ProductQuestionEntity productQuestionEntity : questionRepo.findAll()) {
+      existingQuestionIds.put(productQuestionEntity.getQuestionId(), true);
+    }
+  }
 
   @Override
   public void parseProductPage(String sku, String soup, boolean scheduleJobs) {
@@ -192,10 +203,17 @@ public class AmazonParserImpl implements AmazonParser {
     for (Element element : doc.selectXpath(allReviewsXPath)) {
       walkReviewsHelper(element, reviews);
     }
-    List<ReviewEntity> allReviews = reviews.values().stream().peek(it -> {
-      it.setProductId(productEntity.getId());
-      it.setMerchant(Merchant.AMAZON.name());
-    }).collect(Collectors.toList());
+    List<ReviewEntity> allReviews = reviews.values()
+        .stream()
+        .peek(it -> {
+          it.setProductId(productEntity.getId());
+          it.setMerchant(Merchant.AMAZON.name());
+        })
+        .filter(it -> !existingReviewIds.containsKey(it.getReviewId()))
+        .collect(Collectors.toList());
+    for (ReviewEntity review : allReviews) {
+      existingReviewIds.put(review.getReviewId(), true);
+    }
     reviewRepo.saveAll(allReviews);
     Thread.startVirtualThread(() ->
         embeddingService.embedReviews(allReviews, productEntity.getProductSku()));
@@ -255,8 +273,17 @@ public class AmazonParserImpl implements AmazonParser {
     for (Node childNode : doc.childNodes()) {
       questionWalk(childNode, false, questions);
     }
+    List<QuestionAnswerContainer> newQuestions = new ArrayList<>();
+    for (QuestionAnswerContainer value : questions.values()) {
+      String questionId = value.getQuestion().getQuestionId();
+      if (!existingQuestionIds.containsKey(questionId)) {
+        existingQuestionIds.put(questionId, true);
+        newQuestions.add(value);
+      }
+    }
+
     Long productId = productEntity.getId();
-    List<ProductQuestionEntity> questionEntities = questions.values()
+    List<ProductQuestionEntity> questionEntities = newQuestions
         .stream()
         .map(it -> {
           ProductQuestionEntity entity = it.getQuestion();
@@ -264,8 +291,10 @@ public class AmazonParserImpl implements AmazonParser {
           entity.setNumAnswers(entity.getNumAnswers() != null ? entity.getNumAnswers() : 1);
           entity.setUpvotes(entity.getUpvotes() != null ? entity.getUpvotes() : 0);
           return entity;
-    }).collect(Collectors.toList());
+        })
+        .collect(Collectors.toList());
     questionRepo.saveAll(questionEntities);
+
 
     // Map the saved question entity IDs to the original question IDs from the DOM
     Map<String, Long> questionIds = new HashMap<>();
@@ -273,7 +302,7 @@ public class AmazonParserImpl implements AmazonParser {
       questionIds.put(questionEntity.getQuestionId(), questionEntity.getId());
     }
 
-    List<ProductAnswerEntity> answerEntities = questions.values()
+    List<ProductAnswerEntity> answerEntities = newQuestions
         .stream()
         .map(it -> {
           ProductAnswerEntity answerEntity = it.getAnswer();
