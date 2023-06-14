@@ -47,14 +47,9 @@ public class EmbeddingServiceImpl implements EmbeddingService {
   private final ProductAnswerRepo answerRepo;
   private final OpenAiProps openAiProps;
   private final EmbeddingRepo embeddingRepo;
-  private OpenAiService openAiService;
+  private final OpenAiService openAiService;
   private final int batchSize = 50;
 
-  @PostConstruct
-  public void onStart() {
-    openAiService = new OpenAiService(openAiProps.getApiKey(),
-        Duration.ofSeconds(openAiProps.getRequestTimeoutSeconds()));
-  }
 
   @Override
   public Double[] embedUserQuery(String query, String productSku) {

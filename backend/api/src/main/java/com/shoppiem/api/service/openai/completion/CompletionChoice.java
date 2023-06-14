@@ -14,6 +14,8 @@ public class CompletionChoice {
      */
     String text;
 
+    Message message;
+
     /**
      * This index of this completion in the returned list.
      */

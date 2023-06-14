@@ -1,12 +1,14 @@
 package com.shoppiem.api.service.chat;
 
 
+import com.shoppiem.api.service.openai.completion.CompletionRequest;
+
 /**
  * @author Biz Melesse created on 6/12/23
  */
 public interface ChatService {
 
-  String buildContext(String query, String productSku);
-  String callGpt(String query, String productSku);
+  CompletionRequest buildGptRequest(String query, String productSku);
+  void callGpt(String query, String productSku);
 
 }

@@ -86,6 +86,7 @@ public class ChatServiceIntegrationTest extends AbstractTestNGSpringContextTests
     @Test
     public void callGptTest() {
         String query = "What is the average battery life?";
+        query = "what is the screen resolution for gaming?";
         String sku = "B0BW8K69VP";
         chatService.callGpt(query, sku);
     }

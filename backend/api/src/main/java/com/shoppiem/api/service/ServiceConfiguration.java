@@ -2,10 +2,13 @@ package com.shoppiem.api.service;
 
 
 import com.shoppiem.api.data.DataConfiguration;
+import com.shoppiem.api.props.OpenAiProps;
 import com.shoppiem.api.service.mapper.MapperConfiguration;
 import com.shoppiem.api.service.messaging.Consumer;
+import com.shoppiem.api.service.openai.OpenAiService;
 import com.shoppiem.api.utils.migration.FlywayMigrationConfiguration;
 
+import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
@@ -30,12 +33,13 @@ import org.springframework.scheduling.annotation.EnableAsync;
     WebSocketConfiguration.class,
     DataConfiguration.class,
     MapperConfiguration.class,
+    OpenAIConfiguration.class,
     FlywayMigrationConfiguration.class})
 public class ServiceConfiguration {
   private final Consumer consumer;
 
   @Bean
-  MessageListenerAdapter scrapingJobListener() {
+  public MessageListenerAdapter scrapingJobListener() {
     return new MessageListenerAdapter(consumer, "consume");
   }
 }

@@ -17,21 +17,11 @@ import org.springframework.context.annotation.Primary;
 public class OpenAiProps {
     private int numRetries = 5;
     private String apiKey;
-    private String embeddingModel;
+    private String embeddingModel = "text-embedding-ada-002";
+    private String completionModel = "gpt-3.5-turbo";
+    private String systemMessage;
     private long requestTimeoutSeconds = 120;
-
-
-
-    private double temp = 0.5;
-    private int maxTokens = 2048;
-    private int chunkSize = 1024; //words
-    private String model = "text-davinci-003";
-    private String promptCluster = "Break the following text into paragraphs with headings and fix the grammar:";
-    private String promptParagraph = "Break the following text into paragraphs and improve the writing style:";
-    private String promptTitle = "Generate a blog post title for the following text:";
-    private String promptRecipe = "Generate  recipe steps and ingredient list with quantity form the following text:";
-    private String user = "shoppiem";
-    private int descriptionCharacterLimit = 256;
-
-    private int paragraphThresholdCharCount = 1000;
+    private double temp = 0.7;
+    private int maxTokens = 1000;
+    private String completionEndpoint = "https://api.openai.com/v1/chat/completions";
 }
