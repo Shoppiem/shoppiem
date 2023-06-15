@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author Biz Melesse created on 5/25/23
@@ -78,23 +79,27 @@ public class ProductServiceImpl implements ProductService {
       entity = new ProductEntity();
       entity.setProductSku(productSku);
       productRepo.save(entity);
-      ScrapingJobDto job = new ScrapingJobDto();
-      job.setProductSku(productSku);
-      job.setId(ShoppiemUtils.generateUid());
-      job.setUrl(url);
-      job.setType(JobType.PRODUCT_PAGE);
-      try {
-        String jobString = objectMapper.writeValueAsString(job);
-        rabbitTemplate.convertAndSend(
-            rabbitMQProps.getTopicExchange(),
-            rabbitMQProps.getRoutingKeyPrefix() + productSku,
-            jobString);
-        return new ProductCreateResponse()
-            .inProgress(true);
-      } catch (JsonProcessingException e) {
-        e.printStackTrace();
-        return new ProductCreateResponse()
-            .error(e.getLocalizedMessage());
+      if (!ObjectUtils.isEmpty(productRequest.getHtml())) {
+        amazonParser.parseProductPage(productSku, productRequest.getHtml(), true);
+      } else {
+        ScrapingJobDto job = new ScrapingJobDto();
+        job.setProductSku(productSku);
+        job.setId(ShoppiemUtils.generateUid());
+        job.setUrl(url);
+        job.setType(JobType.PRODUCT_PAGE);
+        try {
+          String jobString = objectMapper.writeValueAsString(job);
+          rabbitTemplate.convertAndSend(
+              rabbitMQProps.getTopicExchange(),
+              rabbitMQProps.getRoutingKeyPrefix() + productSku,
+              jobString);
+          return new ProductCreateResponse()
+              .inProgress(true);
+        } catch (JsonProcessingException e) {
+          e.printStackTrace();
+          return new ProductCreateResponse()
+              .error(e.getLocalizedMessage());
+        }
       }
     }
     if (entity.getIsReady()) {

@@ -129,12 +129,12 @@ public class AmazonParserImpl implements AmazonParser {
         productDescription,
         productDescriptionType2,
         bookDescription)));
-    productRepo.save(entity);
-    Thread.startVirtualThread(() -> embeddingService.embedProduct(entity));
-    if (scheduleJobs) {
-      scheduleQandAScraping(entity);
-      scheduleInitialReviewScraping(entity);
-    }
+//    productRepo.save(entity);
+//    Thread.startVirtualThread(() -> embeddingService.embedProduct(entity));
+//    if (scheduleJobs) {
+//      scheduleQandAScraping(entity);
+//      scheduleInitialReviewScraping(entity);
+//    }
   }
 
   @Override
