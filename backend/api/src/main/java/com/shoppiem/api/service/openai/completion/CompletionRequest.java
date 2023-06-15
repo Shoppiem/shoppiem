@@ -7,7 +7,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * A request for OpenAi to generate a predicted completion for a prompt.
@@ -138,5 +137,5 @@ public class CompletionRequest {
      *         {"role": "user", "content": "Where was it played?"}
      *     ])
      */
-    List<Message> messages;
+    List<CompletionMessage> messages;
 }

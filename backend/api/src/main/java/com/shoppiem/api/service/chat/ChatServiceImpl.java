@@ -2,18 +2,17 @@ package com.shoppiem.api.service.chat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.Message;
 import com.shoppiem.api.props.OpenAiProps;
 import com.shoppiem.api.service.embedding.EmbeddingService;
-import com.shoppiem.api.service.openai.OpenAiService;
-import com.shoppiem.api.service.openai.completion.CompletionChoice;
 import com.shoppiem.api.service.openai.completion.CompletionRequest;
 import com.shoppiem.api.service.openai.completion.CompletionResult;
-import com.shoppiem.api.service.openai.completion.Message;
+import com.shoppiem.api.service.openai.completion.CompletionMessage;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.util.HashMap;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Call;
@@ -22,16 +21,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import org.apache.hc.core5.http.ContentType;
-import org.apache.http.Header;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Service;
-import org.springframework.util.ObjectUtils;
 
 /**
  * @author Biz Melesse created on 6/12/23
@@ -57,25 +47,51 @@ public class ChatServiceImpl implements ChatService {
         .maxTokens(openAiProps.getMaxTokens())
         .temperature(openAiProps.getTemp())
         .messages(List.of(
-            new Message("system", openAiProps.getSystemMessage()),
-            new Message("user", content)
+            new CompletionMessage("system", openAiProps.getSystemMessage()),
+            new CompletionMessage("user", content)
         )).build();
   }
 
   @Override
   public void callGpt(String query, String productSku) {
-    CompletionRequest request = buildGptRequest(query, productSku);
+    sendFcmMessage(LocalDateTime.now().toString());
+//    CompletionRequest request = buildGptRequest(query, productSku);
+//    try {
+//      String json = objectMapper.writeValueAsString(request);
+//      CompletionResult result = gptHttpRequest(json);
+//      if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
+//          result.getChoices().get(0).getMessage() != null) {
+//        String response = result.getChoices().get(0).getMessage().getContent();
+//        sendFcmMessage(response);
+//        log.info("Assistant: {}", response);
+//      }
+//    } catch (JsonProcessingException e) {
+//      log.error(e.getLocalizedMessage());
+//    }
+  }
+
+  private void sendFcmMessage(String chatMessage) {
+    String registrationToken = "APA91bE4sRfKX9swQU3g91_gFgeQciZg6-mP1V1SAdDBPjfbyg8tetPzmL9GZUQMfSjY3Lz2xspDbo9BAYRjw1M4qzqLsVVeeaGhyoVXPorZ9loQrdR0K6tQIFxOuSVM3GvqSCLTZ3FNLwVEYm12dBb4ZltDCLlAug";
+
+// See documentation on defining a message payload.
+    Message message = Message.builder()
+        .putData("content", chatMessage)
+        .putData("greeting", "Hello, world!")
+        .putData("sender", "shoppiem-server")
+        .setToken(registrationToken)
+        .build();
+
+// Send a message to the device corresponding to the provided
+// registration token.
+    String response = null;
     try {
-      String json = objectMapper.writeValueAsString(request);
-      CompletionResult result = gptHttpRequest(json);
-      if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
-          result.getChoices().get(0).getMessage() != null) {
-        String response = result.getChoices().get(0).getMessage().getContent();
-        log.info("Assistant: {}", response);
-      }
-    } catch (JsonProcessingException e) {
-      log.error(e.getLocalizedMessage());
+      response = FirebaseMessaging.getInstance().send(message);
+      // Response is a message ID string.
+      System.out.println("Successfully sent message: " + response);
+    } catch (FirebaseMessagingException e) {
+      throw new RuntimeException(e);
     }
+
   }
 
   private CompletionResult gptHttpRequest(String json) {
