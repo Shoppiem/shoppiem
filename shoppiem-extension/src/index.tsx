@@ -26,7 +26,7 @@ async function init() {
 
   // create react app
   const app = document.createElement('div');
-  app.id = 'side-bar-extension-root';
+  app.id = 'shoppiem-root';
 
   body.appendChild(app);
   const root = createRoot(app!);
