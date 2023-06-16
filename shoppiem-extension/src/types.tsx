@@ -2,7 +2,7 @@ export interface Chat {
   message?: string,
   from_user: boolean,
   id: string,
-  boundary: boolean
+  boundary?: boolean
 }
 
 export interface ProductInfo {

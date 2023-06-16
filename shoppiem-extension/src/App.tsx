@@ -2,7 +2,6 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import { nanoid } from 'nanoid'
 import 'rsuite/dist/rsuite.min.css';
 import CloseIcon from '@rsuite/icons/Close';
-import * as Stomp from '@stomp/stompjs';
 import { Drawer } from 'rsuite';
 
 // @ts-ignore
@@ -37,7 +36,22 @@ export default function App(): ReactElement {
 
   useEffect(() => {
     setChatHistory(loadHistory(chatHistory))
+    setTimeout(() => setServerReady(true), 10000);
   }, [])
+
+  useEffect(() => {
+    if (chatHistory.length == 0 && !serverReady) {
+      addToChatHistory("We are currently processing this product. Please check again in a few minutes.", false)
+      setShowBubbleAnimation(true)
+    }
+  }, [chatHistory])
+
+  useEffect(() => {
+    if (serverReady && chatHistory.length == 1) {
+      setShowBubbleAnimation(false)
+      addToChatHistory("What would you like to know about " + productMetadata?.name + "?", false)
+    }
+  }, [serverReady])
 
   const handleProductInfoChange = (value: string, field: string) => {
     const newMetadata = {...productMetadata}
@@ -50,37 +64,24 @@ export default function App(): ReactElement {
     setRawMessage(value)
   }
 
-  const onServerReady = () => {
-    setShowBubbleAnimation(false)
-    setServerReady(true)
-    addToChatHistory("What would you like to know about this product?", false, false)
-  }
-
-  const handleStartNewSession = () => {
-    setShowBubbleAnimation(true)
-    setShowStartSessionButton(false)
-    addToChatHistory("Processing this product. This may take up to two minutes.", false, false)
-    setTimeout(() => onServerReady(), 5000);
-  }
-
   const handleSubmit = () => {
     if (rawMessage) {
       // TODO send it to the server
       setShowBubbleAnimation(true)
-      addToChatHistory(rawMessage, true, false)
+      addToChatHistory(rawMessage, true)
       setRawMessage('')
     }
   }
 
-  const addToChatHistory = (message: string, fromUser: boolean, boundary: boolean) => {
+  const addToChatHistory = (message: string, fromUser: boolean) => {
     const prevHistory = loadHistory(chatHistory)
     const newHistory = [...prevHistory,
       {
         message,
         from_user: fromUser,
-        id: nanoid(),
-        boundary: boundary
+        id: nanoid()
       } ]
+    localStorage.setItem("history", JSON.stringify(newHistory))
     setChatHistory(newHistory)
   }
 
@@ -104,7 +105,6 @@ export default function App(): ReactElement {
       </Drawer.Header>
       <Drawer.Body style={{bottom: 0}}>
         <ProductForm
-            handleStartNewSession={handleStartNewSession}
             handleProductInfoChange={handleProductInfoChange}
             showStartSessionButton={showStartSessionButton}
             productMetadata={productMetadata}
