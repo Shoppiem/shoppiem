@@ -3,10 +3,7 @@ package com.shoppiem.api.controller;
 import com.shoppiem.api.ExtensionApi;
 import com.shoppiem.api.ExtensionRequest;
 import com.shoppiem.api.GenericResponse;
-import com.shoppiem.api.MessageApi;
-import com.shoppiem.api.MessageRequest;
 import com.shoppiem.api.service.chromeExtension.ExtensionService;
-import com.shoppiem.api.service.product.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -25,6 +22,7 @@ public class ExtensionController implements ExtensionApi {
 
   @Override
   public ResponseEntity<GenericResponse> handleMessage(ExtensionRequest extensionRequest) {
-    return ResponseEntity.ok(extensionService.handleMessages(extensionRequest));
+    Thread.startVirtualThread(() -> extensionService.handleMessages(extensionRequest));
+    return ResponseEntity.ok(new GenericResponse().status("OK"));
   }
 }

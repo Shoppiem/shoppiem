@@ -76,39 +76,6 @@
         "tags": [
           "product"
         ],
-        "summary": "Create a new product",
-        "description": "Create a new product",
-        "operationId": "createProduct",
-        "requestBody": {
-          "required": true,
-          "description": "New product request",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProductRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Generic Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductCreateResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/product-from-data": {
-      "post": {
-        "tags": [
-          "product"
-        ],
         "summary": "Create a new product from input data",
         "description": "Create a new product",
         "operationId": "createProductFromData",
@@ -174,6 +141,12 @@
           "message": {
             "type": "string"
           },
+          "html": {
+            "type": "string"
+          },
+          "product_url": {
+            "type": "string"
+          },
           "product_sku": {
             "type": "string"
           }
@@ -186,17 +159,6 @@
             "type": "string"
           },
           "error": {
-            "type": "string"
-          }
-        }
-      },
-      "ProductRequest":  {
-        "type": "object",
-        "properties": {
-          "product_url": {
-            "type": "string"
-          },
-          "html": {
             "type": "string"
           }
         }

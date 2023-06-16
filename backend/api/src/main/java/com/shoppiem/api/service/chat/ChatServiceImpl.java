@@ -67,7 +67,7 @@ public class ChatServiceImpl implements ChatService {
           result.getChoices().get(0).getMessage() != null) {
         String response = result.getChoices().get(0).getMessage().getContent();
         Thread.startVirtualThread(() -> saveToChatHistory(response, productSku, true));
-        sendFcmMessage(response, registrationToken);
+        sendFcmMessage(response, registrationToken, productSku);
         log.info("Assistant: {}", response);
       }
     } catch (JsonProcessingException e) {
@@ -88,11 +88,10 @@ public class ChatServiceImpl implements ChatService {
     entity.setUserId(-1L);
   }
 
-  private void sendFcmMessage(String chatMessage, String registrationToken ) {
+  private void sendFcmMessage(String chatMessage, String registrationToken, String productSku) {
     Message message = Message.builder()
         .putData("content", chatMessage)
-        .putData("greeting", "Hello, world!")
-        .putData("sender", "shoppiem-server")
+        .putData("productSku", productSku)
         .setToken(registrationToken)
         .build();
 

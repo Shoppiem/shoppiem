@@ -1,11 +1,11 @@
 const MESSAGE_TYPE = {
   HEART_BEAT: "HEART_BEAT",
   REGISTRATION_TOKEN: "REGISTRATION_TOKEN",
-  CHAT: "CHAT"
+  CHAT: "CHAT",
+  PRODUCT_INIT: "PRODUCT_INIT"
 }
 const PATHS = {
   base: "http:localhost:8080",
-  product: "/product",
   extension: "/extension"
 }
 chrome.runtime.onInstalled.addListener(() => {
@@ -30,10 +30,12 @@ function post(host, body) {
 }
 
 function initProduct(url, html) {
-  const host = `${PATHS.base}${PATHS.product}`
+  const host = `${PATHS.base}${PATHS.extension}`
   const requestBody = {
     product_url: url,
-    html: html
+    html: html,
+    token: chrome.storage.local.get("rId"),
+    type: MESSAGE_TYPE.PRODUCT_INIT
   };
   post(host, requestBody)
 }
