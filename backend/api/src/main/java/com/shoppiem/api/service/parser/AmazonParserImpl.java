@@ -10,8 +10,8 @@ import com.shoppiem.api.data.postgres.repo.ProductAnswerRepo;
 import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.data.postgres.repo.ReviewRepo;
-import com.shoppiem.api.dto.ScrapingJobDto;
-import com.shoppiem.api.dto.ScrapingJobDto.JobType;
+import com.shoppiem.api.dto.ScrapingJob;
+import com.shoppiem.api.dto.ScrapingJob.JobType;
 import com.shoppiem.api.props.RabbitMQProps;
 import com.shoppiem.api.service.embedding.EmbeddingService;
 import com.shoppiem.api.service.scraper.Merchant;
@@ -139,11 +139,11 @@ public class AmazonParserImpl implements AmazonParser {
 
   @Override
   public void scheduleQandAScraping(ProductEntity entity) {
-    List<ScrapingJobDto> jobs = new ArrayList<>();
+    List<ScrapingJob> jobs = new ArrayList<>();
     List<String> questionUrls = generateProductQuestionLinks(entity);
     Collections.shuffle(questionUrls);
     for (String url : questionUrls) {
-      ScrapingJobDto job = new ScrapingJobDto();
+      ScrapingJob job = new ScrapingJob();
       job.setProductSku(entity.getProductSku());
       job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
       job.setUrl(url);
@@ -158,11 +158,11 @@ public class AmazonParserImpl implements AmazonParser {
     // Set the number of reviews to cover only the first page of the reviews if numReviews is greater
     // than 0. The real review count is on that page, which we will have to scrape first and parse
     // downstream.
-    List<ScrapingJobDto> jobs = new ArrayList<>();
+    List<ScrapingJob> jobs = new ArrayList<>();
     List<String> reviewUrls = generateReviewLinks(entity);
     if (reviewUrls.size() > 0) {
       String url = reviewUrls.get(0);
-      ScrapingJobDto job = new ScrapingJobDto();
+      ScrapingJob job = new ScrapingJob();
       job.setProductSku(entity.getProductSku());
       job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
       job.setUrl(url);
@@ -176,13 +176,13 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
 
-  private void submitJobs(List<ScrapingJobDto> jobs) {
-    for (ScrapingJobDto job : jobs) {
+  private void submitJobs(List<ScrapingJob> jobs) {
+    for (ScrapingJob job : jobs) {
       try {
         String jobString = objectMapper.writeValueAsString(job);
         rabbitTemplate.convertAndSend(
             rabbitMQProps.getTopicExchange(),
-            rabbitMQProps.getRoutingKeyPrefix() + job.getProductSku(),
+            rabbitMQProps.getScrapeJobRoutingKeyPrefix() + job.getProductSku(),
             jobString);
       } catch (JsonProcessingException e) {
         log.error(e.getLocalizedMessage());
@@ -247,9 +247,9 @@ public class AmazonParserImpl implements AmazonParser {
       List<String> reviewUrls = generateReviewLinks(entity);
       reviewUrls.remove(0); // We already scraped the first page so no need to do it again
       Collections.shuffle(reviewUrls);
-      List<ScrapingJobDto> jobs = new ArrayList<>();
+      List<ScrapingJob> jobs = new ArrayList<>();
       for (String url : reviewUrls) {
-        ScrapingJobDto job = new ScrapingJobDto();
+        ScrapingJob job = new ScrapingJob();
         job.setProductSku(entity.getProductSku());
         job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
         job.setUrl(url);

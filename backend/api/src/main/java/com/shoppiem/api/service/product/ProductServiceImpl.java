@@ -7,8 +7,8 @@ import com.shoppiem.api.ProductFromDataRequest;
 import com.shoppiem.api.ProductRequest;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
-import com.shoppiem.api.dto.ScrapingJobDto;
-import com.shoppiem.api.dto.ScrapingJobDto.JobType;
+import com.shoppiem.api.dto.ScrapingJob;
+import com.shoppiem.api.dto.ScrapingJob.JobType;
 import com.shoppiem.api.props.RabbitMQProps;
 import com.shoppiem.api.service.embedding.EmbeddingService;
 import com.shoppiem.api.service.parser.AmazonParser;
@@ -82,7 +82,7 @@ public class ProductServiceImpl implements ProductService {
       if (!ObjectUtils.isEmpty(productRequest.getHtml())) {
         amazonParser.parseProductPage(productSku, productRequest.getHtml(), true);
       } else {
-        ScrapingJobDto job = new ScrapingJobDto();
+        ScrapingJob job = new ScrapingJob();
         job.setProductSku(productSku);
         job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
         job.setUrl(url);
@@ -91,7 +91,7 @@ public class ProductServiceImpl implements ProductService {
           String jobString = objectMapper.writeValueAsString(job);
           rabbitTemplate.convertAndSend(
               rabbitMQProps.getTopicExchange(),
-              rabbitMQProps.getRoutingKeyPrefix() + productSku,
+              rabbitMQProps.getScrapeJobRoutingKeyPrefix() + productSku,
               jobString);
           return new ProductCreateResponse()
               .inProgress(true);

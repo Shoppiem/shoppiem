@@ -1,5 +1,6 @@
 package com.shoppiem.api.service.utils;
 
+import com.shoppiem.api.props.RabbitMQProps;
 import com.shoppiem.api.props.ScraperProps;
 import java.util.concurrent.Semaphore;
 import lombok.RequiredArgsConstructor;
@@ -18,16 +19,24 @@ public class JobSemaphore {
    * rotation and how many scraping threads they recommend. We need to block
    * the consumer until a slot becomes available.
    */
-  private final ScraperProps scraperProps;
+  private final RabbitMQProps rabbitMQProps;
 
-  private Semaphore semaphore = null;
+  private Semaphore scrapeJobSemaphore = null;
+  private Semaphore chatJobSemaphore = null;
 
 
-  public Semaphore getSemaphore() {
-    if (semaphore == null) {
-      semaphore = new Semaphore(scraperProps.getThreadCount());
+  public Semaphore getScrapeJobSemaphore() {
+    if (scrapeJobSemaphore == null) {
+      scrapeJobSemaphore = new Semaphore(rabbitMQProps.getScrapeJobThreadCount());
     }
-    return semaphore;
+    return scrapeJobSemaphore;
+  }
+
+  public Semaphore getChatJobSemaphore() {
+    if (chatJobSemaphore == null) {
+      chatJobSemaphore = new Semaphore(rabbitMQProps.getChatJobThreadCount());
+    }
+    return chatJobSemaphore;
   }
 
 }

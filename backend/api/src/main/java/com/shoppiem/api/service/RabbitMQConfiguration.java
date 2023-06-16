@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.amqp.core.Binding;
@@ -32,8 +33,15 @@ public class RabbitMQConfiguration {
   }
 
   @Bean
-  public Queue jobQue(){
-    return new Queue(rabbitMQProps.getJobQueue());
+  @Qualifier("scrape-job-queue")
+  public Queue scrapeJobQueue(){
+    return new Queue(rabbitMQProps.getScrapeJobQueue());
+  }
+
+  @Bean
+  @Qualifier("chat-job-queue")
+  public Queue chatJobQueue(){
+    return new Queue(rabbitMQProps.getChatJobQueue());
   }
 
   @Bean
@@ -43,20 +51,43 @@ public class RabbitMQConfiguration {
 
 
   @Bean
-  public Binding binding(){
+  public Binding scrapeJobBinding(@Qualifier("scrape-job-queue") Queue jobQueue){
     return BindingBuilder
-        .bind(jobQue())
+        .bind(jobQueue)
         .to(exchange())
-        .with(rabbitMQProps.getRoutingKey());
+        .with(rabbitMQProps.getScrapeJobRoutingKey());
   }
 
   @Bean
-  SimpleMessageListenerContainer container(MessageListenerAdapter listenerAdapter,
+  public Binding chatJobBinding(@Qualifier("chat-job-queue") Queue jobQueue){
+    return BindingBuilder
+        .bind(jobQueue)
+        .to(exchange())
+        .with(rabbitMQProps.getChatJobRoutingKey());
+  }
+
+  @Bean
+  @Qualifier("scrape-job-listener-container")
+  SimpleMessageListenerContainer scrapeJobListenerContainer(
+      @Qualifier("scrape-job-message-listener") MessageListenerAdapter listenerAdapter,
       ConnectionFactory connectionFactory) {
     SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
     container.setConcurrentConsumers(rabbitMQProps.getConsumerConcurrency());
-    container.setQueueNames(rabbitMQProps.getJobQueue());
+    container.setQueueNames(rabbitMQProps.getScrapeJobQueue());
+    container.setMessageListener(listenerAdapter);
+    return container;
+  }
+
+  @Bean
+  @Qualifier("chat-job-listener-container")
+  SimpleMessageListenerContainer chatJobListenerContainer(
+      @Qualifier("chat-job-message-listener") MessageListenerAdapter listenerAdapter,
+      ConnectionFactory connectionFactory) {
+    SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+    container.setConnectionFactory(connectionFactory);
+    container.setConcurrentConsumers(rabbitMQProps.getConsumerConcurrency());
+    container.setQueueNames(rabbitMQProps.getChatJobQueue());
     container.setMessageListener(listenerAdapter);
     return container;
   }

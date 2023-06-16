@@ -12,6 +12,7 @@ import java.time.Duration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -39,7 +40,14 @@ public class ServiceConfiguration {
   private final Consumer consumer;
 
   @Bean
-  public MessageListenerAdapter scrapingJobListener() {
-    return new MessageListenerAdapter(consumer, "consume");
+  @Qualifier("scrape-job-message-listener")
+  public MessageListenerAdapter scrapeJobConsumer() {
+    return new MessageListenerAdapter(consumer, "scrapeJobConsumer");
+  }
+
+  @Bean
+  @Qualifier("chat-job-message-listener")
+  public MessageListenerAdapter chatJobConsumer() {
+    return new MessageListenerAdapter(consumer, "chatJobConsumer");
   }
 }

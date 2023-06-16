@@ -17,13 +17,18 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 @ConfigurationProperties(prefix = "rabbitmq")
 public class RabbitMQProps {
-    private String jobQueue;
+    private String scrapeJobQueue;
+    private String chatJobQueue;
     private String topicExchange;
-    private String routingKey;
-    private String routingKeyPrefix;
+    private String scrapeJobRoutingKey;
+    private String scrapeJobRoutingKeyPrefix;
+    private String chatJobRoutingKey;
+    private String chatJobRoutingKeyPrefix;
     private String host;
     private Integer port;
     private String username;
     private String password;
     private Integer consumerConcurrency;
+    private Integer scrapeJobThreadCount;
+    private Integer chatJobThreadCount;
 }

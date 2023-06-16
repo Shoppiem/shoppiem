@@ -8,7 +8,7 @@ import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
-import com.shoppiem.api.dto.ScrapingJobDto.JobType;
+import com.shoppiem.api.dto.ScrapingJob.JobType;
 import com.shoppiem.api.props.InfaticaProps;
 import com.shoppiem.api.service.parser.AmazonParser;
 import com.shoppiem.api.service.utils.JobSemaphore;
@@ -90,7 +90,7 @@ public class ScraperServiceImpl implements ScraperService {
                 log.info("Retries exhausted for {}", url);
             }
         } finally {
-            jobSemaphore.getSemaphore().release();
+            jobSemaphore.getScrapeJobSemaphore().release();
         }
     }
 

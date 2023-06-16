@@ -12,6 +12,7 @@ import com.shoppiem.api.service.embedding.EmbeddingService;
 import com.shoppiem.api.service.openai.completion.CompletionRequest;
 import com.shoppiem.api.service.openai.completion.CompletionResult;
 import com.shoppiem.api.service.openai.completion.CompletionMessage;
+import com.shoppiem.api.service.utils.JobSemaphore;
 import com.shoppiem.api.service.utils.ShoppiemUtils;
 import java.io.IOException;
 import java.util.List;
@@ -37,6 +38,7 @@ public class ChatServiceImpl implements ChatService {
   private final ObjectMapper objectMapper;
   private final OpenAiProps openAiProps;
   private final ChatHistoryRepo chatHistoryRepo;
+  private final JobSemaphore jobSemaphore;
 
   @Override
   public CompletionRequest buildGptRequest(String query, String productSku) {
@@ -72,6 +74,8 @@ public class ChatServiceImpl implements ChatService {
       }
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
+    } finally {
+      jobSemaphore.getChatJobSemaphore().release();
     }
   }
 
@@ -86,6 +90,8 @@ public class ChatServiceImpl implements ChatService {
      * TODO: use the real user id
      */
     entity.setUserId(-1L);
+
+    chatHistoryRepo.save(entity);
   }
 
   private void sendFcmMessage(String chatMessage, String registrationToken, String productSku) {
