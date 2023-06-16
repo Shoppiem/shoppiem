@@ -14,7 +14,9 @@ public class UnsecurePaths {
       "/ws/**",
       "/ws",
       "/product/**",
-      "/product"
+      "/product",
+      "/extension",
+      "/extension/**"
   );
 
   public static Stream<String> paths() {

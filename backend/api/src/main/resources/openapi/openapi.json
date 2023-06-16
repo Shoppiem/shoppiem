@@ -38,6 +38,39 @@
         }
       }
     },
+    "/extension": {
+      "post": {
+        "tags": [
+          "extension"
+        ],
+        "summary": "Handle messages from the Chrome extension",
+        "description": "Handle messages from the Chrome extension",
+        "operationId": "handleMessage",
+        "requestBody": {
+          "required": true,
+          "description": "New message request",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtensionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Generic Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GenericResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/product": {
       "post": {
         "tags": [
@@ -126,6 +159,17 @@
           },
           "profile": {
             "$ref": "#/components/schemas/UserProfile"
+          }
+        }
+      },
+      "ExtensionRequest":  {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string"
           }
         }
       },

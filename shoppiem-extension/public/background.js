@@ -1,5 +1,11 @@
 const MESSAGE_TYPE = {
-  HEART_BEAT: "HEART_BEAT"
+  HEART_BEAT: "HEART_BEAT",
+  REGISTRATION_TOKEN: "REGISTRATION_TOKEN"
+}
+const PATHS = {
+  base: "http:localhost:8080",
+  product: "/product",
+  extension: "/extension"
 }
 chrome.runtime.onInstalled.addListener(() => {
   console.log('Extension Installed')
@@ -23,7 +29,7 @@ function post(host, body) {
 }
 
 function initProduct(url, html) {
-  const host = "http://localhost:8080/product"
+  const host = `${PATHS.base}${PATHS.product}`
   const requestBody = {
     product_url: url,
     html: html
@@ -31,10 +37,10 @@ function initProduct(url, html) {
   post(host, requestBody)
 }
 
-function heartbeat() {
-  const host = "http://localhost:8080/heartbeat"
+function heartbeatACK() {
+  const host = `${PATHS.base}${PATHS.extension}`
   const requestBody = {
-    rId: chorme.storage.local.get("rId"),
+    token: chrome.storage.local.get("rId"),
     type: MESSAGE_TYPE.HEART_BEAT
   };
   post(host, requestBody)
@@ -42,6 +48,12 @@ function heartbeat() {
 
 function tokenRegistered(registration_id) {
   chrome.storage.local.set({"rId": registration_id})
+  const host = `${PATHS.base}${PATHS.extension}`
+  const requestBody = {
+    token: registration_id,
+    type: MESSAGE_TYPE.REGISTRATION_TOKEN
+  };
+  post(host, requestBody)
 }
 
 function getHtml() { return document.documentElement.outerHTML; }
@@ -69,14 +81,14 @@ chrome.gcm.register(["658613891142"], tokenRegistered)
 
 chrome.gcm.onMessage.addListener((message) => {
   if (message.data.type === MESSAGE_TYPE.HEART_BEAT) {
-    heartbeat()
+    heartbeatACK()
   }
   console.log("GCM message received: ", message)
-    // chrome.gcm.send({
-    //   data: {
-    //     "sender": "shoppiem-extension",
-    //     "content": "Your message has been received!"
-    //   },
-    //
-    // }, sendMessageCb)
+  // chrome.gcm.send({
+  //   data: {
+  //     "sender": "shoppiem-extension",
+  //     "content": "Your message has been received!"
+  //   },
+  //
+  // }, sendMessageCb)
 })
