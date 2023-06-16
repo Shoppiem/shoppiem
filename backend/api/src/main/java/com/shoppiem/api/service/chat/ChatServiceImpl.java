@@ -57,9 +57,8 @@ public class ChatServiceImpl implements ChatService {
   }
 
   @Override
-  public void callGpt(String query, String productSku) {
+  public void callGpt(String query, String registrationToken, String productSku) {
     Thread.startVirtualThread(() -> saveToChatHistory(query, productSku, false));
-//    sendFcmMessage(LocalDateTime.now().toString());
     CompletionRequest request = buildGptRequest(query, productSku);
     try {
       String json = objectMapper.writeValueAsString(request);
@@ -68,7 +67,7 @@ public class ChatServiceImpl implements ChatService {
           result.getChoices().get(0).getMessage() != null) {
         String response = result.getChoices().get(0).getMessage().getContent();
         Thread.startVirtualThread(() -> saveToChatHistory(response, productSku, true));
-        sendFcmMessage(response);
+        sendFcmMessage(response, registrationToken);
         log.info("Assistant: {}", response);
       }
     } catch (JsonProcessingException e) {
@@ -89,10 +88,7 @@ public class ChatServiceImpl implements ChatService {
     entity.setUserId(-1L);
   }
 
-  private void sendFcmMessage(String chatMessage) {
-    String registrationToken = "APA91bE4sRfKX9swQU3g91_gFgeQciZg6-mP1V1SAdDBPjfbyg8tetPzmL9GZUQMfSjY3Lz2xspDbo9BAYRjw1M4qzqLsVVeeaGhyoVXPorZ9loQrdR0K6tQIFxOuSVM3GvqSCLTZ3FNLwVEYm12dBb4ZltDCLlAug";
-
-// See documentation on defining a message payload.
+  private void sendFcmMessage(String chatMessage, String registrationToken ) {
     Message message = Message.builder()
         .putData("content", chatMessage)
         .putData("greeting", "Hello, world!")
@@ -100,12 +96,9 @@ public class ChatServiceImpl implements ChatService {
         .setToken(registrationToken)
         .build();
 
-// Send a message to the device corresponding to the provided
-// registration token.
     String response = null;
     try {
       response = FirebaseMessaging.getInstance().send(message);
-      // Response is a message ID string.
       System.out.println("Successfully sent message: " + response);
     } catch (FirebaseMessagingException e) {
       throw new RuntimeException(e);

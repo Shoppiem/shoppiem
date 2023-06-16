@@ -104,9 +104,11 @@ public class ProductServiceImpl implements ProductService {
     }
     if (entity.getIsReady()) {
       return new ProductCreateResponse()
+          .productSku(productSku)
           .isReady(true);
     }
     return new ProductCreateResponse()
+        .productSku(productSku)
         .inProgress(true);
   }
 

@@ -170,6 +170,12 @@
           },
           "token": {
             "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "product_sku": {
+            "type": "string"
           }
         }
       },
@@ -242,6 +248,9 @@
           },
           "in_progress": {
             "type": "boolean"
+          },
+          "product_sku": {
+            "type": "string"
           },
           "error": {
             "type": "string"

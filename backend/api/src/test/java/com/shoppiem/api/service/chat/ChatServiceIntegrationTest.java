@@ -85,60 +85,10 @@ public class ChatServiceIntegrationTest extends AbstractTestNGSpringContextTests
 
     @Test
     public void callGptTest() {
+        String registrationToken = "APA91bE4sRfKX9swQU3g91_gFgeQciZg6-mP1V1SAdDBPjfbyg8tetPzmL9GZUQMfSjY3Lz2xspDbo9BAYRjw1M4qzqLsVVeeaGhyoVXPorZ9loQrdR0K6tQIFxOuSVM3GvqSCLTZ3FNLwVEYm12dBb4ZltDCLlAug";
         String query = "What is the average battery life?";
         query = "what is the screen resolution for gaming?";
         String sku = "B0BW8K69VP";
-        chatService.callGpt(query, sku);
+        chatService.callGpt(query, registrationToken, sku);
     }
-
-//    @Test(enabled = false)
-//    public void createProductTest() throws InterruptedException {
-//      ProductRequest request = new ProductRequest()
-//          .productUrl("https://www.amazon.com/Sceptre-E248W-19203R-Monitor-Speakers-Metallic/dp/B0773ZY26F/ref=cm_cr_arp_d_product_top?ie=UTF8");
-//      request.setProductUrl("https://www.amazon.com/dp/B0BW8K69VP/ref=sspa_dk_detail_2?psc=1&pd_rd_i=B0BW8K69VP&pd_rd_w=OJIWn&content-id=amzn1.sym.08ba9b95-1385-44b0-b652-c46acdff309c&pf_rd_p=08ba9b95-1385-44b0-b652-c46acdff309c&pf_rd_r=QFGGBS8QK2MSSHKTVH3X&pd_rd_wg=yjmoJ&pd_rd_r=5f62e5bf-5f96-4101-b5b4-4be74ed30baf&s=pc&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUEyUVhJMkRCMFE3Wlk0JmVuY3J5cHRlZElkPUEwNDU0NjUxMkg3WjNVTDNERjNJRiZlbmNyeXB0ZWRBZElkPUEwODUzNzg5M1ZSM0RaQ1lLNjNFUiZ3aWRnZXROYW1lPXNwX2RldGFpbF90aGVtYXRpYyZhY3Rpb249Y2xpY2tSZWRpcmVjdCZkb05vdExvZ0NsaWNrPXRydWU=");
-//      ProductCreateResponse response = productService.createProduct(request);
-//      assertNotNull(response);
-//      assertTrue(response.getInProgress());
-//      Thread.sleep(3600000);
-//    }
-//
-//    @Test(enabled = false)
-//    public void createProductFromDataTest() {
-//        ProductEntity productEntity = productEntities
-//            .stream()
-//            .filter(it -> it.getProductSku().equals("B0BW8K69VP"))
-//            .findFirst()
-//            .get();
-//        ProductFromDataRequest request = new ProductFromDataRequest()
-//            .productUrl(productEntity.getProductUrl())
-//            .currency(productEntity.getCurrency())
-//            .description(productEntity.getDescription())
-//            .price(productEntity.getPrice())
-//            .numReviews(productEntity.getNumReviews())
-//            .imageUrl(productEntity.getImageUrl())
-//            .numQuestionsAnswered(productEntity.getNumQuestionsAnswered())
-//            .seller(productEntity.getSeller())
-//            .starRating(productEntity.getStarRating())
-//            .title(productEntity.getTitle());
-//        ProductCreateResponse response = productService.createProductFromData(request, false);
-//        assertNotNull(response);
-//        assertTrue(response.getInProgress());
-//    }
-//
-//    @Test
-//    public void scheduleJobsTest() throws InterruptedException {
-//        String sku = "B0BW8K69VP";
-//        productRepo.saveAll(productEntities);
-//        ProductEntity productEntity = productRepo.findByProductSku(sku);
-//        productService.scheduleJobs(productEntity);
-//        Thread.sleep(3600000);
-//    }
-//
-//    @Test(enabled = false)
-//    public void parseProductSKUTest() {
-//        String url = "https://www.amazon.com/Belkin-Boost%E2%86%91ChargeTM-Wireless-Compatible-Kickstand/dp/B0BXRMCC31/?_encoding=UTF8&pd_rd_w=dyu4M&content-id=amzn1.sym.c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_p=c1df8aef-5b8d-403a-bbaa-0d55ea81081f&pf_rd_r=CVH3RSQQQDGMZPB008AQ&pd_rd_wg=B4Bru&pd_rd_r=08f1c561-28fd-45c0-8d24-ca21537303c7&ref_=pd_gw_gcx_gw_EGG-Graduation-23-1a&th=1";
-//        String sku = productService.parseProductSku(url);
-//        assertNotNull(sku);
-//        assertEquals("B0BXRMCC31", sku);
-//    }
 }

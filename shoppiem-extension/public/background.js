@@ -1,6 +1,7 @@
 const MESSAGE_TYPE = {
   HEART_BEAT: "HEART_BEAT",
-  REGISTRATION_TOKEN: "REGISTRATION_TOKEN"
+  REGISTRATION_TOKEN: "REGISTRATION_TOKEN",
+  CHAT: "CHAT"
 }
 const PATHS = {
   base: "http:localhost:8080",
@@ -33,6 +34,17 @@ function initProduct(url, html) {
   const requestBody = {
     product_url: url,
     html: html
+  };
+  post(host, requestBody)
+}
+
+function sendMessage(message) {
+  const host = `${PATHS.base}${PATHS.extension}`
+  const requestBody = {
+    token: chrome.storage.local.get("rId"),
+    type: MESSAGE_TYPE.CHAT,
+    message: message,
+    productSku: "INSERT_PRODUCT_SKU_HERE"
   };
   post(host, requestBody)
 }
@@ -92,3 +104,10 @@ chrome.gcm.onMessage.addListener((message) => {
   //
   // }, sendMessageCb)
 })
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if (request.type === MESSAGE_TYPE.CHAT) {
+    sendMessage(request.message)
+    sendResponse({ status: "done" });
+  }
+});
