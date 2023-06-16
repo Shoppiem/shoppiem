@@ -5,13 +5,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
+import com.shoppiem.api.data.postgres.entity.ChatHistoryEntity;
+import com.shoppiem.api.data.postgres.repo.ChatHistoryRepo;
 import com.shoppiem.api.props.OpenAiProps;
 import com.shoppiem.api.service.embedding.EmbeddingService;
 import com.shoppiem.api.service.openai.completion.CompletionRequest;
 import com.shoppiem.api.service.openai.completion.CompletionResult;
 import com.shoppiem.api.service.openai.completion.CompletionMessage;
+import com.shoppiem.api.service.utils.ShoppiemUtils;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author Biz Melesse created on 6/12/23
@@ -33,6 +36,7 @@ public class ChatServiceImpl implements ChatService {
   private final EmbeddingService embeddingService;
   private final ObjectMapper objectMapper;
   private final OpenAiProps openAiProps;
+  private final ChatHistoryRepo chatHistoryRepo;
 
   @Override
   public CompletionRequest buildGptRequest(String query, String productSku) {
@@ -54,20 +58,35 @@ public class ChatServiceImpl implements ChatService {
 
   @Override
   public void callGpt(String query, String productSku) {
-    sendFcmMessage(LocalDateTime.now().toString());
-//    CompletionRequest request = buildGptRequest(query, productSku);
-//    try {
-//      String json = objectMapper.writeValueAsString(request);
-//      CompletionResult result = gptHttpRequest(json);
-//      if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
-//          result.getChoices().get(0).getMessage() != null) {
-//        String response = result.getChoices().get(0).getMessage().getContent();
-//        sendFcmMessage(response);
-//        log.info("Assistant: {}", response);
-//      }
-//    } catch (JsonProcessingException e) {
-//      log.error(e.getLocalizedMessage());
-//    }
+    Thread.startVirtualThread(() -> saveToChatHistory(query, productSku, false));
+//    sendFcmMessage(LocalDateTime.now().toString());
+    CompletionRequest request = buildGptRequest(query, productSku);
+    try {
+      String json = objectMapper.writeValueAsString(request);
+      CompletionResult result = gptHttpRequest(json);
+      if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
+          result.getChoices().get(0).getMessage() != null) {
+        String response = result.getChoices().get(0).getMessage().getContent();
+        Thread.startVirtualThread(() -> saveToChatHistory(response, productSku, true));
+        sendFcmMessage(response);
+        log.info("Assistant: {}", response);
+      }
+    } catch (JsonProcessingException e) {
+      log.error(e.getLocalizedMessage());
+    }
+  }
+
+  private void saveToChatHistory(String query, String productSku, boolean isGpt) {
+    ChatHistoryEntity entity = new ChatHistoryEntity();
+    entity.setMessage(query);
+    entity.setIsGpt(isGpt);
+    entity.setProductSku(productSku);
+    entity.setChatId(ShoppiemUtils.generateUid(16));
+
+    /***
+     * TODO: use the real user id
+     */
+    entity.setUserId(-1L);
   }
 
   private void sendFcmMessage(String chatMessage) {

@@ -120,4 +120,15 @@ CREATE TABLE IF NOT EXISTS public.fcm_token (
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-ALTER TABLE public.fcm_token OWNER TO root;
+
+CREATE TABLE IF NOT EXISTS public.chat_history (
+    id BIGSERIAL PRIMARY KEY NOT NULL,
+    user_id bigint NOT NULL,
+    product_sku varchar(255) NOT NULL,
+    chat_id varchar(16),
+    message varchar NOT NULL,
+    is_gpt boolean NOT NULL,
+    updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+ALTER TABLE public.chat_history OWNER TO root;

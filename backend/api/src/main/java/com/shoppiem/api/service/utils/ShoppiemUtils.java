@@ -10,15 +10,6 @@ import java.util.Random;
 public class ShoppiemUtils {
   public static final int DEFAULT_UID_LENGTH = 8;
 
-
-  public static String getCanonicalPath(String path) throws IOException {
-    String cPath = new File(path).getCanonicalPath();
-    if (cPath.startsWith("/private")) {
-      return cPath.replace("/private", "");
-    }
-    return cPath;
-  }
-
   public static String generateUid(int length) {
     StringBuilder builder = new StringBuilder();
     // An ID length of N gives 62^N unique IDs
