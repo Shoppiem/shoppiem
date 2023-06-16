@@ -1,16 +1,9 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import { APP_COLLAPSE_WIDTH, APP_EXTEND_WIDTH, URLS } from './const';
-import WechatIcon from '@rsuite/icons/Wechat';
 import { nanoid } from 'nanoid'
-// import {
-//   Drawer,
-//   Button,
-// } from 'rsuite';
 import 'rsuite/dist/rsuite.min.css';
 import CloseIcon from '@rsuite/icons/Close';
 import * as Stomp from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
-import { Drawer, RadioGroup, Radio, ButtonToolbar, Button, IconButton, Placeholder } from 'rsuite';
+import { Drawer } from 'rsuite';
 
 // @ts-ignore
 import cartLogo from './assets/img/shoppiem_cart.png';
@@ -20,188 +13,16 @@ import {Chat, ProductInfo} from "./types";
 import ChatInput from "./components/chat/input";
 import ChatMessages from "./components/chat/messages";
 import {loadHistory} from "./components/chat/utils";
-import FloatingButton from "./components/FloatingButton";
+import FloatingButton from "./components/logo/FloatingButton";
 import ProductCard from "./components/product/card";
 import ProductForm from "./components/product/form";
+import FullLogo from "./components/logo/FullLogo";
 
 const productInfo: ProductInfo = {
   name: "Dell Inspiron 15 3000 Series 3511 Laptop, 15.6\" FHD Touchscreen, Intel Core i5-1035G1, 32GB DDR4 RAM, 1TB PCIe SSD, SD Card Reader, Webcam, HDMI, Wi-Fi, Windows 11 Home, Black",
   imageUrl: "https://m.media-amazon.com/images/I/61KwCmF0bdL._AC_SL1500_.jpg",
   productUrl: "https://www.amazon.com/Dell-Inspiron-3511-Touchscreen-i5-1135G7/dp/B0B29C364N"
 }
-
-
-// export default function Panel({ onWidthChange, initialEnabled }: { onWidthChange: (value: number) => void, initialEnabled: boolean }): ReactElement {
-//   // const [enabled, setEnabled] = useState(initialEnabled);
-//   // const [sidePanelWidth, setSidePanelWidth] = useState(enabled ? APP_EXTEND_WIDTH: APP_COLLAPSE_WIDTH);
-//   // const [tabIndex, setTabIndex] = useState(0);
-//
-//   // const [size, setSize] = useState('xs');
-//   // const [open, setOpen] = useState(false);
-//   // const [placement, setPlacement] = React.useState();
-//
-//   // function handleOnToggle(enabled: boolean) {
-//   //   const value = enabled ? APP_EXTEND_WIDTH : APP_COLLAPSE_WIDTH;
-//   //   setSidePanelWidth(value);
-//   //   onWidthChange(value);
-//   //
-//   //   window['chrome'].storage?.local.set({enabled});
-//   // }
-//   //
-//   // function openPanel(force?: boolean) {
-//   //   const newValue = force || !enabled;
-//   //   setEnabled(newValue);
-//   //   handleOnToggle(newValue);
-//   // }
-//
-//   const [open, setOpen] = useState(false);
-//   const [chatHistory, setChatHistory] = useState<Chat[]>([])
-//   const [productId, setProductId] = useState('')
-//   const [productMetadata, setProductMetadata] = useState<ProductInfo>(productInfo)
-//   const [showBubbleAnimation, setShowBubbleAnimation] = useState(false)
-//   const [showStartSessionButton, setShowStartSessionButton] = useState(true)
-//   const [rawMessage, setRawMessage] = useState('')
-//   const [serverReady, setServerReady] = useState(false)
-//   const [stompClient, setStompClient] = useState<Stomp.CompatClient | undefined>(undefined)
-//   const boundaryId = nanoid()
-//
-//   // useEffect(() => {
-//   //   if (!stompClient) {
-//   //     const wsStompUrl = process.env.REACT_WEBSOCKET_ENDPOINT;
-//   //     const sock = new SockJS(wsStompUrl)
-//   //     try {
-//   //       const client = Stomp.Stomp.over(() => sock);
-//   //       client.connect({}, function () {
-//   //         setStompClient(client)
-//   //       });
-//   //     } catch (e) {
-//   //       console.log(e)
-//   //     }
-//   //   }
-//   // })
-//
-//   useEffect(() => {
-//     setChatHistory(loadHistory(chatHistory))
-//   }, [])
-//
-//   const handleProductInfoChange = (value: string, field: string) => {
-//     const newMetadata = {...productMetadata}
-//     // @ts-ignore
-//     newMetadata[field] = value
-//     setProductMetadata(newMetadata)
-//   }
-//
-//   const handleRawMessageChange = (value: string) => {
-//     setRawMessage(value)
-//   }
-//
-//   const onServerReady = () => {
-//     setShowBubbleAnimation(false)
-//     setServerReady(true)
-//     addToChatHistory("What would you like to know about this product?", false, false)
-//   }
-//
-//   const handleStartNewSession = () => {
-//     setShowBubbleAnimation(true)
-//     setShowStartSessionButton(false)
-//     addToChatHistory("Processing this product. This may take up to two minutes.", false, false)
-//     setTimeout(() => onServerReady(), 5000);
-//   }
-//
-//   const handleSubmit = () => {
-//     if (rawMessage) {
-//       // TODO send it to the server
-//       setShowBubbleAnimation(true)
-//       addToChatHistory(rawMessage, true, false)
-//       setRawMessage('')
-//     }
-//   }
-//
-//   const addToChatHistory = (message: string, fromUser: boolean, boundary: boolean) => {
-//     const prevHistory = loadHistory(chatHistory)
-//     const newHistory = [...prevHistory,
-//       {
-//         message,
-//         from_user: fromUser,
-//         id: nanoid(),
-//         boundary: boundary
-//       } ]
-//     setChatHistory(newHistory)
-//   }
-//
-//   // const handleOpen = () => {
-//   //   setOpen(!open);
-//   // };
-//
-//   const handleOpen = () => {
-//     setOpen(!open);
-//   };
-//
-//   return (
-//       <div>
-//
-//         {/*<Drawer size={"xs"} placement={"right"} open={open} onClose={() => setOpen(false)}>*/}
-//         {/*  <Drawer.Header>*/}
-//         {/*    <Drawer.Title>Drawer Title</Drawer.Title>*/}
-//         {/*    <Drawer.Actions>*/}
-//         {/*      <Button onClick={() => setOpen(false)}>Cancel</Button>*/}
-//         {/*      <Button onClick={() => setOpen(false)} appearance="primary">*/}
-//         {/*        Confirm*/}
-//         {/*      </Button>*/}
-//         {/*    </Drawer.Actions>*/}
-//         {/*  </Drawer.Header>*/}
-//         {/*  <Drawer.Body>*/}
-//         {/*    <Placeholder.Paragraph rows={8} />*/}
-//         {/*  </Drawer.Body>*/}
-//         {/*</Drawer>*/}
-//
-//
-//
-//
-//         <Drawer size={"xs"} placement={"right"} open={open} onClose={() => setOpen(false)} className="z-max b">
-//           <Drawer.Header closeButton={false}>
-//             {/*<Drawer.Title>*/}
-//             {/*  <img className="shoppiem-full-logo" src={fullLogo} alt="Shoppiem"/>*/}
-//             {/*</Drawer.Title>*/}
-//             <Drawer.Actions>
-//               <CloseIcon onClick={() => setOpen(false)} className="close-btn"/>
-//               {/*<Button onClick={() => setOpen(false)}><CloseIcon/></Button>*/}
-//             </Drawer.Actions>
-//           </Drawer.Header>
-//           <Drawer.Header style={{marginTop: "1rem"}}>
-//             <ProductCard productMetadata={productMetadata}/>
-//           </Drawer.Header>
-//           <Drawer.Body style={{bottom: 0}}>
-//             <ProductForm
-//                 handleStartNewSession={handleStartNewSession}
-//                 handleProductInfoChange={handleProductInfoChange}
-//                 showStartSessionButton={showStartSessionButton}
-//                 productMetadata={productMetadata}
-//             />
-//             <ChatMessages
-//                 chatHistory={chatHistory}
-//                 boundaryId={boundaryId}
-//                 setShowStartSessionButton={setShowStartSessionButton}
-//             />
-//           </Drawer.Body>
-//           <Drawer.Footer>
-//             <ChatInput
-//                 handleSubmit={handleSubmit}
-//                 handleRawMessageChange={handleRawMessageChange}
-//                 serverReady={serverReady}
-//                 showBubbleAnimation={showBubbleAnimation}
-//                 rawMessage={rawMessage}
-//             />
-//           </Drawer.Footer>
-//         </Drawer>
-//
-//
-//
-//
-//         <FloatingButton handleOpen={handleOpen}/>
-//       </div>
-//   )
-// }
 
 export default function App(): ReactElement {
   const [open, setOpen] = useState(false);
@@ -212,23 +33,7 @@ export default function App(): ReactElement {
   const [showStartSessionButton, setShowStartSessionButton] = useState(true)
   const [rawMessage, setRawMessage] = useState('')
   const [serverReady, setServerReady] = useState(false)
-  const [stompClient, setStompClient] = useState<Stomp.CompatClient | undefined>(undefined)
   const boundaryId = nanoid()
-
-  // useEffect(() => {
-  //   if (!stompClient) {
-  //     const wsStompUrl = process.env.REACT_WEBSOCKET_ENDPOINT;
-  //     const sock = new SockJS(wsStompUrl)
-  //     try {
-  //       const client = Stomp.Stomp.over(() => sock);
-  //       client.connect({}, function () {
-  //         setStompClient(client)
-  //       });
-  //     } catch (e) {
-  //       console.log(e)
-  //     }
-  //   }
-  // })
 
   useEffect(() => {
     setChatHistory(loadHistory(chatHistory))
@@ -288,11 +93,10 @@ export default function App(): ReactElement {
         <Drawer size={"xs"} placement={"right"} open={open} onClose={() => setOpen(false)} className="z-max b">
       <Drawer.Header closeButton={false}>
         <Drawer.Title>
-          <img className="shoppiem-full-logo" src="/shoppiem_full_blue.png" alt="Shoppiem"/>
+          <FullLogo/>
         </Drawer.Title>
         <Drawer.Actions>
           <CloseIcon onClick={() => setOpen(false)} className="close-btn"/>
-          {/*<Button onClick={() => setOpen(false)}><CloseIcon/></Button>*/}
         </Drawer.Actions>
       </Drawer.Header>
       <Drawer.Header style={{marginTop: "1rem"}}>

@@ -7,7 +7,14 @@
 /*.rs-drawer-header-close {*/
 /*  display: none*/
 /*}*/
-.shoppiem-full-logo {
+.floating-button svg {
+  background: #3498ff;
+  padding: 8px;
+  border-right: 16px;
+  height: 64px;
+}
+.shoppiem-full-logo svg {
+  height: 40px;
   width: 128px;
 }
 .rs-drawer-body {

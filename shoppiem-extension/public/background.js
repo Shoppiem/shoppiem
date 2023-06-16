@@ -1,8 +1,9 @@
 const MESSAGE_TYPE = {
-  HEART_BEAT: "HEART_BEAT",
-  REGISTRATION_TOKEN: "REGISTRATION_TOKEN",
   CHAT: "CHAT",
-  PRODUCT_INIT: "PRODUCT_INIT"
+  READY: "READY",
+  HEART_BEAT: "HEART_BEAT",
+  PRODUCT_INIT: "PRODUCT_INIT",
+  REGISTRATION_TOKEN: "REGISTRATION_TOKEN",
 }
 const PATHS = {
   base: "http:localhost:8080",
@@ -40,7 +41,7 @@ function initProduct(url, html) {
   post(host, requestBody)
 }
 
-function sendMessage(message) {
+function sendQuery(message) {
   const host = `${PATHS.base}${PATHS.extension}`
   const requestBody = {
     token: chrome.storage.local.get("rId"),
@@ -96,6 +97,8 @@ chrome.gcm.register(["658613891142"], tokenRegistered)
 chrome.gcm.onMessage.addListener((message) => {
   if (message.data.type === MESSAGE_TYPE.HEART_BEAT) {
     heartbeatACK()
+  } else if (message.data.type === MESSAGE_TYPE.READY) {
+    chrome.storage.local.set({"isReady": true})
   }
   console.log("GCM message received: ", message)
   // chrome.gcm.send({
@@ -104,12 +107,12 @@ chrome.gcm.onMessage.addListener((message) => {
   //     "content": "Your message has been received!"
   //   },
   //
-  // }, sendMessageCb)
+  // }, sendQueryCb)
 })
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.type === MESSAGE_TYPE.CHAT) {
-    sendMessage(request.message)
+    sendQuery(request.message)
     sendResponse({ status: "done" });
   }
 });
