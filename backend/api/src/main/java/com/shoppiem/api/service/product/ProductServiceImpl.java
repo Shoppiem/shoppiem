@@ -84,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
       } else {
         ScrapingJobDto job = new ScrapingJobDto();
         job.setProductSku(productSku);
-        job.setId(ShoppiemUtils.generateUid());
+        job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
         job.setUrl(url);
         job.setType(JobType.PRODUCT_PAGE);
         try {

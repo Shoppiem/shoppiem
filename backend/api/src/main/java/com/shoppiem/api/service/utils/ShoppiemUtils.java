@@ -8,6 +8,7 @@ import java.util.Random;
  * @author Biz Melesse created on 1/2/23
  */
 public class ShoppiemUtils {
+  public static final int DEFAULT_UID_LENGTH = 8;
 
 
   public static String getCanonicalPath(String path) throws IOException {
@@ -18,11 +19,10 @@ public class ShoppiemUtils {
     return cPath;
   }
 
-  public static String generateUid() {
+  public static String generateUid(int length) {
     StringBuilder builder = new StringBuilder();
     // An ID length of N gives 62^N unique IDs
-    int contentIdLength = 8;
-    for (int i = 0; i < contentIdLength; i++) {
+    for (int i = 0; i < length; i++) {
       builder.append(getRandomCharacter());
     }
     return builder.toString();

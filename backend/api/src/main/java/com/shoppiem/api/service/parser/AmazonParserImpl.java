@@ -145,7 +145,7 @@ public class AmazonParserImpl implements AmazonParser {
     for (String url : questionUrls) {
       ScrapingJobDto job = new ScrapingJobDto();
       job.setProductSku(entity.getProductSku());
-      job.setId(ShoppiemUtils.generateUid());
+      job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
       job.setUrl(url);
       job.setType(JobType.QUESTION_PAGE);
       jobs.add(job);
@@ -164,7 +164,7 @@ public class AmazonParserImpl implements AmazonParser {
       String url = reviewUrls.get(0);
       ScrapingJobDto job = new ScrapingJobDto();
       job.setProductSku(entity.getProductSku());
-      job.setId(ShoppiemUtils.generateUid());
+      job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
       job.setUrl(url);
       job.setType(JobType.REVIEW_PAGE);
       jobs.add(job);
@@ -251,7 +251,7 @@ public class AmazonParserImpl implements AmazonParser {
       for (String url : reviewUrls) {
         ScrapingJobDto job = new ScrapingJobDto();
         job.setProductSku(entity.getProductSku());
-        job.setId(ShoppiemUtils.generateUid());
+        job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
         job.setUrl(url);
         job.setType(JobType.REVIEW_PAGE);
         jobs.add(job);
