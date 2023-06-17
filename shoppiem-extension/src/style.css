@@ -86,6 +86,35 @@ form {
   text-align: center;
   color: white;
 }
+
+.landing-section-header {
+  /*margin: 16px;*/
+  line-height: 24px;
+  padding: 6px;
+  padding-left: 14px;
+  /*background: #f2f4f7;*/
+  border-radius: 8px;
+  color: #101828;
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 0;
+  display: block;
+  text-align: center;
+}
+.landing-section-header span {
+  padding-left: 10px;
+}
+.landing-section {
+  background: #f5faff;
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: inline-block;
+  font-size: 14px;
+  line-height: 24px;
+  color: #1570ef;
+  text-align: center;
+}
+
 .break-4 {
   margin-top: 4rem;
 }

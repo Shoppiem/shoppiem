@@ -4,17 +4,13 @@ import {useRef} from "react/index";
 
 export interface ChatProps {
   chatHistory: Chat[],
-  boundaryId: string,
-  setShowStartSessionButton: (v: boolean) => void
+  boundaryId: string
 }
 const ChatMessages: FC<ChatProps> =  (props) => {
   const messageEndRef = useRef()
 
   useEffect(() => {
     scrollToBottom()
-    if (props.chatHistory.length > 0) {
-      props.setShowStartSessionButton(false)
-    }
   }, [props.chatHistory])
 
   const scrollToBottom = () => {

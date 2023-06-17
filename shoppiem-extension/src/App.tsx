@@ -14,8 +14,9 @@ import ChatMessages from "./components/chat/messages";
 import {loadHistory} from "./components/chat/utils";
 import FloatingButton from "./components/logo/FloatingButton";
 import ProductCard from "./components/product/card";
-import ProductForm from "./components/product/form";
+import ProductForm from "./components/product/hero";
 import FullLogo from "./components/logo/FullLogo";
+import Hero from './components/product/hero';
 
 const productInfo: ProductInfo = {
   name: "Dell Inspiron 15 3000 Series 3511 Laptop, 15.6\" FHD Touchscreen, Intel Core i5-1035G1, 32GB DDR4 RAM, 1TB PCIe SSD, SD Card Reader, Webcam, HDMI, Wi-Fi, Windows 11 Home, Black",
@@ -24,12 +25,10 @@ const productInfo: ProductInfo = {
 }
 
 export default function App(): ReactElement {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
   const [chatHistory, setChatHistory] = useState<Chat[]>([])
-  const [productId, setProductId] = useState('')
-  const [productMetadata, setProductMetadata] = useState<ProductInfo>(productInfo)
+  const [productMetadata, setProductMetadata] = useState<ProductInfo | undefined>(productInfo)
   const [showBubbleAnimation, setShowBubbleAnimation] = useState(false)
-  const [showStartSessionButton, setShowStartSessionButton] = useState(true)
   const [rawMessage, setRawMessage] = useState('')
   const [serverReady, setServerReady] = useState(false)
   const boundaryId = nanoid()
@@ -52,13 +51,6 @@ export default function App(): ReactElement {
       addToChatHistory("What would you like to know about " + productMetadata?.name + "?", false)
     }
   }, [serverReady])
-
-  const handleProductInfoChange = (value: string, field: string) => {
-    const newMetadata = {...productMetadata}
-    // @ts-ignore
-    newMetadata[field] = value
-    setProductMetadata(newMetadata)
-  }
 
   const handleRawMessageChange = (value: string) => {
     setRawMessage(value)
@@ -100,29 +92,30 @@ export default function App(): ReactElement {
           <CloseIcon onClick={() => setOpen(false)} className="close-btn"/>
         </Drawer.Actions>
       </Drawer.Header>
-      <Drawer.Header style={{marginTop: "1rem"}}>
-        <ProductCard productMetadata={productMetadata}/>
-      </Drawer.Header>
+          {productMetadata?.name &&
+            <Drawer.Header style={{marginTop: "1rem"}}>
+              <ProductCard productMetadata={productMetadata}/>
+            </Drawer.Header>
+          }
       <Drawer.Body style={{bottom: 0}}>
-        <ProductForm
-            handleProductInfoChange={handleProductInfoChange}
-            showStartSessionButton={showStartSessionButton}
-            productMetadata={productMetadata}
-        />
-        <ChatMessages
-            chatHistory={chatHistory}
-            boundaryId={boundaryId}
-            setShowStartSessionButton={setShowStartSessionButton}
-        />
+        <Hero/>
+        {productMetadata?.name &&
+          <ChatMessages
+              chatHistory={chatHistory}
+              boundaryId={boundaryId}
+          />
+        }
       </Drawer.Body>
       <Drawer.Footer>
-        <ChatInput
-            handleSubmit={handleSubmit}
-            handleRawMessageChange={handleRawMessageChange}
-            serverReady={serverReady}
-            showBubbleAnimation={showBubbleAnimation}
-            rawMessage={rawMessage}
-        />
+        {productMetadata?.name &&
+          <ChatInput
+              handleSubmit={handleSubmit}
+              handleRawMessageChange={handleRawMessageChange}
+              serverReady={serverReady}
+              showBubbleAnimation={showBubbleAnimation}
+              rawMessage={rawMessage}
+          />
+        }
       </Drawer.Footer>
     </Drawer>
         <FloatingButton handleOpen={handleOpen}/>
