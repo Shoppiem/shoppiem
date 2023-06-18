@@ -3,34 +3,25 @@ import { nanoid } from 'nanoid'
 import 'rsuite/dist/rsuite.min.css';
 import CloseIcon from '@rsuite/icons/Close';
 import { Drawer } from 'rsuite';
-
-// @ts-ignore
-import cartLogo from './assets/img/shoppiem_cart.png';
-// @ts-ignore
-import fullLogo from './assets/img/shoppiem_full_blue.png'
 import {Chat, ProductInfo} from "./types";
 import ChatInput from "./components/chat/input";
 import ChatMessages from "./components/chat/messages";
 import {loadHistory} from "./components/chat/utils";
 import FloatingButton from "./components/logo/FloatingButton";
 import ProductCard from "./components/product/card";
-import ProductForm from "./components/product/hero";
 import FullLogo from "./components/logo/FullLogo";
 import Hero from './components/product/hero';
-
-const productInfo: ProductInfo = {
-  name: "Dell Inspiron 15 3000 Series 3511 Laptop, 15.6\" FHD Touchscreen, Intel Core i5-1035G1, 32GB DDR4 RAM, 1TB PCIe SSD, SD Card Reader, Webcam, HDMI, Wi-Fi, Windows 11 Home, Black",
-  imageUrl: "https://m.media-amazon.com/images/I/61KwCmF0bdL._AC_SL1500_.jpg",
-  productUrl: "https://www.amazon.com/Dell-Inspiron-3511-Touchscreen-i5-1135G7/dp/B0B29C364N"
-}
+import { Placeholder } from 'rsuite';
 
 export default function App(): ReactElement {
-  const [open, setOpen] = useState(true);
+  const [open, setOpen] = useState(false);
   const [chatHistory, setChatHistory] = useState<Chat[]>([])
-  const [productMetadata, setProductMetadata] = useState<ProductInfo | undefined>(productInfo)
+  const [productMetadata, setProductMetadata] = useState<ProductInfo | undefined>(undefined)
+  const [productSku, setProductSku] = useState("")
   const [showBubbleAnimation, setShowBubbleAnimation] = useState(false)
   const [rawMessage, setRawMessage] = useState('')
   const [serverReady, setServerReady] = useState(false)
+  const [productStatusUpdated, setProductStatusUpdated] = useState(false)
   const boundaryId = nanoid()
 
   useEffect(() => {
@@ -39,18 +30,46 @@ export default function App(): ReactElement {
   }, [])
 
   useEffect(() => {
-    if (chatHistory.length == 0 && !serverReady) {
-      addToChatHistory("We are currently processing this product. Please check again in a few minutes.", false)
-      setShowBubbleAnimation(true)
+    const href = window.location.href
+    if (href.includes("/dp/")) {
+      setProductSku(window.location.href.split("/dp/")[1].split("/")[0]);
     }
-  }, [chatHistory])
+    return undefined;
+  }, [])
 
   useEffect(() => {
-    if (serverReady && chatHistory.length == 1) {
-      setShowBubbleAnimation(false)
-      addToChatHistory("What would you like to know about " + productMetadata?.name + "?", false)
+    // @ts-ignore
+    chrome?.runtime?.onMessage?.addListener(function (request, sender, sendResponse) {
+      if (request.type === "PRODUCT_INFO_REQUEST" && !productMetadata?.name) {
+        console.log("Setting product metadata: ", request)
+        setProductMetadata({
+          name: request.name,
+          imageUrl: request.imageUrl
+        })
+        addToChatHistory(`What would you like to know about <strong>${request.name}</strong>?`, false)
+        sendResponse(true)
+      } else if (request.type === "PRODUCT_STATUS") {
+        if (!request.type.status && !productStatusUpdated) {
+          setProductStatusUpdated(true)
+          addToChatHistory("We are currently processing this product. Please wait a minute or two.", false)
+          setShowBubbleAnimation(true)
+        }
+      } else if (request.type === "CHAT") {
+        addToChatHistory(request.content, false)
+        setShowBubbleAnimation(false)
+      }
+    });
+
+    if (productSku) {
+      (async () => {
+        // @ts-ignore
+        await chrome?.runtime?.sendMessage({
+          type: "PRODUCT_INFO_REQUEST",
+          productSku: productSku
+        });
+      })();
     }
-  }, [serverReady])
+  }, [productSku])
 
   const handleRawMessageChange = (value: string) => {
     setRawMessage(value)
@@ -58,7 +77,13 @@ export default function App(): ReactElement {
 
   const handleSubmit = () => {
     if (rawMessage) {
-      // TODO send it to the server
+      (async () => {
+        // @ts-ignore
+        await chrome?.runtime?.sendMessage({
+          type: "CHAT",
+          query: rawMessage
+        });
+      })()
       setShowBubbleAnimation(true)
       addToChatHistory(rawMessage, true)
       setRawMessage('')
@@ -92,14 +117,15 @@ export default function App(): ReactElement {
           <CloseIcon onClick={() => setOpen(false)} className="close-btn"/>
         </Drawer.Actions>
       </Drawer.Header>
-          {productMetadata?.name &&
-            <Drawer.Header style={{marginTop: "1rem"}}>
-              <ProductCard productMetadata={productMetadata}/>
-            </Drawer.Header>
+        <Drawer.Header style={{marginTop: "1rem"}}>
+          {productMetadata?.name && productMetadata?.imageUrl ?
+          <ProductCard productMetadata={productMetadata}/> :
+              <Placeholder.Paragraph rows={3} graph="image" active />
           }
+        </Drawer.Header>
       <Drawer.Body style={{bottom: 0}}>
         <Hero/>
-        {productMetadata?.name &&
+        {productSku &&
           <ChatMessages
               chatHistory={chatHistory}
               boundaryId={boundaryId}
@@ -107,7 +133,7 @@ export default function App(): ReactElement {
         }
       </Drawer.Body>
       <Drawer.Footer>
-        {productMetadata?.name &&
+        {productSku &&
           <ChatInput
               handleSubmit={handleSubmit}
               handleRawMessageChange={handleRawMessageChange}

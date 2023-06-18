@@ -38,7 +38,8 @@ const ChatMessages: FC<ChatProps> =  (props) => {
               } else if (item.from_user) {
                 return <span className="chat-msg right" key={item.id}>{item.message}</span>
               } else {
-                return <span className="chat-msg left" key={item.id}>{item.message}</span>
+                return <span className="chat-msg left" key={item.id}
+                             dangerouslySetInnerHTML={{__html: item.message as string}}></span>
               }
             })
           }

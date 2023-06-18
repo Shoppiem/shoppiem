@@ -7,6 +7,6 @@ export interface Chat {
 
 export interface ProductInfo {
   name: string,
-  imageUrl: string,
-  productUrl: string
+  imageUrl?: string,
+  productUrl?: string
 }

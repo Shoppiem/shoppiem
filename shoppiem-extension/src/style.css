@@ -7,9 +7,9 @@
 .rs-drawer-header {
   padding: 12px 20px 5px 20px;
 }
-/*.rs-drawer-header-close {*/
-/*  display: none*/
-/*}*/
+.rs-drawer-header-close {
+  display: none
+}
 .floating-button svg {
   background: #3498ff;
   padding: 8px;
