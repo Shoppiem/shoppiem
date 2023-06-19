@@ -29,9 +29,9 @@ public class ChatHistoryEntity {
     private Long id;
 
     @Basic
-    @JsonProperty("user_id")
-    @Column(name = "user_id")
-    private Long userId;
+    @JsonProperty("fcm_token_id")
+    @Column(name = "fcm_token_id")
+    private Long fcmTokenId;
 
     @Basic
     @JsonProperty("chat_id")
