@@ -34,9 +34,9 @@ public class FcmTokenEntity {
     private Long userId;
 
     @Basic
-    @JsonProperty("registration_token")
-    @Column(name = "registration_token")
-    private String registrationToken;
+    @JsonProperty("fcm_token")
+    @Column(name = "fcm_token")
+    private String fcmToken;
 
 
     @Basic

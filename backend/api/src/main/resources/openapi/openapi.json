@@ -138,7 +138,7 @@
           "token": {
             "type": "string"
           },
-          "message": {
+          "query": {
             "type": "string"
           },
           "html": {

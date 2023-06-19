@@ -116,7 +116,7 @@ CREATE TABLE IF NOT EXISTS public.feedback (
 CREATE TABLE IF NOT EXISTS public.fcm_token (
     id BIGSERIAL PRIMARY KEY NOT NULL,
     user_id bigint,
-    registration_token varchar(255) NOT NULL,
+    fcm_token varchar(255) NOT NULL,
     updated_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP,
     created_at timestamptz NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
