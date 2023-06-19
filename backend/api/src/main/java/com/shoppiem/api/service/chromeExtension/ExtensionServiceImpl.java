@@ -29,7 +29,7 @@ public class ExtensionServiceImpl implements ExtensionService {
   private final RabbitTemplate rabbitTemplate;
   private final RabbitMQProps rabbitMQProps;
 
-  private static final class MessageType {
+  public static final class MessageType {
     public static final String CHAT = "CHAT";
     public static final String HEART_BEAT = "HEART_BEAT";
     public static final String PRODUCT_INIT = "PRODUCT_INIT";
@@ -58,7 +58,7 @@ public class ExtensionServiceImpl implements ExtensionService {
           String jobString = objectMapper.writeValueAsString(job);
           rabbitTemplate.convertAndSend(
               rabbitMQProps.getTopicExchange(),
-              rabbitMQProps.getScrapeJobRoutingKeyPrefix() + request.getProductSku(),
+              rabbitMQProps.getChatJobRoutingKeyPrefix() + request.getProductSku(),
               jobString);
         } catch (JsonProcessingException e) {
           e.printStackTrace();
