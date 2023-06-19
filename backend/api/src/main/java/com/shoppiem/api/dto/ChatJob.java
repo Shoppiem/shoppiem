@@ -10,6 +10,7 @@ import lombok.Setter;
 public class ChatJob {
   private String query;
   private String productSku;
-  private String registrationToken;
+  private String fcmToken;
   private String id;
+  private boolean inRetry;
 }

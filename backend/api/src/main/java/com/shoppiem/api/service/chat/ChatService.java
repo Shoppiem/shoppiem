@@ -9,6 +9,7 @@ import com.shoppiem.api.service.openai.completion.CompletionRequest;
 public interface ChatService {
 
   CompletionRequest buildGptRequest(String query, String productSku);
-  void callGpt(String query, String registrationToken, String productSku);
+  void callGpt(String query, String registrationToken, String productSku, boolean inRetry);
+  void addQueryToQueue(String query, String fcmToken, String productSku, long delay, boolean inRetry);
 
 }

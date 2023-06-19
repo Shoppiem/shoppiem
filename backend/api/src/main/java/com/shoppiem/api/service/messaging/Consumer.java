@@ -40,7 +40,7 @@ public class Consumer {
     try {
       ChatJob job = objectMapper.readValue(message, ChatJob.class);
       Thread.startVirtualThread(() ->
-          chatService.callGpt(job.getQuery(), job.getRegistrationToken(), job.getProductSku()));
+          chatService.callGpt(job.getQuery(), job.getFcmToken(), job.getProductSku(), job.isInRetry()));
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
     }

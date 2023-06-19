@@ -20,9 +20,7 @@ export default function App(): ReactElement {
   const [productSku, setProductSku] = useState("")
   const [showBubbleAnimation, setShowBubbleAnimation] = useState(false)
   const [rawMessage, setRawMessage] = useState('')
-  const [serverReady, setServerReady] = useState(false)
   const [initialChatHistoryLoaded, setInitialChatHistoryLoaded] = useState(false)
-  const [productStatusUpdated, setProductStatusUpdated] = useState(false)
   const boundaryId = nanoid()
 
   useEffect(() => {
@@ -61,13 +59,6 @@ export default function App(): ReactElement {
             imageUrl: request.imageUrl
           })
           sendResponse(true)
-        } else if (request.type === MESSAGE_TYPE.PRODUCT_STATUS) {
-          if (!request.type.status && !productStatusUpdated) {
-            setProductStatusUpdated(true)
-            addToChatHistory("We are currently processing this product. Please wait a minute or two.", false)
-            .catch(err => console.log(err));
-            setShowBubbleAnimation(true)
-          }
         } else if (request.type === MESSAGE_TYPE.CHAT) {
           addToChatHistory(request.content, false)
           .catch(err => console.log(err));

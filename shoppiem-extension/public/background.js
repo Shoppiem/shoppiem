@@ -1,9 +1,8 @@
 const MESSAGE_TYPE = {
   CHAT: "CHAT",
-  PRODUCT_STATUS: "PRODUCT_STATUS",
   HEART_BEAT: "HEART_BEAT",
   PRODUCT_INIT: "PRODUCT_INIT",
-  REGISTRATION_TOKEN: "REGISTRATION_TOKEN",
+  FCM_TOKEN: "FCM_TOKEN",
   PRODUCT_INFO_REQUEST: "PRODUCT_INFO_REQUEST"
 }
 const PATHS = {
@@ -61,7 +60,7 @@ async function sendQuery(request) {
   const requestBody = {
     token: token.rId,
     type: MESSAGE_TYPE.CHAT,
-    message: request.query,
+    query: request.query,
     product_sku: request.productSku
   };
   post(host, requestBody)
@@ -81,7 +80,7 @@ function tokenRegistered(registration_id) {
   const host = `${PATHS.base}${PATHS.extension}`
   const requestBody = {
     token: registration_id,
-    type: MESSAGE_TYPE.REGISTRATION_TOKEN
+    type: MESSAGE_TYPE.FCM_TOKEN
   };
   post(host, requestBody)
 }
@@ -122,8 +121,6 @@ async function sendMessageToClient(message) {
 chrome.gcm.onMessage.addListener((message) => {
   if (message.data.type === MESSAGE_TYPE.HEART_BEAT) {
     heartbeatACK()
-  } else if (message.data.type === MESSAGE_TYPE.PRODUCT_STATUS) {
-    chrome.storage.local.set({"isReady": message.data.status})
   } else if (message.data.type === MESSAGE_TYPE.CHAT) {
     sendMessageToClient(message)
     .catch(err => console.log(err));

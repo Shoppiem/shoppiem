@@ -14,5 +14,5 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional
 public interface FcmTokenRepo extends JpaRepository<FcmTokenEntity, Long> {
-  FcmTokenEntity findByRegistrationToken(String token);
+  FcmTokenEntity findByFcmToken(String token);
 }
