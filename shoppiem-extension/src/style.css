@@ -7,6 +7,9 @@
 .rs-drawer-header {
   padding: 12px 20px 5px 20px;
 }
+.product-card-header {
+  height: 132px;
+}
 .rs-drawer-header-close {
   display: none
 }
@@ -22,6 +25,7 @@
 }
 .rs-drawer-body {
   padding: 30px 20px;
+  /*height: calc(100vh - 376px) !important;*/
 }
 .rs-form-control {
   width: 100%;
@@ -34,7 +38,7 @@
 }
 
 .rs-drawer-header + .rs-drawer-body {
-  height: calc(100% - 320px);
+ height: calc(100vh - 376px) !important;
 }
 
 .chat-form-container {

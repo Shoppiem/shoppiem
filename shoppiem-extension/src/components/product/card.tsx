@@ -14,11 +14,11 @@ const ProductCard: FC<ProductCardProps> =  (props) => {
   }
 
   return (
-      <Row style={{marginBottom: "1rem"}}>
-        <Col xs={9}>
-          <img  src={props.productMetadata?.imageUrl}  alt="Shoppiem" style={{width: "128px"}}/>
+      <Row style={{marginBottom: "1rem"}} className="product-card-header">
+        <Col xs={8}>
+          <img  src={props.productMetadata?.imageUrl}  alt="Shoppiem" style={{maxHeight: '132px'}}/>
         </Col>
-        <Col xs={15}>
+        <Col xs={16}>
           <p>
             <small>{truncate(props.productMetadata?.name)}</small>
           </p>
