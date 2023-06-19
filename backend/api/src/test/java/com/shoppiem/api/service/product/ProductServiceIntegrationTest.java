@@ -73,7 +73,7 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
       ProductRequest request = new ProductRequest()
           .productUrl("https://www.amazon.com/Sceptre-E248W-19203R-Monitor-Speakers-Metallic/dp/B0773ZY26F/ref=cm_cr_arp_d_product_top?ie=UTF8");
       request.setProductUrl("https://www.amazon.com/dp/B0BW8K69VP/ref=sspa_dk_detail_2?psc=1&pd_rd_i=B0BW8K69VP&pd_rd_w=OJIWn&content-id=amzn1.sym.08ba9b95-1385-44b0-b652-c46acdff309c&pf_rd_p=08ba9b95-1385-44b0-b652-c46acdff309c&pf_rd_r=QFGGBS8QK2MSSHKTVH3X&pd_rd_wg=yjmoJ&pd_rd_r=5f62e5bf-5f96-4101-b5b4-4be74ed30baf&s=pc&sp_csd=d2lkZ2V0TmFtZT1zcF9kZXRhaWxfdGhlbWF0aWM&spLa=ZW5jcnlwdGVkUXVhbGlmaWVyPUEyUVhJMkRCMFE3Wlk0JmVuY3J5cHRlZElkPUEwNDU0NjUxMkg3WjNVTDNERjNJRiZlbmNyeXB0ZWRBZElkPUEwODUzNzg5M1ZSM0RaQ1lLNjNFUiZ3aWRnZXROYW1lPXNwX2RldGFpbF90aGVtYXRpYyZhY3Rpb249Y2xpY2tSZWRpcmVjdCZkb05vdExvZ0NsaWNrPXRydWU=");
-      ProductCreateResponse response = productService.createProduct(request);
+      ProductCreateResponse response = productService.createProduct(request, null);
       assertNotNull(response);
       assertTrue(response.getInProgress());
       Thread.sleep(3600000);

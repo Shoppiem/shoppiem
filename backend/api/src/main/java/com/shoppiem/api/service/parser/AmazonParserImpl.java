@@ -2,6 +2,9 @@ package com.shoppiem.api.service.parser;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.Message;
 import com.shoppiem.api.data.postgres.entity.ProductAnswerEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.entity.ProductQuestionEntity;
@@ -13,6 +16,7 @@ import com.shoppiem.api.data.postgres.repo.ReviewRepo;
 import com.shoppiem.api.dto.ScrapingJob;
 import com.shoppiem.api.dto.ScrapingJob.JobType;
 import com.shoppiem.api.props.RabbitMQProps;
+import com.shoppiem.api.service.chromeExtension.ExtensionServiceImpl.MessageType;
 import com.shoppiem.api.service.embedding.EmbeddingService;
 import com.shoppiem.api.service.scraper.Merchant;
 import com.shoppiem.api.service.utils.ShoppiemUtils;
@@ -73,7 +77,7 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
   @Override
-  public void parseProductPage(String sku, String soup, boolean scheduleJobs) {
+  public void parseProductPage(String sku, String soup, boolean scheduleJobs, String fcmToken) {
     Document doc = Jsoup.parse(soup);
     String titleXPath = "//*[@id=\"productTitle\"]";
     String sellerXPath = "//*[@id=\"bylineInfo\"]";
@@ -95,7 +99,7 @@ public class AmazonParserImpl implements AmazonParser {
     Long numReviews = getNumReviews(doc, reviewCountXPath);
     Long numQuestionsAnswered = getNumQuestionsAnswered(doc, numQuestionsAnsweredXPath);
     String canonicalUrl = getCanonicalUrl(doc, canonicalXPath);
-
+    Thread.startVirtualThread(() -> sendProductInfoToClient(title, imageUrl, fcmToken, sku));
     List<String> features = new ArrayList<>();
     walkHelper(doc, featuresXPath, features, 3, true);
 
@@ -135,6 +139,21 @@ public class AmazonParserImpl implements AmazonParser {
 //      scheduleQandAScraping(entity);
 //      scheduleInitialReviewScraping(entity);
 //    }
+  }
+
+  private void sendProductInfoToClient(String title, String imageUrl, String fcmToken, String productSku) {
+    Message message = Message.builder()
+        .putData("name", title)
+        .putData("imageUrl", imageUrl)
+        .putData("productSku", productSku)
+        .putData("type", MessageType.PRODUCT_INFO_REQUEST)
+        .setToken(fcmToken)
+        .build();
+    try {
+      FirebaseMessaging.getInstance().send(message);
+    } catch (FirebaseMessagingException e) {
+      log.error(e.getLocalizedMessage());
+    }
   }
 
   @Override

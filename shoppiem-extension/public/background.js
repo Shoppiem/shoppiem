@@ -13,6 +13,12 @@ chrome.runtime.onInstalled.addListener(() => {
   console.log('Extension Installed')
 });
 
+function getHtml() {return document.documentElement.outerHTML; }
+
+function getProductInfoKey(productSku) {
+  return "productInfo-" + productSku;
+}
+
 async function getCurrentTab(productSku) {
   const tabs = await chrome.tabs.query({active: true})
   if (tabs) {
@@ -45,10 +51,11 @@ function post(host, body) {
 
 async function initProduct(url, html) {
   const host = `${PATHS.base}${PATHS.extension}`
+  const token = await chrome.storage.local.get("rId")
   const requestBody = {
     product_url: url,
     html: html,
-    token: chrome.storage.local.get("rId"),
+    token: token.rId,
     type: MESSAGE_TYPE.PRODUCT_INIT
   };
   post(host, requestBody)
@@ -75,8 +82,8 @@ function heartbeatACK() {
   post(host, requestBody)
 }
 
-function tokenRegistered(registration_id) {
-  chrome.storage.local.set({"rId": registration_id})
+async function tokenRegistered(registration_id) {
+  await chrome.storage.local.set({"rId": registration_id})
   const host = `${PATHS.base}${PATHS.extension}`
   const requestBody = {
     token: registration_id,
@@ -85,10 +92,6 @@ function tokenRegistered(registration_id) {
   post(host, requestBody)
 }
 
-function getHtml() { return document.documentElement.outerHTML; }
-
-function getTitle() { return document.title; }
-
 chrome.tabs.onUpdated.addListener(
     function(tabId, changeInfo, tab) {
       const url = changeInfo.url
@@ -96,7 +99,7 @@ chrome.tabs.onUpdated.addListener(
         chrome.scripting
         .executeScript({
           target : {tabId : tab.id, allFrames : true},
-          func : getHtml,
+          func: getHtml,
         })
         .then(injectionResults => {
           for (const {frameId, result} of injectionResults) {
@@ -124,17 +127,28 @@ chrome.gcm.onMessage.addListener((message) => {
   } else if (message.data.type === MESSAGE_TYPE.CHAT) {
     sendMessageToClient(message)
     .catch(err => console.log(err));
+  } else if (message.data.type === MESSAGE_TYPE.PRODUCT_INFO_REQUEST) {
+    const obj = {}
+    obj[getProductInfoKey(message.data.productSku)] = {
+      name: message.data.name,
+      imageUrl: message.data.imageUrl
+    }
+    chrome.storage.local.set(obj)
   }
 })
 
 async function sendProductInfo(productSku) {
   const tab = await getCurrentTab(productSku);
   if (tab) {
-    await chrome.tabs.sendMessage(tab.id, {
-      type: MESSAGE_TYPE.PRODUCT_INFO_REQUEST,
-      name: tab.title.replace("Amazon.com:", "").trim(),
-      imageUrl: "https://m.media-amazon.com/images/I/61KwCmF0bdL._AC_SL1500_.jpg"
-    });
+    const key = getProductInfoKey(productSku);
+    const productInfo = await chrome.storage.local.get(key)
+    if (productInfo) {
+      await chrome.tabs.sendMessage(tab.id, {
+        type: MESSAGE_TYPE.PRODUCT_INFO_REQUEST,
+        name: productInfo[key]["name"],
+        imageUrl: productInfo[key]["imageUrl"]
+      });
+    }
   }
 }
 

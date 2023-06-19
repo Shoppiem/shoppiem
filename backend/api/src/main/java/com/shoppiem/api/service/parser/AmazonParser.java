@@ -19,7 +19,7 @@ public interface AmazonParser {
   Map<String, Boolean> existingQuestionIds = new ConcurrentHashMap<>();
 
   String bodyDelimiter = "\n--------SHOPPIEM_BOUNDARY--------\n";
-  void parseProductPage(String sku, String soup, boolean scheduleJobs);
+  void parseProductPage(String sku, String soup, boolean scheduleJobs, String fcmToken);
 
   void scheduleQandAScraping(ProductEntity entity);
 

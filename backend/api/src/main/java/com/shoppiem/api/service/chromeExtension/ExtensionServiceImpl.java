@@ -27,6 +27,7 @@ public class ExtensionServiceImpl implements ExtensionService {
     public static final String HEART_BEAT = "HEART_BEAT";
     public static final String PRODUCT_INIT = "PRODUCT_INIT";
     public static final String FCM_TOKEN = "FCM_TOKEN";
+    public static final String PRODUCT_INFO_REQUEST = "PRODUCT_INFO_REQUEST";
   }
 
   @Override
@@ -45,7 +46,8 @@ public class ExtensionServiceImpl implements ExtensionService {
           request.getQuery(), request.getToken(), request.getProductSku(), 0, false);
       case MessageType.PRODUCT_INIT -> productService.createProduct(new ProductRequest()
           .productUrl(request.getProductUrl())
-          .html(request.getHtml()));
+          .html(request.getHtml()),
+          request.getToken());
     }
     return new GenericResponse().status("ok");
   }

@@ -73,7 +73,8 @@ public class ScraperServiceImpl implements ScraperService {
                 ProductEntity entity = productRepo.findByProductSku(sku);
                 saveFile(soup,  url);
                 switch (type) {
-                    case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, soup, scheduleJobs);
+                    case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, soup, scheduleJobs,
+                        null);
                     case QUESTION_PAGE -> amazonParser.parseProductQuestions(entity, soup, scheduleJobs);
                     case REVIEW_PAGE -> amazonParser.parseReviewPage(entity, soup);
                     case ANSWER_PAGE -> amazonParser.parseProductAnswers(sku, soup);

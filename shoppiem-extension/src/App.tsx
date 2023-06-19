@@ -46,8 +46,20 @@ export default function App(): ReactElement {
     if (href.includes("/dp/")) {
       setProductSku(window.location.href.split("/dp/")[1].split("/")[0]);
     }
-    return undefined;
   }, [])
+
+  useEffect(() => {
+    // Keep messaging the service worker until we have the product metadata
+   if (!productMetadata && productSku) {
+     (async () => {
+       // @ts-ignore
+       await chrome?.runtime?.sendMessage({
+         type: MESSAGE_TYPE.PRODUCT_INFO_REQUEST,
+         productSku: productSku
+       });
+     })();
+   }
+  })
 
   useEffect(() => {
     if (productSku) {

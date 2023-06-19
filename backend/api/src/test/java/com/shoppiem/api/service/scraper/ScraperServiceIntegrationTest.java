@@ -86,7 +86,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = ServiceTestHelper.loadFromFile("scraper/amazonProductPage_Electronics.html");
-        amazonParser.parseProductPage(sku, soup, false);
+        amazonParser.parseProductPage(sku, soup, false, null);
         assertProduct(sku, 99.68);
     }
 
@@ -99,7 +99,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = ServiceTestHelper.loadFromFile("scraper/amazonProductPage_Clothing.html");
-        amazonParser.parseProductPage(sku, soup, false);
+        amazonParser.parseProductPage(sku, soup, false, null);
         assertProduct(sku, 25.99);
 
     }
@@ -113,7 +113,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = ServiceTestHelper.loadFromFile("scraper/amazonProductPage_Books.html");
-        amazonParser.parseProductPage(sku, soup, false);
+        amazonParser.parseProductPage(sku, soup, false, null);
         assertProduct(sku, 14.49);
     }
 
@@ -126,7 +126,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = ServiceTestHelper.loadFromFile("scraper/amazonProductPage_Electronics.html");
-        amazonParser.parseProductPage(sku, soup, false);
+        amazonParser.parseProductPage(sku, soup, false, null);
         List<String> reviewLinks = amazonParser.generateReviewLinks(productRepo.findByProductSku(sku));
         assertEquals(2679, reviewLinks.size());
         for (String reviewLink : reviewLinks) {
@@ -145,7 +145,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = ServiceTestHelper.loadFromFile("scraper/amazonProductPage_Electronics.html");
-        amazonParser.parseProductPage(sku, soup, false);
+        amazonParser.parseProductPage(sku, soup, false, null);
         List<String> questionLinks = amazonParser.generateProductQuestionLinks(productRepo.findByProductSku(sku));
         assertEquals(90, questionLinks.size());
         for (String reviewLink : questionLinks) {

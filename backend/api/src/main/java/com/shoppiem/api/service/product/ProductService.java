@@ -11,7 +11,7 @@ import com.shoppiem.api.data.postgres.entity.ProductEntity;
 public interface ProductService {
   ProductCreateResponse createProductFromData(ProductFromDataRequest productFromDataRequest,
       boolean scheduleJobs);
-  ProductCreateResponse createProduct(ProductRequest productRequest);
+  ProductCreateResponse createProduct(ProductRequest productRequest, String fcmToken);
   String parseProductSku(String productUrl);
 
   void scheduleJobs(ProductEntity productEntity);

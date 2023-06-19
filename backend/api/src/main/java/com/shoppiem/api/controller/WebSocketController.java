@@ -22,6 +22,6 @@ public class WebSocketController {
 
   @MessageMapping("/create-product")
   public void processMessage(@Payload ProductRequest productRequest) {
-    productService.createProduct(productRequest);
+    productService.createProduct(productRequest, null);
   }
 }

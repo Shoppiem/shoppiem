@@ -2,6 +2,9 @@ package com.shoppiem.api.service.product;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingException;
+import com.google.firebase.messaging.Message;
 import com.shoppiem.api.ProductCreateResponse;
 import com.shoppiem.api.ProductFromDataRequest;
 import com.shoppiem.api.ProductRequest;
@@ -10,6 +13,7 @@ import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.dto.ScrapingJob;
 import com.shoppiem.api.dto.ScrapingJob.JobType;
 import com.shoppiem.api.props.RabbitMQProps;
+import com.shoppiem.api.service.chromeExtension.ExtensionServiceImpl.MessageType;
 import com.shoppiem.api.service.embedding.EmbeddingService;
 import com.shoppiem.api.service.parser.AmazonParser;
 import com.shoppiem.api.service.utils.ShoppiemUtils;
@@ -71,7 +75,7 @@ public class ProductServiceImpl implements ProductService {
   }
 
   @Override
-  public ProductCreateResponse createProduct(ProductRequest productRequest) {
+  public ProductCreateResponse createProduct(ProductRequest productRequest, String fcmToken) {
     var url = cleanupUrl(productRequest.getProductUrl());
     var productSku = parseProductSku(url);
     var entity = productRepo.findByProductSku(productSku);
@@ -80,7 +84,7 @@ public class ProductServiceImpl implements ProductService {
       entity.setProductSku(productSku);
       productRepo.save(entity);
       if (!ObjectUtils.isEmpty(productRequest.getHtml())) {
-        amazonParser.parseProductPage(productSku, productRequest.getHtml(), true);
+        amazonParser.parseProductPage(productSku, productRequest.getHtml(), true, fcmToken);
       } else {
         ScrapingJob job = new ScrapingJob();
         job.setProductSku(productSku);
@@ -100,6 +104,19 @@ public class ProductServiceImpl implements ProductService {
           return new ProductCreateResponse()
               .error(e.getLocalizedMessage());
         }
+      }
+    } else {
+      Message message = Message.builder()
+          .putData("title", entity.getTitle())
+          .putData("imageUrl", entity.getImageUrl())
+          .putData("productSku", productSku)
+          .putData("type", MessageType.PRODUCT_INFO_REQUEST)
+          .setToken(fcmToken)
+          .build();
+      try {
+        FirebaseMessaging.getInstance().send(message);
+      } catch (FirebaseMessagingException e) {
+        log.error(e.getLocalizedMessage());
       }
     }
     if (entity.getIsReady()) {
