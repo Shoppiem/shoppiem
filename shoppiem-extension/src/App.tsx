@@ -3,10 +3,10 @@ import { nanoid } from 'nanoid'
 import 'rsuite/dist/rsuite.min.css';
 import CloseIcon from '@rsuite/icons/Close';
 import { Drawer } from 'rsuite';
-import {Chat, ProductInfo} from "./types";
+import {Chat, MESSAGE_TYPE, ProductInfo} from "./types";
 import ChatInput from "./components/chat/input";
 import ChatMessages from "./components/chat/messages";
-import {loadHistory} from "./components/chat/utils";
+import {loadHistory, saveHistory} from "./components/chat/utils";
 import FloatingButton from "./components/logo/FloatingButton";
 import ProductCard from "./components/product/card";
 import FullLogo from "./components/logo/FullLogo";
@@ -21,13 +21,27 @@ export default function App(): ReactElement {
   const [showBubbleAnimation, setShowBubbleAnimation] = useState(false)
   const [rawMessage, setRawMessage] = useState('')
   const [serverReady, setServerReady] = useState(false)
+  const [initialChatHistoryLoaded, setInitialChatHistoryLoaded] = useState(false)
   const [productStatusUpdated, setProductStatusUpdated] = useState(false)
   const boundaryId = nanoid()
 
   useEffect(() => {
-    setChatHistory(loadHistory(chatHistory))
-    setTimeout(() => setServerReady(true), 10000);
-  }, [])
+    if (productSku) {
+      loadHistory(productSku).then(result => {
+        setChatHistory(result)
+        setInitialChatHistoryLoaded(true)
+      }).catch(err => console.log(err))
+    }
+  }, [productSku])
+
+  useEffect(() => {
+    if (initialChatHistoryLoaded && chatHistory.length === 0 && productMetadata?.name) {
+      if (!!chatHistory) {
+        addToChatHistory(`What would you like to know about <strong>${productMetadata.name}</strong>?`, false)
+        .catch(err => console.log(err));
+      }
+    }
+  }, [initialChatHistoryLoaded, productMetadata])
 
   useEffect(() => {
     const href = window.location.href
@@ -38,36 +52,35 @@ export default function App(): ReactElement {
   }, [])
 
   useEffect(() => {
-    // @ts-ignore
-    chrome?.runtime?.onMessage?.addListener(function (request, sender, sendResponse) {
-      if (request.type === "PRODUCT_INFO_REQUEST" && !productMetadata?.name) {
-        console.log("Setting product metadata: ", request)
-        setProductMetadata({
-          name: request.name,
-          imageUrl: request.imageUrl
-        })
-        addToChatHistory(`What would you like to know about <strong>${request.name}</strong>?`, false)
-        sendResponse(true)
-      } else if (request.type === "PRODUCT_STATUS") {
-        if (!request.type.status && !productStatusUpdated) {
-          setProductStatusUpdated(true)
-          addToChatHistory("We are currently processing this product. Please wait a minute or two.", false)
-          setShowBubbleAnimation(true)
-        }
-      } else if (request.type === "CHAT") {
-        addToChatHistory(request.content, false)
-        setShowBubbleAnimation(false)
-      }
-    });
-
     if (productSku) {
-      (async () => {
-        // @ts-ignore
-        await chrome?.runtime?.sendMessage({
-          type: "PRODUCT_INFO_REQUEST",
-          productSku: productSku
-        });
-      })();
+      // @ts-ignore
+      chrome?.runtime?.onMessage?.addListener(function (request, sender, sendResponse) {
+        if (request.type === MESSAGE_TYPE.PRODUCT_INFO_REQUEST && !productMetadata?.name) {
+          setProductMetadata({
+            name: request.name,
+            imageUrl: request.imageUrl
+          })
+          sendResponse(true)
+        } else if (request.type === MESSAGE_TYPE.PRODUCT_STATUS) {
+          if (!request.type.status && !productStatusUpdated) {
+            setProductStatusUpdated(true)
+            addToChatHistory("We are currently processing this product. Please wait a minute or two.", false)
+            .catch(err => console.log(err));
+            setShowBubbleAnimation(true)
+          }
+        } else if (request.type === MESSAGE_TYPE.CHAT) {
+          addToChatHistory(request.content, false)
+          .catch(err => console.log(err));
+          setShowBubbleAnimation(false)
+        }
+      });
+        (async () => {
+          // @ts-ignore
+          await chrome?.runtime?.sendMessage({
+            type: MESSAGE_TYPE.PRODUCT_INFO_REQUEST,
+            productSku: productSku
+          });
+        })();
     }
   }, [productSku])
 
@@ -80,25 +93,27 @@ export default function App(): ReactElement {
       (async () => {
         // @ts-ignore
         await chrome?.runtime?.sendMessage({
-          type: "CHAT",
-          query: rawMessage
+          type: MESSAGE_TYPE.CHAT,
+          query: rawMessage,
+          productSku: productSku
         });
       })()
       setShowBubbleAnimation(true)
       addToChatHistory(rawMessage, true)
+      .catch(err => console.log(err));
       setRawMessage('')
     }
   }
 
-  const addToChatHistory = (message: string, fromUser: boolean) => {
-    const prevHistory = loadHistory(chatHistory)
+  const addToChatHistory = async (message: string, fromUser: boolean) => {
+    const prevHistory = await loadHistory(productSku)
     const newHistory = [...prevHistory,
       {
         message,
         from_user: fromUser,
         id: nanoid()
       } ]
-    localStorage.setItem("history", JSON.stringify(newHistory))
+    await saveHistory(productSku, newHistory)
     setChatHistory(newHistory)
   }
 
@@ -137,7 +152,6 @@ export default function App(): ReactElement {
           <ChatInput
               handleSubmit={handleSubmit}
               handleRawMessageChange={handleRawMessageChange}
-              serverReady={serverReady}
               showBubbleAnimation={showBubbleAnimation}
               rawMessage={rawMessage}
           />

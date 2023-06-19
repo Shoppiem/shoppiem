@@ -7,7 +7,7 @@ const MESSAGE_TYPE = {
   PRODUCT_INFO_REQUEST: "PRODUCT_INFO_REQUEST"
 }
 const PATHS = {
-  base: "http:localhost:8080",
+  base: "http://localhost:8080",
   extension: "/extension"
 }
 chrome.runtime.onInstalled.addListener(() => {
@@ -44,7 +44,7 @@ function post(host, body) {
   });
 }
 
-function initProduct(url, html) {
+async function initProduct(url, html) {
   const host = `${PATHS.base}${PATHS.extension}`
   const requestBody = {
     product_url: url,
@@ -52,17 +52,17 @@ function initProduct(url, html) {
     token: chrome.storage.local.get("rId"),
     type: MESSAGE_TYPE.PRODUCT_INIT
   };
-  console.log("Calling server")
   post(host, requestBody)
 }
 
-function sendQuery(message) {
+async function sendQuery(request) {
   const host = `${PATHS.base}${PATHS.extension}`
+  const token = await chrome.storage.local.get("rId")
   const requestBody = {
-    token: chrome.storage.local.get("rId"),
+    token: token.rId,
     type: MESSAGE_TYPE.CHAT,
-    message: message,
-    productSku: "INSERT_PRODUCT_SKU_HERE"
+    message: request.query,
+    product_sku: request.productSku
   };
   post(host, requestBody)
 }
@@ -101,7 +101,8 @@ chrome.tabs.onUpdated.addListener(
         })
         .then(injectionResults => {
           for (const {frameId, result} of injectionResults) {
-            initProduct(url, result);
+            initProduct(url, result)
+            .catch(err => console.log(err));
             break
           }
         });
@@ -110,15 +111,23 @@ chrome.tabs.onUpdated.addListener(
 );
 chrome.gcm.register(["658613891142"], tokenRegistered)
 
+async function sendMessageToClient(message) {
+  const tab = await getCurrentTab(message.data.productSku);
+  await chrome.tabs.sendMessage(tab.id, {
+    type: MESSAGE_TYPE.CHAT,
+    content: message.data.content
+  });
+}
+
 chrome.gcm.onMessage.addListener((message) => {
   if (message.data.type === MESSAGE_TYPE.HEART_BEAT) {
     heartbeatACK()
   } else if (message.data.type === MESSAGE_TYPE.PRODUCT_STATUS) {
     chrome.storage.local.set({"isReady": message.data.status})
   } else if (message.data.type === MESSAGE_TYPE.CHAT) {
-
+    sendMessageToClient(message)
+    .catch(err => console.log(err));
   }
-  console.log("GCM message received: ", message)
 })
 
 async function sendProductInfo(productSku) {
@@ -134,7 +143,8 @@ async function sendProductInfo(productSku) {
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if (request.type === MESSAGE_TYPE.CHAT) {
-    sendQuery(request.message)
+    sendQuery(request)
+    .catch(err => console.log(err));
     sendResponse({ status: "done" });
   } else if (request.type === MESSAGE_TYPE.PRODUCT_INFO_REQUEST) {
     sendProductInfo(request.productSku)

@@ -8,6 +8,8 @@ import com.google.firebase.messaging.Message;
 import com.shoppiem.api.data.postgres.entity.ChatHistoryEntity;
 import com.shoppiem.api.data.postgres.repo.ChatHistoryRepo;
 import com.shoppiem.api.props.OpenAiProps;
+import com.shoppiem.api.service.chromeExtension.ExtensionServiceImpl;
+import com.shoppiem.api.service.chromeExtension.ExtensionServiceImpl.MessageType;
 import com.shoppiem.api.service.embedding.EmbeddingService;
 import com.shoppiem.api.service.openai.completion.CompletionRequest;
 import com.shoppiem.api.service.openai.completion.CompletionResult;
@@ -61,22 +63,24 @@ public class ChatServiceImpl implements ChatService {
   @Override
   public void callGpt(String query, String registrationToken, String productSku) {
     Thread.startVirtualThread(() -> saveToChatHistory(query, productSku, false));
-    CompletionRequest request = buildGptRequest(query, productSku);
-    try {
-      String json = objectMapper.writeValueAsString(request);
-      CompletionResult result = gptHttpRequest(json);
-      if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
-          result.getChoices().get(0).getMessage() != null) {
-        String response = result.getChoices().get(0).getMessage().getContent();
-        Thread.startVirtualThread(() -> saveToChatHistory(response, productSku, true));
-        sendFcmMessage(response, registrationToken, productSku);
-        log.info("Assistant: {}", response);
-      }
-    } catch (JsonProcessingException e) {
-      log.error(e.getLocalizedMessage());
-    } finally {
-      jobSemaphore.getChatJobSemaphore().release();
-    }
+    sendFcmMessage("This is an echo: " + query, registrationToken, productSku);
+    jobSemaphore.getChatJobSemaphore().release();
+//    CompletionRequest request = buildGptRequest(query, productSku);
+//    try {
+//      String json = objectMapper.writeValueAsString(request);
+//      CompletionResult result = gptHttpRequest(json);
+//      if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
+//          result.getChoices().get(0).getMessage() != null) {
+//        String response = result.getChoices().get(0).getMessage().getContent();
+//        Thread.startVirtualThread(() -> saveToChatHistory(response, productSku, true));
+//        sendFcmMessage(response, registrationToken, productSku);
+//        log.info("Assistant: {}", response);
+//      }
+//    } catch (JsonProcessingException e) {
+//      log.error(e.getLocalizedMessage());
+//    } finally {
+//      jobSemaphore.getChatJobSemaphore().release();
+//    }
   }
 
   private void saveToChatHistory(String query, String productSku, boolean isGpt) {
@@ -98,6 +102,7 @@ public class ChatServiceImpl implements ChatService {
     Message message = Message.builder()
         .putData("content", chatMessage)
         .putData("productSku", productSku)
+        .putData("type", MessageType.CHAT)
         .setToken(registrationToken)
         .build();
 

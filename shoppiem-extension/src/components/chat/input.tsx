@@ -8,7 +8,6 @@ import SendIcon from "@rsuite/icons/Send";
 export interface ChatInputProps {
   handleSubmit: () => void,
   handleRawMessageChange: (e: any) => void,
-  serverReady: boolean,
   rawMessage?: string
   showBubbleAnimation: boolean,
 }
@@ -37,7 +36,6 @@ const ChatInput: FC<ChatInputProps> =  (props) => {
           <Form className="chat-form">
             <Form.Group controlId="chat-box">
               <Form.Control
-                  disabled={!props.serverReady}
                   name="textarea"
                   accepter={Textarea}
                   rows={2}
@@ -47,7 +45,7 @@ const ChatInput: FC<ChatInputProps> =  (props) => {
                   placeholder="Ask a question"/>
             </Form.Group>
           </Form>
-          <Button disabled={!props.serverReady} onClick={props.handleSubmit}>
+          <Button onClick={props.handleSubmit}>
             <SendIcon />
           </Button>
         </div>
