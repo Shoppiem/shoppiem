@@ -9,6 +9,7 @@ import java.util.Random;
  */
 public class ShoppiemUtils {
   public static final int DEFAULT_UID_LENGTH = 8;
+  public static final int DEFAULT_CHAT_UID_LENGTH = 16;
 
   public static String generateUid(int length) {
     StringBuilder builder = new StringBuilder();
