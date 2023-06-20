@@ -73,6 +73,17 @@ async function sendQuery(request) {
   post(host, requestBody)
 }
 
+async function sendProductInfoRequest(productSku) {
+  const host = `${PATHS.base}${PATHS.extension}`
+  const token = await chrome.storage.local.get("rId")
+  const requestBody = {
+    token: token.rId,
+    type: MESSAGE_TYPE.PRODUCT_INFO_REQUEST,
+    product_sku: productSku
+  };
+  post(host, requestBody)
+}
+
 function heartbeatACK() {
   const host = `${PATHS.base}${PATHS.extension}`
   const requestBody = {
@@ -142,12 +153,14 @@ async function sendProductInfo(productSku) {
   if (tab) {
     const key = getProductInfoKey(productSku);
     const productInfo = await chrome.storage.local.get(key)
-    if (productInfo) {
+    if (productInfo && productInfo[key]) {
       await chrome.tabs.sendMessage(tab.id, {
         type: MESSAGE_TYPE.PRODUCT_INFO_REQUEST,
         name: productInfo[key]["name"],
         imageUrl: productInfo[key]["imageUrl"]
       });
+    } else {
+      await sendProductInfoRequest(productSku);
     }
   }
 }

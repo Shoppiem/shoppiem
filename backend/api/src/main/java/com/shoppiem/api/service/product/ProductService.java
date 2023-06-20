@@ -12,6 +12,8 @@ public interface ProductService {
   ProductCreateResponse createProductFromData(ProductFromDataRequest productFromDataRequest,
       boolean scheduleJobs);
   ProductCreateResponse createProduct(ProductRequest productRequest, String fcmToken);
+
+  void sendProductInfoToClient(ProductEntity entity, String productSku, String fcmToken);
   String parseProductSku(String productUrl);
 
   void scheduleJobs(ProductEntity productEntity);

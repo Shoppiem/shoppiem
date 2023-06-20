@@ -106,8 +106,26 @@ public class ProductServiceImpl implements ProductService {
         }
       }
     } else {
+      sendProductInfoToClient(entity, productSku, fcmToken);
+    }
+    if (entity.getIsReady()) {
+      return new ProductCreateResponse()
+          .productSku(productSku)
+          .isReady(true);
+    }
+    return new ProductCreateResponse()
+        .productSku(productSku)
+        .inProgress(true);
+  }
+
+  @Override
+  public void sendProductInfoToClient(ProductEntity entity, String productSku, String fcmToken) {
+    if (entity == null) {
+      entity = productRepo.findByProductSku(productSku);
+    }
+    if (entity != null) {
       Message message = Message.builder()
-          .putData("title", entity.getTitle())
+          .putData("name", entity.getTitle())
           .putData("imageUrl", entity.getImageUrl())
           .putData("productSku", productSku)
           .putData("type", MessageType.PRODUCT_INFO_REQUEST)
@@ -119,14 +137,6 @@ public class ProductServiceImpl implements ProductService {
         log.error(e.getLocalizedMessage());
       }
     }
-    if (entity.getIsReady()) {
-      return new ProductCreateResponse()
-          .productSku(productSku)
-          .isReady(true);
-    }
-    return new ProductCreateResponse()
-        .productSku(productSku)
-        .inProgress(true);
   }
 
   private String cleanupUrl(String url) {

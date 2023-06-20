@@ -78,7 +78,6 @@ public class ScraperServiceImpl implements ScraperService {
                     case QUESTION_PAGE -> amazonParser.parseProductQuestions(entity, soup, scheduleJobs);
                     case REVIEW_PAGE -> amazonParser.parseReviewPage(entity, soup);
                     case ANSWER_PAGE -> amazonParser.parseProductAnswers(sku, soup);
-
                 }
             }
         } catch (Exception e) {

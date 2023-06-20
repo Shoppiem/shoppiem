@@ -48,6 +48,8 @@ public class ExtensionServiceImpl implements ExtensionService {
           .productUrl(request.getProductUrl())
           .html(request.getHtml()),
           request.getToken());
+      case MessageType.PRODUCT_INFO_REQUEST ->  productService.sendProductInfoToClient(
+          null, request.getProductSku(), request.getToken());
     }
     return new GenericResponse().status("ok");
   }

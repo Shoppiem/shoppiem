@@ -167,6 +167,11 @@ public class EmbeddingServiceImpl implements EmbeddingService {
         }
       }
       embeddingRequest.setInput(input);
+      try {
+        Thread.sleep(2_000);
+      } catch (InterruptedException e) {
+        log.error(e.getLocalizedMessage());
+      }
       EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
 
       // Save all the embeddings, along with the actual text and update the corresponding
