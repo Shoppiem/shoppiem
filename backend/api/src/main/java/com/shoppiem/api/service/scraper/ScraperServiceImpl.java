@@ -60,37 +60,38 @@ public class ScraperServiceImpl implements ScraperService {
     @Override
     public void scrape(String sku, String url, JobType type, boolean scheduleJobs, int numRetries,
         boolean headless) {
+        log.info("Scraping {} at {}", sku, url);
+        Merchant merchant = getPlatform(url);
+        String soup = null;
         try {
-            log.info("Scraping {} at {}", sku, url);
-            Merchant merchant = getPlatform(url);
-            String soup;
             if (headless) {
                 soup = downloadPageHeadless(url);
             } else {
                 soup = downloadPage(url);
             }
-            if (Objects.requireNonNull(merchant) == Merchant.AMAZON) {
-                ProductEntity entity = productRepo.findByProductSku(sku);
-                saveFile(soup,  url);
-                switch (type) {
-                    case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, soup, scheduleJobs,
-                        null);
-                    case QUESTION_PAGE -> amazonParser.parseProductQuestions(entity, soup, scheduleJobs);
-                    case REVIEW_PAGE -> amazonParser.parseReviewPage(entity, soup);
-                    case ANSWER_PAGE -> amazonParser.parseProductAnswers(sku, soup);
-                }
-            }
         } catch (Exception e) {
-            log.error("{}: {}", e.getLocalizedMessage(), url);
-            if (numRetries > 0) {
-                log.info("Retrying {}", url);
-                scrape(sku, url, type, scheduleJobs, numRetries - 1, headless);
-                Thread.sleep(2000L);
-            } else {
-                log.info("Retries exhausted for {}", url);
-            }
+            log.error(e.getLocalizedMessage());
         } finally {
             jobSemaphore.getScrapeJobSemaphore().release();
+        }
+        // Although we want to retry if parsing any of the pages fails, it is okay to skip failing
+        // ones. The most important page is the product page. But the HTML soup for that is
+        // provided by the client.
+        if (soup != null) {
+            final String _soup = soup;
+            Thread.startVirtualThread(() -> {
+                if (Objects.requireNonNull(merchant) == Merchant.AMAZON) {
+                    ProductEntity entity = productRepo.findByProductSku(sku);
+//                saveFile(soup,  url);
+                    switch (type) {
+                        case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, _soup, scheduleJobs,
+                            null);
+                        case QUESTION_PAGE -> amazonParser.parseProductQuestions(entity, _soup, scheduleJobs);
+                        case REVIEW_PAGE -> amazonParser.parseReviewPage(entity, _soup);
+                        case ANSWER_PAGE -> amazonParser.parseProductAnswers(sku, _soup);
+                    }
+                }
+            });
         }
     }
 
