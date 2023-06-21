@@ -17,14 +17,13 @@ import com.shoppiem.api.service.openai.embedding.Embedding;
 import com.shoppiem.api.service.openai.embedding.EmbeddingRequest;
 import com.shoppiem.api.service.openai.embedding.EmbeddingResult;
 import com.shoppiem.api.service.parser.AmazonParser;
+import io.github.resilience4j.retry.annotation.Retry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.time.Duration;
 import java.util.stream.Collectors;
-import javax.annotation.PostConstruct;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +31,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
+
 
 /**
  * @author Biz Melesse created on 6/10/23
@@ -57,7 +57,11 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     EmbeddingRequest embeddingRequest = createEmbeddingRequest(productSku);
     embeddingRequest.setInput(input);
     log.info("Embedding user query for product {}: {}", productSku, query);
-    EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
+    EmbeddingResult result = getEmbeddingResult(embeddingRequest);
+    if (result == null) {
+      log.warn("embedUserQuery: Failed to get embeddings");
+      return new Double[0];
+    }
     if (result.getData().size() > 0) {
       List<Double> vector = result.getData().get(0).getEmbedding();
       return vector.toArray(new Double[0]);
@@ -119,7 +123,11 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     EmbeddingRequest embeddingRequest = createEmbeddingRequest(productEntity.getProductSku());
     embeddingRequest.setInput(input);
     log.info("Embedding product {}", productEntity.getProductSku());
-    EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
+    EmbeddingResult result = getEmbeddingResult(embeddingRequest);
+    if (result == null) {
+      log.warn("embedProduct: Failed to get embeddings");
+      return; // TODO: should probably reschedule the job
+    }
 
     List<EmbeddingEntity> embeddingEntities = new ArrayList<>();
     List<Embedding> data = result.getData();
@@ -172,7 +180,11 @@ public class EmbeddingServiceImpl implements EmbeddingService {
       } catch (InterruptedException e) {
         log.error(e.getLocalizedMessage());
       }
-      EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
+      EmbeddingResult result = getEmbeddingResult(embeddingRequest);
+      if (result == null) {
+        log.warn("embedReviews: Failed to get embeddings");
+        return; // TODO: should probably reschedule the job
+      }
 
       // Save all the embeddings, along with the actual text and update the corresponding
       // reviews
@@ -238,7 +250,11 @@ public class EmbeddingServiceImpl implements EmbeddingService {
 
       }
       embeddingRequest.setInput(input);
-      EmbeddingResult result = openAiService.createEmbeddings(embeddingRequest);
+      EmbeddingResult result = getEmbeddingResult(embeddingRequest);
+      if (result == null) {
+        log.warn("embedQuestionsAndAnswers: Failed to get embeddings");
+        return; // TODO: should probably reschedule the job
+      }
       List<EmbeddingEntity> embeddingEntities = new ArrayList<>();
       List<Embedding> data = result.getData();
       for (int i = 0; i < data.size(); i++) {
@@ -273,6 +289,12 @@ public class EmbeddingServiceImpl implements EmbeddingService {
       questionRepo.saveAll(questionEntities);
       answerRepo.saveAll(answerEntities);
     }
+  }
+
+  @Override
+  @Retry(name = "embeddings")
+  public EmbeddingResult getEmbeddingResult(EmbeddingRequest embeddingRequest) {
+    return openAiService.createEmbeddings(embeddingRequest);
   }
 
   private List<QAndA> inMemoryJoin(List<ProductQuestionEntity> questionsToEmbed,

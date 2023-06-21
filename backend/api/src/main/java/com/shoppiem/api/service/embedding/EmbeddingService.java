@@ -5,6 +5,8 @@ import com.shoppiem.api.data.postgres.entity.ProductAnswerEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.entity.ProductQuestionEntity;
 import com.shoppiem.api.data.postgres.entity.ReviewEntity;
+import com.shoppiem.api.service.openai.embedding.EmbeddingRequest;
+import com.shoppiem.api.service.openai.embedding.EmbeddingResult;
 import java.util.List;
 
 /**
@@ -19,5 +21,7 @@ public interface EmbeddingService {
   void embedReviews(List<ReviewEntity> reviewsToEmbed, String productSku);
   void embedQuestionsAndAnswers(List<ProductQuestionEntity> questionsToEmbed,
       List<ProductAnswerEntity> answersToEmbed, String productSku);
+
+  EmbeddingResult getEmbeddingResult(EmbeddingRequest embeddingRequest);
 
 }
