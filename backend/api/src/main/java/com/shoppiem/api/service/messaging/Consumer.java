@@ -29,7 +29,9 @@ public class Consumer {
     try {
       ScrapingJob job = objectMapper.readValue(message, ScrapingJob.class);
       Thread.startVirtualThread(() ->
-          scraperService.scrape(job.getProductSku(), job.getUrl(), job.getType(), true, numRetries, false));
+          scraperService.scrape(job.getProductSku(), job.getUrl(), job.getType(), true,
+              Math.max(numRetries, job.getRetries()), false,
+              job.isInitialReviewsByStarRating(), job.getStarRating()));
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
     }

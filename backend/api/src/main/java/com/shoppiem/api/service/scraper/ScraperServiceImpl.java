@@ -59,7 +59,7 @@ public class ScraperServiceImpl implements ScraperService {
     @SneakyThrows
     @Override
     public void scrape(String sku, String url, JobType type, boolean scheduleJobs, int numRetries,
-        boolean headless) {
+        boolean headless, boolean initialReviewByStarRating, String starRating) {
         log.info("Scraping {} at {}", sku, url);
         Merchant merchant = getPlatform(url);
         String soup = null;
@@ -87,7 +87,8 @@ public class ScraperServiceImpl implements ScraperService {
                         case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, _soup, scheduleJobs,
                             null);
                         case QUESTION_PAGE -> amazonParser.parseProductQuestions(entity, _soup, scheduleJobs);
-                        case REVIEW_PAGE -> amazonParser.parseReviewPage(entity, _soup);
+                        case REVIEW_PAGE -> amazonParser.parseReviewPage(entity, _soup, initialReviewByStarRating, starRating,
+                            numRetries);
                         case ANSWER_PAGE -> amazonParser.parseProductAnswers(sku, _soup);
                     }
                 }

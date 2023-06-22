@@ -8,11 +8,15 @@ import lombok.Setter;
  */
 @Getter @Setter
 public class ScrapingJob {
+  public static final int DEFAULT_RETRIES = 5;
   private String url;
   private String productSku;
   private String questionId;
+  private boolean initialReviewsByStarRating;
+  private String starRating;
   private JobType type;
   private String id;
+  private int retries;
 
 
   public enum JobType {

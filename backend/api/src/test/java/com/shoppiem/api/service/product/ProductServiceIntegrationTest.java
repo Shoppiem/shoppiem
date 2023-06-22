@@ -97,7 +97,7 @@ public class ProductServiceIntegrationTest extends AbstractTestNGSpringContextTe
             .seller(productEntity.getSeller())
             .starRating(productEntity.getStarRating())
             .title(productEntity.getTitle());
-        ProductCreateResponse response = productService.createProductFromData(request, false);
+        ProductCreateResponse response = productService.createProductFromData(request);
         assertNotNull(response);
         assertTrue(response.getInProgress());
     }

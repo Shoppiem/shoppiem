@@ -127,7 +127,8 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         productRepo.save(entity);
         String soup = ServiceTestHelper.loadFromFile("scraper/amazonProductPage_Electronics.html");
         amazonParser.parseProductPage(sku, soup, false, null);
-        List<String> reviewLinks = amazonParser.generateReviewLinks(productRepo.findByProductSku(sku));
+        List<String> reviewLinks = amazonParser.generateReviewLinks(
+            productRepo.findByProductSku(sku), "five_star");
         assertEquals(2679, reviewLinks.size());
         for (String reviewLink : reviewLinks) {
             assertTrue(reviewLink.contains("amazon.com"));
@@ -188,7 +189,7 @@ public class ScraperServiceIntegrationTest extends AbstractTestNGSpringContextTe
         entity.setStarRating(0.0);
         productRepo.save(entity);
         String soup = ServiceTestHelper.loadFromFile("scraper/AmazonProductReviewPage.html");
-        amazonParser.parseReviewPage(entity, soup);
+        amazonParser.parseReviewPage(entity, soup, false, "", 0);
 
         List<ReviewEntity> reviews = reviewRepo.findAllByProductId(entity.getId());
         assertEquals(10, reviews.size());

@@ -18,6 +18,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public interface EmbeddingRepo extends JpaRepository<EmbeddingEntity, Long> {
 
+  @Query(value = "SELECT COUNT (id) " +
+      "FROM embedding " +
+      "WHERE product_sku = ?1",
+      nativeQuery = true)
+  Long countDocumentsEmbedded(String productSku);
+
   @Query(value = "SELECT DISTINCT ON (review_id) * " +
       "FROM embedding " +
       "WHERE review_id IN(?1)",

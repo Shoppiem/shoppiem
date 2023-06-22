@@ -9,6 +9,7 @@ import com.shoppiem.api.data.postgres.entity.ChatHistoryEntity;
 import com.shoppiem.api.data.postgres.entity.FcmTokenEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.repo.ChatHistoryRepo;
+import com.shoppiem.api.data.postgres.repo.EmbeddingRepo;
 import com.shoppiem.api.data.postgres.repo.FcmTokenRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.dto.ChatJob;
@@ -51,6 +52,7 @@ public class ChatServiceImpl implements ChatService {
   private final RabbitTemplate rabbitTemplate;
   private final RabbitMQProps rabbitMQProps;
   private final ProductRepo productRepo;
+  private final EmbeddingRepo embeddingRepo;
 
   @Override
   public CompletionRequest buildGptRequest(String query, String productSku) {
@@ -112,7 +114,7 @@ public class ChatServiceImpl implements ChatService {
       }
     } else {
       jobSemaphore.getChatJobSemaphore().release();
-      addQueryToQueue(query, registrationToken, productSku, 30_000, true);
+      addQueryToQueue(query, registrationToken, productSku, 5_000, true);
       if (!inRetry) {
         Message message = Message.builder()
             .putData("content",
@@ -129,7 +131,19 @@ public class ChatServiceImpl implements ChatService {
   private boolean isReady(String productSku) {
     ProductEntity entity = productRepo.findByProductSku(productSku);
     if (entity != null) {
-      return entity.getIsReady();
+      if (entity.getIsReady()) {
+        return true;
+      }
+      // If 50% or more of the total documents for this product have been embedded, consider it to be
+      // ready to start querying.
+      int productPageEmbeddings = 3; // on average we treat the product page as 3 documents
+      long numDocuments = productPageEmbeddings + entity.getNumReviews() + entity.getNumQuestionsAnswered();
+      long numDocumentsEmbedded = embeddingRepo.countDocumentsEmbedded(productSku);
+      if (numDocumentsEmbedded/(1.0 * numDocuments) >= 0.5) {
+        entity.setIsReady(true);
+        productRepo.save(entity);
+        return true;
+      }
     }
     return false;
   }

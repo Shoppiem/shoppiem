@@ -117,7 +117,7 @@ public class AmazonParserImpl implements AmazonParser {
     walkHelper(doc, bookDescFeatureXPath, bookDescription, 3, true);
 
     ProductEntity entity = productRepo.findByProductSku(sku);
-    entity.setNumReviews(numReviews);
+    entity.setNumReviews(Long.MAX_VALUE);
     entity.setStarRating(starRating);
     entity.setNumQuestionsAnswered(numQuestionsAnswered);
     entity.setCurrency("USD");
@@ -137,7 +137,17 @@ public class AmazonParserImpl implements AmazonParser {
     Thread.startVirtualThread(() -> embeddingService.embedProduct(entity));
     if (scheduleJobs) {
       scheduleQandAScraping(entity);
-      scheduleInitialReviewScraping(entity);
+      List<String> starRatings = List.of(
+          "five_star",
+          "four_star",
+          "three_star",
+          "two_star",
+          "one_star"
+      );
+      for (String rating : starRatings) {
+        scheduleInitialReviewScraping(entity.getProductSku(), entity.getProductUrl(), rating,
+            ScrapingJob.DEFAULT_RETRIES);
+      }
     }
   }
 
@@ -173,24 +183,22 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
   @Override
-  public void scheduleInitialReviewScraping(ProductEntity entity) {
-    // Set the number of reviews to cover only the first page of the reviews if numReviews is greater
-    // than 0. The real review count is on that page, which we will have to scrape first and parse
-    // downstream.
-    List<ScrapingJob> jobs = new ArrayList<>();
-    List<String> reviewUrls = generateReviewLinks(entity);
-    if (reviewUrls.size() > 0) {
-      String url = reviewUrls.get(0);
+  public void scheduleInitialReviewScraping(String productSku, String productUrl, String starRating,
+      int retries) {
+    if (retries > 0) {
+      String url = generateInitialReviewLink(productSku, productUrl, starRating);
       ScrapingJob job = new ScrapingJob();
-      job.setProductSku(entity.getProductSku());
+      job.setProductSku(productSku);
       job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
       job.setUrl(url);
+      job.setRetries(retries);
+      job.setInitialReviewsByStarRating(true);
+      job.setStarRating(starRating);
       job.setType(JobType.REVIEW_PAGE);
-      jobs.add(job);
-      submitJobs(jobs);
+      submitJobs(List.of(job));
     } else {
-      log.info("Product {} has no reviews. Skipping review scraping...",
-          entity.getProductSku());
+      log.warn("SKU={} starRating={} has reached retry limit for initial review scraping",
+          productSku, starRating);
     }
   }
 
@@ -210,14 +218,15 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
   @Override
-  public void parseReviewPage(ProductEntity productEntity, String soup) {
+  public void parseReviewPage(ProductEntity productEntity, String soup,
+      boolean initialReviewByStarRating, String starRating, int retries) {
     Document doc = Jsoup.parse(soup);
     String allReviewsXPath = "//*[@id=\"cm_cr-review_list\"]";
     Map<String, ReviewEntity> reviews = new HashMap<>();
     ReviewEntity entity = new ReviewEntity();
     entity.setProductId(productEntity.getId());
-    if (!productEntity.getAllReviewsScheduled()) {
-      scheduleAllReviewScraping(soup, productEntity.getProductSku());
+    if (initialReviewByStarRating) {
+      scheduleReviewScrapingByStarRating(soup, productEntity.getProductSku(), starRating, retries);
     }
     for (Element element : doc.selectXpath(allReviewsXPath)) {
       walkReviewsHelper(element, reviews);
@@ -238,50 +247,47 @@ public class AmazonParserImpl implements AmazonParser {
         embeddingService.embedReviews(allReviews, productEntity.getProductSku()));
   }
 
-  private void scheduleAllReviewScraping(String soup, String productSku) {
-    long numReviews = 0;
+  private void scheduleReviewScrapingByStarRating(String soup, String productSku, String starRating,
+      int retries) {
     ProductEntity entity = productRepo.findByProductSku(productSku);
     try {
-       numReviews = Long.parseLong(soup.substring(
+       long numReviews = Long.parseLong(soup.substring(
               soup.indexOf("total ratings"), soup.indexOf("with reviews"))
           .split("total ratings")[1]
           .replace(",","").strip());
+      if (numReviews > 0) {
+        if (entity.getNumReviews() == Long.MAX_VALUE) {
+          entity.setNumReviews(numReviews);
+        } else {
+          entity.setNumReviews(entity.getNumReviews() + numReviews);
+        }
+        productRepo.save(entity);
+        log.info("Total reviews: {} for {}", numReviews, starRating);
+        List<String> reviewUrls = generateReviewLinks(entity, starRating);
+        Collections.shuffle(reviewUrls);
+        List<ScrapingJob> jobs = new ArrayList<>();
+        for (String url : reviewUrls) {
+          ScrapingJob job = new ScrapingJob();
+          job.setProductSku(entity.getProductSku());
+          job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
+          job.setUrl(url);
+          job.setInitialReviewsByStarRating(false);
+          job.setType(JobType.REVIEW_PAGE);
+          jobs.add(job);
+        }
+        submitJobs(jobs);
+      }
     } catch (Exception e) {
       e.printStackTrace();
-      long duration = getRandomSleepTime();
-      log.info("Sleeping for {} ms and re-trying initial review scraping for {}",
-          duration, productSku);
-      try {
-        Thread.sleep(duration);
-      } catch (InterruptedException ex) {
-        log.error(ex.getLocalizedMessage());
-      }
-      scheduleInitialReviewScraping(entity);
-    }
-    if (numReviews > 0) {
-      entity.setNumReviews(numReviews);
-      entity.setAllReviewsScheduled(true);
-      productRepo.save(entity);
-      log.info("Total reviews: {}", numReviews);
-      List<String> reviewUrls = generateReviewLinks(entity);
-      reviewUrls.remove(0); // We already scraped the first page so no need to do it again
-      Collections.shuffle(reviewUrls);
-      List<ScrapingJob> jobs = new ArrayList<>();
-      for (String url : reviewUrls) {
-        ScrapingJob job = new ScrapingJob();
-        job.setProductSku(entity.getProductSku());
-        job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
-        job.setUrl(url);
-        job.setType(JobType.REVIEW_PAGE);
-        jobs.add(job);
-      }
-      submitJobs(jobs);
+      log.info("Rescheduling initial review scraping: SKU={} starRating={}",
+          productSku, starRating);
+      scheduleInitialReviewScraping(productSku, entity.getProductUrl(), starRating, retries - 1);
     }
   }
 
   private long getRandomSleepTime() {
     int min = 10;
-    int max = 1000;
+    int max = 2000;
     return new Random().nextLong((max - min) + 1) + min;
   }
 
@@ -650,14 +656,18 @@ public class AmazonParserImpl implements AmazonParser {
   private Long getNumQuestionsAnswered(Document doc, String numQuestionsAnsweredXPath) {
     List<String> values = new ArrayList<>();
     walkHelper(doc, numQuestionsAnsweredXPath, values, 1, false);
-    if (values.size() > 0) {
-      return Long.parseLong(values.get(0).replace(" answered questions", ""));
+    try {
+      if (values.size() > 0) {
+        return Long.parseLong(values.get(0).replace(" answered questions", ""));
+      }
+    } catch (Exception e) {
+      log.error(e.getLocalizedMessage());
     }
     return 0L;
   }
 
   @Override
-  public List<String> generateReviewLinks(ProductEntity entity) {
+  public List<String> generateReviewLinks(ProductEntity entity, String starRating) {
     List<String> urls = new ArrayList<>();
     if (entity != null) {
       String sku = entity.getProductSku();
@@ -666,21 +676,25 @@ public class AmazonParserImpl implements AmazonParser {
       if (numReviews % 10 > 0) {
         numPages++;
       }
-      for (int i = 0; i < numPages; i++) {
-        String prefix = entity.getProductUrl().split("/dp/")[0];
-        String url = "";
-        int page = i + 1;
-        if (i == 0) {
-          url = String.format("%s/product-reviews/%s/ref=cm_cr_getr_d_paging_btm_prev_%s?ie=UTF8&reviewerType=all_reviews&pageNumber=%s",
-              prefix, sku, page, page);
-        } else {
-          url = String.format("%s/product-reviews/%s/ref=cm_cr_getr_d_paging_btm_next_%s?ie=UTF8&reviewerType=all_reviews&pageNumber=%s",
-              prefix, sku, page, page);
-        }
+      // Amazon only returns 100 reviews per star rating so need to limit the page size to 10
+      numPages = Math.min(10, numPages);
+      String prefix = entity.getProductUrl().split("/dp/")[0];
+      for (int page = 2; page <= numPages; page++) {
+        // The first page would have
+        String url = String.format("%s/product-reviews/%s/ref=cm_cr_getr_d_paging_btm_next_%s?ie=UTF8&reviewerType=all_reviews&pageNumber=%s&filterByStar=%s&sortBy=helpful",
+            prefix, sku, page, page, starRating);
         urls.add(url);
       }
     }
     return urls;
+  }
+
+  @Override
+  public String generateInitialReviewLink(String productSku, String productUrl, String numStars) {
+    String prefix = productUrl.split("/dp/")[0];
+    int page = 1;
+    return String.format("%s/product-reviews/%s/ref=cm_cr_arp_d_viewopt_sr?ie=UTF8&reviewerType=all_reviews&pageNumber=%s&filterByStar=%s&sortBy=helpful",
+        prefix, productSku, page, numStars);
   }
 
   @Override
@@ -781,32 +795,51 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
   private String getImage(Document doc, String imageXPath) {
-    for (Element element : doc.selectXpath(imageXPath)) {
-      for (Attribute attribute : element.attributes()) {
-        if (attribute.getKey().equals("src")) {
-          return attribute.getValue();
+    try {
+      for (Element element : doc.selectXpath(imageXPath)) {
+        for (Attribute attribute : element.attributes()) {
+          if (attribute.getKey().equals("src")) {
+            return attribute.getValue();
+          }
         }
       }
+    } catch (Exception e) {
+      log.error(e.getLocalizedMessage());
     }
      return "";
   }
 
   private Long getNumReviews(Document doc, String reviewCountXPath) {
-    return Long.parseLong(doc.selectXpath(reviewCountXPath)
-        .get(0)
-        .childNodes().get(0)
-        .toString()
-        .replace(" ratings", "")
-        .replace(",", ""));
+    try {
+      return Long.parseLong(doc.selectXpath(reviewCountXPath)
+          .get(0)
+          .childNodes().get(0)
+          .toString()
+          .replace(" ratings", "")
+          .replace(",", ""));
+    } catch (Exception e) {
+      log.error(e.getLocalizedMessage());
+    }
+    return 0L;
   }
 
   private String getSeller(Document doc, String sellerXPath) {
-    return StringUtils.capitalize(
-        doc.selectXpath(sellerXPath).get(0).childNodes().get(0).toString().replace("Visit ", ""));
+    try {
+      return StringUtils.capitalize(
+          doc.selectXpath(sellerXPath).get(0).childNodes().get(0).toString().replace("Visit ", ""));
+    } catch (Exception e) {
+      log.error(e.getLocalizedMessage());
+    }
+    return "";
   }
 
   private String getTitle(Document doc, String titleXPath) {
-    return doc.selectXpath(titleXPath).get(0).childNodes().get(0).toString();
+    try {
+      return doc.selectXpath(titleXPath).get(0).childNodes().get(0).toString();
+    } catch (Exception e) {
+      log.error(e.getLocalizedMessage());
+    }
+    return "";
   }
 
   private Double getStarRating(Document doc, String starRatingXPath) {

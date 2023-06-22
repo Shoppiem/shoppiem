@@ -23,18 +23,20 @@ public interface AmazonParser {
 
   void scheduleQandAScraping(ProductEntity entity);
 
-  void scheduleInitialReviewScraping(ProductEntity entity);
+  void scheduleInitialReviewScraping(String productSku, String productUrl, String starRating, int retries);
 
-  void parseReviewPage(ProductEntity entity, String soup);
+  void parseReviewPage(ProductEntity entity, String soup, boolean initialReviewByStarRating, String starRating,
+      int retries);
 
   void parseProductQuestions(ProductEntity entity, String soup, boolean scheduleJobs);
 
   void parseProductAnswers(String questionId, String soup);
 
-  List<String> generateReviewLinks(ProductEntity entity);
+  List<String> generateReviewLinks(ProductEntity entity, String starRating);
 
   List<String> generateProductQuestionLinks(ProductEntity entity);
 
   List<String> generateAnswerLinks(String questionId);
+  String generateInitialReviewLink(String productSku, String productUrl, String numStars);
 
 }

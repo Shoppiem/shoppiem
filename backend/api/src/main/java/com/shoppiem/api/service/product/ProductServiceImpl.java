@@ -37,11 +37,9 @@ public class ProductServiceImpl implements ProductService {
   private final RabbitTemplate rabbitTemplate;
   private final RabbitMQProps rabbitMQProps;
   private final AmazonParser amazonParser;
-  private final EmbeddingService embeddingService;
 
   @Override
-  public ProductCreateResponse createProductFromData(
-      ProductFromDataRequest productFromDataRequest, boolean schedule) {
+  public ProductCreateResponse createProductFromData(ProductFromDataRequest productFromDataRequest) {
     var url = cleanupUrl(productFromDataRequest.getProductUrl());
     var productSku = parseProductSku(url);
     var entity = productRepo.findByProductSku(productSku);
@@ -60,11 +58,6 @@ public class ProductServiceImpl implements ProductService {
       entity.setDescription(productFromDataRequest.getDescription());
       entity.setIsReady(false);
       productRepo.save(entity);
-      if (schedule) {
-        final ProductEntity finalEntity = entity;
-        Thread.startVirtualThread(() -> embeddingService.embedProduct(finalEntity));
-        scheduleJobs(entity);
-      }
     }
     if (entity.getIsReady()) {
       return new ProductCreateResponse()
@@ -79,8 +72,12 @@ public class ProductServiceImpl implements ProductService {
     var url = cleanupUrl(productRequest.getProductUrl());
     var productSku = parseProductSku(url);
     var entity = productRepo.findByProductSku(productSku);
-    if (entity == null) {
-      entity = new ProductEntity();
+    if (entity == null ||
+        ObjectUtils.isEmpty(entity.getTitle()) ||
+        ObjectUtils.isEmpty(entity.getDescription())) {
+      if (entity == null) {
+        entity = new ProductEntity();
+      }
       entity.setProductSku(productSku);
       productRepo.save(entity);
       if (!ObjectUtils.isEmpty(productRequest.getHtml())) {
@@ -155,11 +152,5 @@ public class ProductServiceImpl implements ProductService {
     String skuPart = tokens[1];
     String sku = skuPart.split("/")[0];
     return sku;
-  }
-
-  @Override
-  public void scheduleJobs(ProductEntity productEntity) {
-    Thread.startVirtualThread(() -> amazonParser.scheduleQandAScraping(productEntity));
-    Thread.startVirtualThread(() -> amazonParser.scheduleInitialReviewScraping(productEntity));
   }
 }

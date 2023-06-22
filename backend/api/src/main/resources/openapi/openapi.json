@@ -70,39 +70,6 @@
           }
         }
       }
-    },
-    "/product": {
-      "post": {
-        "tags": [
-          "product"
-        ],
-        "summary": "Create a new product from input data",
-        "description": "Create a new product",
-        "operationId": "createProductFromData",
-        "requestBody": {
-          "required": true,
-          "description": "New product request",
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ProductFromDataRequest"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "Generic Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProductCreateResponse"
-                }
-              }
-            }
-          }
-        }
-      }
     }
   },
   "components": {
@@ -162,89 +129,6 @@
             "type": "string"
           }
         }
-      },
-      "ProductFromDataRequest":  {
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string"
-          },
-          "seller": {
-            "type": "string"
-          },
-          "product_url": {
-            "type": "string"
-          },
-          "image_url": {
-            "type": "string"
-          },
-          "description": {
-            "type": "string"
-          },
-          "price": {
-            "type": "number",
-            "format": "double"
-          },
-          "currency": {
-            "type": "string"
-          },
-          "num_reviews": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "num_questions_answered": {
-            "type": "integer",
-            "format": "int64"
-          },
-          "star_rating": {
-            "type": "number",
-            "format": "double"
-          }
-        }
-      },
-      "ProductCreateResponse":  {
-        "type": "object",
-        "properties": {
-          "is_ready": {
-            "type": "boolean"
-          },
-          "in_progress": {
-            "type": "boolean"
-          },
-          "product_sku": {
-            "type": "string"
-          },
-          "error": {
-            "type": "string"
-          }
-        }
-      },
-      "Payload":  {
-        "oneOf": [
-          {
-            "$ref": "#/components/schemas/ProductCreateResponse"
-          }
-        ]
-      },
-      "WebsocketResponse":  {
-        "type": "object",
-        "properties": {
-          "type": {
-            "$ref": "#/components/schemas/WebsocketResponseType"
-          },
-          "payload": {
-            "$ref": "#/components/schemas/Payload"
-          }
-        }
-      },
-      "WebsocketResponseType":  {
-        "type": "string",
-        "enum": [
-          "Create Product"
-        ],
-        "x-enum-varnames": [
-          "CREATE_PRODUCT"
-        ]
       },
       "ChatDto":  {
         "type": "object",

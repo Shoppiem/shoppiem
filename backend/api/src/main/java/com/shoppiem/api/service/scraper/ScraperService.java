@@ -18,5 +18,6 @@ public interface ScraperService {
      * @param numRetries
      * @return
      */
-    void scrape(String sku, String url, JobType type, boolean scheduleJobs, int numRetries, boolean headless);
+    void scrape(String sku, String url, JobType type, boolean scheduleJobs, int numRetries, boolean headless,
+        boolean initialReviewByStarRating, String starRating);
 }
