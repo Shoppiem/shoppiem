@@ -43,7 +43,7 @@ public class ExtensionServiceImpl implements ExtensionService {
         }
       }
       case MessageType.CHAT -> chatService.addQueryToQueue(
-          request.getQuery(), request.getToken(), request.getProductSku(), 0, false);
+          request.getQuery(), request.getToken(), request.getProductSku());
       case MessageType.PRODUCT_INIT -> productService.createProduct(new ProductRequest()
           .productUrl(request.getProductUrl())
           .html(request.getHtml()),

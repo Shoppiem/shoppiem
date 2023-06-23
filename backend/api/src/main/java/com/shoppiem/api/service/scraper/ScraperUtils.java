@@ -44,8 +44,8 @@ public class ScraperUtils {
         ProxyConfig proxyConfig = new ProxyConfig(proxyIpWithPort.getFirst(), proxyIpWithPort.getSecond(), "http");
         webClient.getOptions().setProxyConfig(proxyConfig);
 
-        webClient.getOptions().setCssEnabled(true);
-        webClient.getOptions().setJavaScriptEnabled(true);
+        webClient.getOptions().setCssEnabled(false);
+        webClient.getOptions().setJavaScriptEnabled(false);
         webClient.getOptions().setThrowExceptionOnScriptError(false);
         webClient.getOptions().setPrintContentOnFailingStatusCode(false);
         webClient.setAjaxController(new NicelyResynchronizingAjaxController());

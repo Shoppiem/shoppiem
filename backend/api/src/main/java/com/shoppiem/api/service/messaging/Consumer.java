@@ -29,8 +29,8 @@ public class Consumer {
     try {
       ScrapingJob job = objectMapper.readValue(message, ScrapingJob.class);
       Thread.startVirtualThread(() ->
-          scraperService.scrape(job.getProductSku(), job.getUrl(), job.getType(), true,
-              Math.max(numRetries, job.getRetries()), false,
+          scraperService.scrape(job.getId(), job.getProductSku(), job.getUrl(), job.getType(), true,
+              Math.max(numRetries, job.getRetries()), true,
               job.isInitialReviewsByStarRating(), job.getStarRating()));
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
@@ -42,7 +42,7 @@ public class Consumer {
     try {
       ChatJob job = objectMapper.readValue(message, ChatJob.class);
       Thread.startVirtualThread(() ->
-          chatService.callGpt(job.getQuery(), job.getFcmToken(), job.getProductSku(), job.isInRetry()));
+          chatService.callGpt(job.getQuery(), job.getFcmToken(), job.getProductSku()));
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
     }

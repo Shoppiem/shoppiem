@@ -121,17 +121,17 @@ public class ProductServiceImpl implements ProductService {
       entity = productRepo.findByProductSku(productSku);
     }
     if (entity != null) {
-      Message message = Message.builder()
-          .putData("name", entity.getTitle())
-          .putData("imageUrl", entity.getImageUrl())
-          .putData("productSku", productSku)
-          .putData("type", MessageType.PRODUCT_INFO_REQUEST)
-          .setToken(fcmToken)
-          .build();
       try {
+        Message message = Message.builder()
+            .putData("name", entity.getTitle())
+            .putData("imageUrl", entity.getImageUrl())
+            .putData("productSku", productSku)
+            .putData("type", MessageType.PRODUCT_INFO_REQUEST)
+            .setToken(fcmToken)
+            .build();
         FirebaseMessaging.getInstance().send(message);
-      } catch (FirebaseMessagingException e) {
-        log.error(e.getLocalizedMessage());
+      } catch (Exception e) {
+        // pass
       }
     }
   }

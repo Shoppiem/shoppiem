@@ -9,7 +9,6 @@ import com.shoppiem.api.data.postgres.entity.ChatHistoryEntity;
 import com.shoppiem.api.data.postgres.entity.FcmTokenEntity;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.repo.ChatHistoryRepo;
-import com.shoppiem.api.data.postgres.repo.EmbeddingRepo;
 import com.shoppiem.api.data.postgres.repo.FcmTokenRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.dto.ChatJob;
@@ -52,14 +51,10 @@ public class ChatServiceImpl implements ChatService {
   private final RabbitTemplate rabbitTemplate;
   private final RabbitMQProps rabbitMQProps;
   private final ProductRepo productRepo;
-  private final EmbeddingRepo embeddingRepo;
 
   @Override
   public CompletionRequest buildGptRequest(String query, String productSku) {
     List<String> embeddings = embeddingService.fetchEmbeddings(query, productSku);
-    if (embeddings.size() == 0) {
-      return null;
-    }
     String context = String.join(" ", embeddings);
     String content = String.format("CONTEXT:\n%s\n\nQUESTION: %s\n\nANSWER:",
         context, query);
@@ -76,97 +71,60 @@ public class ChatServiceImpl implements ChatService {
   }
 
   @Override
-  public void callGpt(String query, String registrationToken, String productSku, boolean inRetry) {
-    if (isReady(productSku)) {
-      Thread.startVirtualThread(
-          () -> saveToChatHistory(query, productSku, registrationToken, false));
-      CompletionRequest request = buildGptRequest(query, productSku);
-      if (request == null) {
-        Message message = Message.builder()
-            .putData("content", "Sorry, I'm unable to find answers for this product. Maybe try again with a different product?")
-            .putData("productSku", productSku)
-            .putData("type", MessageType.CHAT)
-            .setToken(registrationToken)
-            .build();
-        sendFcmMessage(message);
-      } else {
-        try {
-          String json = objectMapper.writeValueAsString(request);
-          CompletionResult result = gptHttpRequest(json);
-          if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
-              result.getChoices().get(0).getMessage() != null) {
-            String response = result.getChoices().get(0).getMessage().getContent();
-            Thread.startVirtualThread(
-                () -> saveToChatHistory(response, productSku, registrationToken, true));
-            Message message = Message.builder()
-                .putData("content", response)
-                .putData("productSku", productSku)
-                .putData("type", MessageType.CHAT)
-                .setToken(registrationToken)
-                .build();
-            sendFcmMessage(message);
-          }
-        } catch (JsonProcessingException e) {
-          log.error(e.getLocalizedMessage());
-        } finally {
-          jobSemaphore.getChatJobSemaphore().release();
-        }
-      }
+  public void callGpt(String query, String registrationToken, String productSku) {
+    Thread.startVirtualThread(
+        () -> saveToChatHistory(query, productSku, registrationToken, false));
+    CompletionRequest request = buildGptRequest(query, productSku);
+    if (request == null) {
+      Message message = Message.builder()
+          .putData("content", "Sorry, I'm unable to find answers for this product. Maybe try again with a different product?")
+          .putData("productSku", productSku)
+          .putData("type", MessageType.CHAT)
+          .setToken(registrationToken)
+          .build();
+      sendFcmMessage(message);
     } else {
-      jobSemaphore.getChatJobSemaphore().release();
-      addQueryToQueue(query, registrationToken, productSku, 5_000, true);
-      if (!inRetry) {
-        Message message = Message.builder()
-            .putData("content",
-                "We are currently processing this product. Please try again in 1-2 minutes.")
-            .putData("productSku", productSku)
-            .putData("type", MessageType.CHAT)
-            .setToken(registrationToken)
-            .build();
-        sendFcmMessage(message);
+      try {
+        String json = objectMapper.writeValueAsString(request);
+        CompletionResult result = gptHttpRequest(json);
+        if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
+            result.getChoices().get(0).getMessage() != null) {
+          String response = result.getChoices().get(0).getMessage().getContent();
+          Thread.startVirtualThread(
+              () -> saveToChatHistory(response, productSku, registrationToken, true));
+          Message message = Message.builder()
+              .putData("content", response)
+              .putData("productSku", productSku)
+              .putData("type", MessageType.CHAT)
+              .setToken(registrationToken)
+              .build();
+          sendFcmMessage(message);
+        }
+      } catch (JsonProcessingException e) {
+        log.error(e.getLocalizedMessage());
+      } finally {
+        jobSemaphore.getChatJobSemaphore().release();
       }
     }
-  }
-
-  private boolean isReady(String productSku) {
-    ProductEntity entity = productRepo.findByProductSku(productSku);
-    if (entity != null) {
-      if (entity.getIsReady()) {
-        return true;
-      }
-      // If 50% or more of the total documents for this product have been embedded, consider it to be
-      // ready to start querying.
-      int productPageEmbeddings = 3; // on average we treat the product page as 3 documents
-      long numDocuments = productPageEmbeddings + entity.getNumReviews() + entity.getNumQuestionsAnswered();
-      long numDocumentsEmbedded = embeddingRepo.countDocumentsEmbedded(productSku);
-      if (numDocumentsEmbedded/(1.0 * numDocuments) >= 0.5) {
-        entity.setIsReady(true);
-        productRepo.save(entity);
-        return true;
-      }
-    }
-    return false;
   }
 
   @Override
-  public void addQueryToQueue(String query, String fcmToken, String productSku, long delay, boolean inRetry) {
+  public void addQueryToQueue(String query, String fcmToken, String productSku) {
     Thread.startVirtualThread(() -> {
       ChatJob job = new ChatJob();
       job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
       job.setQuery(query);
       job.setFcmToken(fcmToken);
       job.setProductSku(productSku);
-      job.setInRetry(inRetry);
       // If the product is ready, add the job to the queue immediately. Otherwise, delay the queueing
       try {
         String jobString = objectMapper.writeValueAsString(job);
-        Thread.sleep(delay);
         rabbitTemplate.convertAndSend(
             rabbitMQProps.getTopicExchange(),
             rabbitMQProps.getChatJobRoutingKeyPrefix() + productSku,
             jobString);
-      } catch (JsonProcessingException | InterruptedException e) {
-        e.printStackTrace();
+      } catch (JsonProcessingException e) {
+        log.error(e.getLocalizedMessage());
       }
     });
   }

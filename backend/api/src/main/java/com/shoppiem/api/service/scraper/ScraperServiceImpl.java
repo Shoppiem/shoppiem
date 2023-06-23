@@ -58,7 +58,7 @@ public class ScraperServiceImpl implements ScraperService {
 
     @SneakyThrows
     @Override
-    public void scrape(String sku, String url, JobType type, boolean scheduleJobs, int numRetries,
+    public void scrape(String jobId, String sku, String url, JobType type, boolean scheduleJobs, int numRetries,
         boolean headless, boolean initialReviewByStarRating, String starRating) {
         log.info("Scraping {} at {}", sku, url);
         Merchant merchant = getPlatform(url);
@@ -70,7 +70,7 @@ public class ScraperServiceImpl implements ScraperService {
                 soup = downloadPage(url);
             }
         } catch (Exception e) {
-            log.error(e.getLocalizedMessage());
+            log.error("{}: {} - {}", e.getLocalizedMessage(), jobId, url);
         } finally {
             jobSemaphore.getScrapeJobSemaphore().release();
         }
@@ -78,11 +78,12 @@ public class ScraperServiceImpl implements ScraperService {
         // ones. The most important page is the product page. But the HTML soup for that is
         // provided by the client.
         if (soup != null) {
+            log.info("Soup found for {}", jobId);
             final String _soup = soup;
             Thread.startVirtualThread(() -> {
                 if (Objects.requireNonNull(merchant) == Merchant.AMAZON) {
                     ProductEntity entity = productRepo.findByProductSku(sku);
-//                saveFile(soup,  url);
+//                saveFile(_soup,  url);
                     switch (type) {
                         case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, _soup, scheduleJobs,
                             null);

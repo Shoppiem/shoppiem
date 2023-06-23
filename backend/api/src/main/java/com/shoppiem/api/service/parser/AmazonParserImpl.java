@@ -195,6 +195,8 @@ public class AmazonParserImpl implements AmazonParser {
       job.setInitialReviewsByStarRating(true);
       job.setStarRating(starRating);
       job.setType(JobType.REVIEW_PAGE);
+      log.info("Scheduling review scraping job for sku={} starRating={}",
+          productSku, starRating);
       submitJobs(List.of(job));
     } else {
       log.warn("SKU={} starRating={} has reached retry limit for initial review scraping",
@@ -278,7 +280,7 @@ public class AmazonParserImpl implements AmazonParser {
         submitJobs(jobs);
       }
     } catch (Exception e) {
-      e.printStackTrace();
+      log.error(e.getLocalizedMessage());
       log.info("Rescheduling initial review scraping: SKU={} starRating={}",
           productSku, starRating);
       scheduleInitialReviewScraping(productSku, entity.getProductUrl(), starRating, retries - 1);
