@@ -1,6 +1,6 @@
 {
   "short_name": "shoppiem",
-  "name": "Shoppiem Virtual Assistant",
+  "name": "Shoppiem Amazon Virtual Assistant with ChatGPT",
   "version": "1.0.0",
   "manifest_version": 3,
   "background": {
