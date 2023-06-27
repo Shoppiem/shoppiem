@@ -75,6 +75,8 @@ export default function App(): ReactElement {
           addToChatHistory(request.content, false)
           .catch(err => console.log(err));
           setShowBubbleAnimation(false)
+        } else if (request.type === MESSAGE_TYPE.TOOLBAR_BUTTON_CLICK) {
+          handleOpen()
         }
       });
         (async () => {
@@ -86,6 +88,15 @@ export default function App(): ReactElement {
         })();
     }
   }, [productSku])
+
+  useEffect(() => {
+    // @ts-ignore
+    chrome?.runtime?.onMessage?.addListener(function (request, sender, sendResponse) {
+      if (request.type === MESSAGE_TYPE.TOOLBAR_BUTTON_CLICK) {
+        handleOpen()
+      }
+    });
+  }, [])
 
   const handleRawMessageChange = (value: string) => {
     setRawMessage(value)

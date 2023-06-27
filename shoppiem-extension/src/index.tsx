@@ -4,9 +4,9 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 
-async function init() {
+export async function init() {
   const href = window.location.href
-  if (href.includes("amazon") && href.includes("/dp/")) {
+  // if (href.includes("amazon") && href.includes("/dp/")) {
     // Create div wrapper
     const body = document.body;
     const bodyWrapper = document.createElement('div');
@@ -33,7 +33,7 @@ async function init() {
     body.appendChild(app);
     const root = createRoot(app!);
     root.render(<App/>);
-  }
+  // }
 }
 
 init()

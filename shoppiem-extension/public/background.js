@@ -3,15 +3,13 @@ const MESSAGE_TYPE = {
   HEART_BEAT: "HEART_BEAT",
   PRODUCT_INIT: "PRODUCT_INIT",
   FCM_TOKEN: "FCM_TOKEN",
-  PRODUCT_INFO_REQUEST: "PRODUCT_INFO_REQUEST"
+  PRODUCT_INFO_REQUEST: "PRODUCT_INFO_REQUEST",
+  TOOLBAR_BUTTON_CLICK: "TOOLBAR_BUTTON_CLICK"
 }
 const PATHS = {
   base: "http://localhost:8080",
   extension: "/extension"
 }
-chrome.runtime.onInstalled.addListener(() => {
-  // console.log('Extension Installed')
-});
 
 function getHtml() {return document.documentElement.outerHTML; }
 
@@ -176,3 +174,10 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     sendResponse(true)
   }
 });
+
+chrome.action.onClicked.addListener( async function(tab) {
+  await chrome.tabs.sendMessage(tab.id, {
+    type: MESSAGE_TYPE.TOOLBAR_BUTTON_CLICK
+  })
+});
+
