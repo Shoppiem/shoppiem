@@ -453,12 +453,24 @@ public class AmazonParserImpl implements AmazonParser {
 
   private LocalDateTime parseDate(String value) {
     String date = value.replaceAll("[^A-Za-z0-9\s]", "").strip();
-    DateFormat fmt = new SimpleDateFormat("MMMM dd yyyy", Locale.US);
-    try {
-      Date d = fmt.parse(date);
-      return LocalDateTime.ofInstant(d.toInstant(),
-          ZoneOffset.UTC);
-    } catch (ParseException e) {}
+    List<DateFormat> formats = List.of(
+        new SimpleDateFormat("MMMM dd yyyy", Locale.US),
+        new SimpleDateFormat("dd MMMM yyyy", Locale.US),
+        new SimpleDateFormat("d MMMM yyyy", Locale.US)
+    );
+    int attempts = formats.size();
+    for (DateFormat format : formats) {
+      try {
+        Date d = format.parse(date);
+        return LocalDateTime.ofInstant(d.toInstant(),
+            ZoneOffset.UTC);
+      } catch (ParseException e) {
+        attempts--;
+        if (attempts <= 1) {
+          log.error(e.getLocalizedMessage());
+        }
+      }
+    }
     return null;
   }
 
@@ -602,13 +614,9 @@ public class AmazonParserImpl implements AmazonParser {
                   String[] tokens = values.get(0).split(" on ");
                   String country = tokens[0].split("Reviewed in ")[1];
                   String date = tokens[1];
-                  DateFormat fmt = new SimpleDateFormat("MMMM dd yyyy", Locale.US);
-                  try {
-                    Date d = fmt.parse(date);
-                    reviewEntity.setSubmittedAt(LocalDateTime.ofInstant(d.toInstant(),
-                        ZoneOffset.UTC));
-                  } catch (ParseException e) {
-                    log.error(e.getLocalizedMessage());
+                  LocalDateTime submittedAt = parseDate(date);
+                  if (submittedAt != null) {
+                    reviewEntity.setSubmittedAt(submittedAt);
                   }
                   reviewEntity.setCountry(country);
                 }
