@@ -7,10 +7,8 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.shoppiem.api.data.postgres.entity.ChatHistoryEntity;
 import com.shoppiem.api.data.postgres.entity.FcmTokenEntity;
-import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.repo.ChatHistoryRepo;
 import com.shoppiem.api.data.postgres.repo.FcmTokenRepo;
-import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.dto.ChatJob;
 import com.shoppiem.api.props.OpenAiProps;
 import com.shoppiem.api.props.RabbitMQProps;
@@ -50,7 +48,6 @@ public class ChatServiceImpl implements ChatService {
   private final FcmTokenRepo fcmTokenRepo;
   private final RabbitTemplate rabbitTemplate;
   private final RabbitMQProps rabbitMQProps;
-  private final ProductRepo productRepo;
 
   @Override
   public CompletionRequest buildGptRequest(String query, String productSku) {
@@ -77,7 +74,7 @@ public class ChatServiceImpl implements ChatService {
     CompletionRequest request = buildGptRequest(query, productSku);
     if (request == null) {
       Message message = Message.builder()
-          .putData("content", "Sorry, I'm unable to find answers for this product. Maybe try again with a different product?")
+          .putData("content", "Sorry, I'm unable to find answers for this product.")
           .putData("productSku", productSku)
           .putData("type", MessageType.CHAT)
           .setToken(registrationToken)

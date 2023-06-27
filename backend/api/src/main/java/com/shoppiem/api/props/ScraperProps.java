@@ -20,6 +20,8 @@ import org.springframework.context.annotation.Primary;
 public class ScraperProps {
     private String userAgent;
     private List<String> proxyIpAddress;
+    private boolean useStormProxy;
+    private boolean saveHtml;
 
     public Pair<String, Integer> getProxyIpWithPort() {
         String[] tokens = proxyIpAddress.get(0).split(":");

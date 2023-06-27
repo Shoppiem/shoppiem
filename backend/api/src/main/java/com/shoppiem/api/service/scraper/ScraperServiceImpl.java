@@ -10,6 +10,7 @@ import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.dto.ScrapingJob.JobType;
 import com.shoppiem.api.props.InfaticaProps;
+import com.shoppiem.api.props.ScraperProps;
 import com.shoppiem.api.service.parser.AmazonParser;
 import com.shoppiem.api.service.utils.JobSemaphore;
 import java.io.ByteArrayInputStream;
@@ -55,6 +56,7 @@ public class ScraperServiceImpl implements ScraperService {
     private final UserAgentService userAgentService;
     private final InfaticaProps infaticaProps;
     private final ObjectMapper objectMapper;
+    private final ScraperProps scraperProps;
 
     @SneakyThrows
     @Override
@@ -83,7 +85,9 @@ public class ScraperServiceImpl implements ScraperService {
             Thread.startVirtualThread(() -> {
                 if (Objects.requireNonNull(merchant) == Merchant.AMAZON) {
                     ProductEntity entity = productRepo.findByProductSku(sku);
-//                saveFile(_soup,  url);
+                    if (scraperProps.isSaveHtml()) {
+                        saveFile(_soup,  url);
+                    }
                     switch (type) {
                         case PRODUCT_PAGE -> amazonParser.parseProductPage(sku, _soup, scheduleJobs,
                             null);

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.dto.ChatJob;
 import com.shoppiem.api.dto.ScrapingJob;
+import com.shoppiem.api.props.ScraperProps;
 import com.shoppiem.api.service.chat.ChatService;
 import com.shoppiem.api.service.scraper.ScraperService;
 import com.shoppiem.api.service.utils.JobSemaphore;
@@ -22,6 +23,7 @@ public class Consumer {
   private final ScraperService scraperService;
   private final ChatService chatService;
   private final JobSemaphore jobSemaphore;
+  private final ScraperProps scraperProps;
   private final int numRetries = 3;
 
   public void scrapeJobConsumer(String message) throws InterruptedException {
@@ -30,7 +32,7 @@ public class Consumer {
       ScrapingJob job = objectMapper.readValue(message, ScrapingJob.class);
       Thread.startVirtualThread(() ->
           scraperService.scrape(job.getId(), job.getProductSku(), job.getUrl(), job.getType(), true,
-              Math.max(numRetries, job.getRetries()), true,
+              Math.max(numRetries, job.getRetries()), scraperProps.isUseStormProxy(),
               job.isInitialReviewsByStarRating(), job.getStarRating()));
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
