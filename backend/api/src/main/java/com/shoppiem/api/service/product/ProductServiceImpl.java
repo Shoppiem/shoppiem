@@ -53,6 +53,7 @@ public class ProductServiceImpl implements ProductService {
       entity.setImageUrl(productFromDataRequest.getImageUrl());
       entity.setPrice(productFromDataRequest.getPrice());
       entity.setProductUrl(url);
+      entity.setBaseUrl(getBaseUrl(url));
       entity.setSeller(productFromDataRequest.getSeller());
       entity.setTitle(ShoppiemUtils.truncate(productFromDataRequest.getTitle()));
       entity.setDescription(productFromDataRequest.getDescription());
@@ -79,6 +80,8 @@ public class ProductServiceImpl implements ProductService {
         entity = new ProductEntity();
       }
       entity.setProductSku(productSku);
+      entity.setBaseUrl(getBaseUrl(url));
+      entity.setProductUrl(url);
       productRepo.save(entity);
       if (!ObjectUtils.isEmpty(productRequest.getHtml())) {
         amazonParser.parseProductPage(productSku, productRequest.getHtml(), true, fcmToken);
@@ -140,6 +143,15 @@ public class ProductServiceImpl implements ProductService {
     try {
       URL parsedUrl = new URL(url);
       return String.format("%s://%s%s", parsedUrl.getProtocol(), parsedUrl.getHost(), parsedUrl.getPath());
+    } catch (MalformedURLException e) {
+      return url;
+    }
+  }
+
+  private String getBaseUrl(String url) {
+    try {
+      URL parsedUrl = new URL(url);
+      return String.format("%s://%s", parsedUrl.getProtocol(), parsedUrl.getHost());
     } catch (MalformedURLException e) {
       return url;
     }

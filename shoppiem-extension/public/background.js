@@ -10,7 +10,7 @@ const PATHS = {
   extension: "/extension"
 }
 chrome.runtime.onInstalled.addListener(() => {
-  console.log('Extension Installed')
+  // console.log('Extension Installed')
 });
 
 function getHtml() {return document.documentElement.outerHTML; }
@@ -106,7 +106,7 @@ async function tokenRegistered(registration_id) {
 chrome.tabs.onUpdated.addListener(
     function(tabId, changeInfo, tab) {
       const url = changeInfo.url
-      if (url && url.includes("amazon.com") && url.includes("/dp/")) {
+      if (url && url.includes("amazon") && url.includes("/dp/")) {
         chrome.scripting
         .executeScript({
           target : {tabId : tab.id, allFrames : true},

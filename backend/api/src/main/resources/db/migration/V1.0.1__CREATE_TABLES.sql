@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS public.product (
     title varchar(255),
     seller varchar(255),
     product_url varchar(255),
+    base_url varchar(255),
     image_url varchar,
     description varchar,
     price numeric(8,2),

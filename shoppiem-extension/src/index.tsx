@@ -6,7 +6,7 @@ import App from './App';
 
 async function init() {
   const href = window.location.href
-  if (href.includes("amazon.com") && href.includes("/dp/")) {
+  if (href.includes("amazon") && href.includes("/dp/")) {
     // Create div wrapper
     const body = document.body;
     const bodyWrapper = document.createElement('div');

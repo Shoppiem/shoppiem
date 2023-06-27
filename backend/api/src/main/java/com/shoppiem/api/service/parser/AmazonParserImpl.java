@@ -608,7 +608,7 @@ public class AmazonParserImpl implements AmazonParser {
                     reviewEntity.setSubmittedAt(LocalDateTime.ofInstant(d.toInstant(),
                         ZoneOffset.UTC));
                   } catch (ParseException e) {
-                    e.printStackTrace();
+                    log.error(e.getLocalizedMessage());
                   }
                   reviewEntity.setCountry(country);
                 }
@@ -711,8 +711,8 @@ public class AmazonParserImpl implements AmazonParser {
       }
       for (int i = 0; i < numPages; i++) {
         int page = i + 1;
-        String url = String.format("https://www.amazon.com/ask/questions/asin/%s/%s/ref=ask_ql_psf_ql_hza?isAnswered=true",
-            sku, page);
+        String url = String.format("%s/ask/questions/asin/%s/%s/ref=ask_ql_psf_ql_hza?isAnswered=true",
+            entity.getBaseUrl(), sku, page);
         urls.add(url);
       }
     }

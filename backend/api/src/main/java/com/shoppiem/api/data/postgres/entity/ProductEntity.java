@@ -47,6 +47,11 @@ public class ProductEntity {
     private String productUrl;
 
     @Basic
+    @JsonProperty("base_url")
+    @Column(name = "base_url")
+    private String baseUrl;
+
+    @Basic
     @JsonProperty("image_url")
     @Column(name = "image_url")
     private String imageUrl;
