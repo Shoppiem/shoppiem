@@ -1,0 +1,131 @@
+#**********************************************************************
+# Build and Deploy Shoppiem API Service
+#**********************************************************************
+
+name: Shoppiem API Service | Prod
+on:
+  pull_request:
+    branches: [ main ]
+    types: [closed]
+    paths:
+      - "backend/api/**"
+env:
+  AWS_REGION_US: 'us-east-2'
+  AWS_ECR_REGISTRY: '537408061242.dkr.ecr.us-east-2.amazonaws.com'
+  AWS_ECR_REPO: 'shoppiem'
+  IMAGE_TAG: 'backend'
+  PROJECT_NAME: 'api'
+  PROJECT_ROOT: 'backend'
+  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  MR_GH_USERNAME: ${{ secrets.MR_GH_USERNAME }}
+  MR_GH_TOKEN: ${{ secrets.MR_GH_TOKEN }}
+  SPRING_APPLICATION_NAME: 'shoppiem'
+  SPRING_PROFILES_ACTIVE: 'prod'
+  TEST_SPRING_PROFILES_ACTIVE: 'test'
+  TEST_DB_NAME: 'shoppiem'
+  TEST_DB_PASSWORD: 'root'
+  TEST_DB_USERNAME: 'root'
+  ARTIFACT_PATH: 'shoppiem-api/build'
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:latest
+        env:
+          POSTGRES_DB: ${{ env.TEST_DB_NAME }}
+          POSTGRES_PASSWORD: ${{ env.TEST_DB_PASSWORD }}
+          POSTGRES_USER: ${{ env.TEST_DB_USERNAME }}
+        ports:
+          - 8432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '16'
+          cache: 'gradle'
+
+      - name: Test project
+        run: |
+          cd ${{ env.PROJECT_ROOT }}
+          ./gradlew :${{ env.PROJECT_NAME }}:build \
+          -DMR_GH_TOKEN=${{ env.MR_GH_TOKEN }} \
+          -DMR_GH_USERNAME=${{ env.MR_GH_USERNAME }} \
+          -DSPRING_APPLICATION_NAME=${{ env.SPRING_APPLICATION_NAME }} \
+          -DSPRING_PROFILES_ACTIVE=${{ env.TEST_SPRING_PROFILES_ACTIVE }} --info
+
+  build:
+    needs: test
+    if: ${{ github.event.pull_request.merged }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_KEY }}
+          aws-region: ${{ env.AWS_REGION_US }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+
+      - name: Setup JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: '16'
+          cache: 'gradle'
+
+      - name: Build project and generate artifact
+        run: |
+          cd ${{ env.PROJECT_ROOT }}
+          ./gradlew :${{ env.PROJECT_NAME }}:build -x test
+
+      - name: Create a Dockerfile
+        run: |
+          cd ${{ env.PROJECT_ROOT }}
+          rm -rf Dockerfile
+          touch Dockerfile
+
+          echo "FROM amazoncorretto:20.0.1-al2-generic" >> Dockerfile
+          echo ENV SPRING_APPLICATION_NAME=${{ env.SPRING_APPLICATION_NAME }} >> Dockerfile
+          echo ENV SPRING_PROFILES_ACTIVE=${{ env.SPRING_PROFILES_ACTIVE }} >> Dockerfile
+          echo ENV MR_GH_USERNAME=${{ env.MR_GH_USERNAME }} >> Dockerfile
+          echo ENV MR_GH_TOKEN=${{ env.MR_GH_TOKEN }} >> Dockerfile
+          echo EXPOSE 8080 >> Dockerfile
+          echo COPY ${{ env.PROJECT_NAME }}/build/libs/app.jar /app.jar >> Dockerfile
+          echo ENTRYPOINT ["\"java\"","\"-jar\"","\"--enable-preview\"","\"/app.jar\""] >> Dockerfile
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ env.AWS_ECR_REGISTRY }}
+          ECR_REPOSITORY: ${{ env.AWS_ECR_REPO }}
+          IMAGE_TAG: ${{ env.IMAGE_TAG }}
+        run: |
+          cd ${{ env.PROJECT_ROOT }}
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+          echo "::set-output name=image::$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+
+      - run: mkdir -p ${{ env.ARTIFACT_PATH }}
+      - run: echo ${{ steps.build-image.outputs.image }} > ${{ env.ARTIFACT_PATH }}/${{ env.IMAGE_TAG }}.txt
+      - uses: actions/upload-artifact@v2
+        with:
+          name: image-tag
+          path: ${{ env.ARTIFACT_PATH }}/${{ env.IMAGE_TAG }}.txt
