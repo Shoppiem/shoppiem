@@ -2,16 +2,17 @@ version: '3.7'
 
 services:
   rabbitmq:
-    image: 'bitnami/rabbitmq:latest'
+    image: rabbitmq:management
+    container_name: rabbitmq
     restart: always
     ports:
       - "5672:5672"
       - "15672:15672"
     environment:
-      - RABBITMQ_PASSWORD=pV5S7ulu26J
-      - RABBITMQ_USERNAME=shoppiem
+      - RABBITMQ_DEFAULT_PASS=pV5S7ulu26J
+      - RABBITMQ_DEFAULT_USER=shoppiem
     volumes:
-      - './data:/bitnami/rabbitmq/mnesia'
+      - './data:/mnesia'
     networks:
       - messaging
       - traefik_network
