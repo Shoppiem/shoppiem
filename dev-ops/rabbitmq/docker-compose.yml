@@ -7,13 +7,16 @@ services:
       - "5672:5672"
       - "15672:15672"
     environment:
-      - RABBITMQ_PASSWORD=password
-      - RABBITMQ_USERNAME=user
+      - RABBITMQ_PASSWORD=pV5S7ulu26J
+      - RABBITMQ_USERNAME=shoppiem
     volumes:
       - './data:/bitnami/rabbitmq/mnesia'
     networks:
       - messaging
+      - traefik_network
 
 networks:
   messaging:
     driver: bridge
+  traefik_network:
+    external: true
