@@ -7,7 +7,8 @@ const MESSAGE_TYPE = {
   TOOLBAR_BUTTON_CLICK: "TOOLBAR_BUTTON_CLICK"
 }
 const PATHS = {
-  base: "https://api.shoppiem.com",
+  base: "http://localhost:8080",
+  // base: "https://api.shoppiem.com",
   extension: "/extension"
 }
 

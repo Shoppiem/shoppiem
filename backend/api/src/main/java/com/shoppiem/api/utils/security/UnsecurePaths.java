@@ -11,8 +11,6 @@ public class UnsecurePaths {
   private static final List<String> paths = List.of(
       "/actuator/health",
       "/actuator/health/**",
-      "/ws/**",
-      "/ws",
       "/product/**",
       "/product",
       "/extension",

@@ -17,5 +17,5 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 @ConfigurationProperties(prefix = "cors")
 public class CorsProps {
-    private Set<String> allowedOrigins = new HashSet<>();
+    private Set<String> allowedOriginPatterns = new HashSet<>();
 }

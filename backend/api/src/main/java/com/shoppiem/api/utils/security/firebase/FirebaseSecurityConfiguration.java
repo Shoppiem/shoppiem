@@ -8,9 +8,11 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.actuate.autoconfigure.security.reactive.ReactiveManagementWebSecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.reactive.ReactiveSecurityAutoConfiguration;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.Ordered;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -27,8 +29,8 @@ import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 /**
  * @author Bizuwork Melesse
@@ -80,11 +82,10 @@ public class FirebaseSecurityConfiguration {
 
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
+    public FilterRegistrationBean<CorsFilter> corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedHeaders(List.of("*"));
-        corsConfiguration.setAllowedOrigins(corsProps
-            .getAllowedOrigins()
+        corsConfiguration.setAllowedOriginPatterns(corsProps.getAllowedOriginPatterns()
             .stream()
             .toList());
         corsConfiguration.setAllowedMethods(List.of("*"));
@@ -93,7 +94,9 @@ public class FirebaseSecurityConfiguration {
         corsConfiguration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration);
-        return source;
+        FilterRegistrationBean<CorsFilter> filter = new FilterRegistrationBean<>(new CorsFilter(source));
+        filter.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return filter;
     }
 
     @Bean
