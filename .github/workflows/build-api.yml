@@ -87,8 +87,8 @@ jobs:
       - name: Setup JDK
         uses: actions/setup-java@v3
         with:
-          distribution: 'temurin'
-          java-version: '16'
+          distribution: 'corretto'
+          java-version: '20'
           cache: 'gradle'
 
       - name: Build project and generate artifact

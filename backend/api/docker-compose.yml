@@ -18,3 +18,4 @@ services:
 networks:
   traefik_network:
     external: true
+
