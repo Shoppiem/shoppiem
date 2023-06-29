@@ -23,7 +23,8 @@ import org.springframework.context.annotation.Configuration;
     IpAddressProps.class,
     ScraperProps.class,
     RabbitMQProps.class,
-    InfaticaProps.class
+    InfaticaProps.class,
+    CorsProps.class
 })
 public class PropConfiguration {
 }

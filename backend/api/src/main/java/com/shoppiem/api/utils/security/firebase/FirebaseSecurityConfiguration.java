@@ -1,6 +1,7 @@
 package com.shoppiem.api.utils.security.firebase;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.shoppiem.api.props.CorsProps;
 import com.shoppiem.api.utils.security.UnsecurePaths;
 import com.shoppiem.api.utils.security.firewall.FirewallConfiguration;
 import lombok.RequiredArgsConstructor;
@@ -58,6 +59,7 @@ public class FirebaseSecurityConfiguration {
 
     private final SecurityFilter securityFilter;
     private final ObjectMapper objectMapper;
+    private final CorsProps corsProps;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http,
@@ -81,10 +83,10 @@ public class FirebaseSecurityConfiguration {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration corsConfiguration = new CorsConfiguration();
         corsConfiguration.setAllowedHeaders(List.of("*"));
-        corsConfiguration.setAllowedOrigins(List.of(
-            "http://localhost:1234",
-            "chrome-extension://hcpjdbdfkeeahjennonnojanglgpfbom"
-            ));
+        corsConfiguration.setAllowedOrigins(corsProps
+            .getAllowedOrigins()
+            .stream()
+            .toList());
         corsConfiguration.setAllowedMethods(List.of("*"));
         corsConfiguration.setExposedHeaders(List.of("*"));
         corsConfiguration.setAllowCredentials(true);
