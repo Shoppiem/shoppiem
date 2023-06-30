@@ -80,7 +80,7 @@ public class ScraperServiceImpl implements ScraperService {
         // ones. The most important page is the product page. But the HTML soup for that is
         // provided by the client.
         if (soup != null) {
-            log.info("Soup found for {}", jobId);
+            log.info("Soup found for jobId={}", jobId);
             final String _soup = soup;
             Thread.startVirtualThread(() -> {
                 if (Objects.requireNonNull(merchant) == Merchant.AMAZON) {

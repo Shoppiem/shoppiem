@@ -69,6 +69,8 @@ public class ChatServiceImpl implements ChatService {
 
   @Override
   public void callGpt(String query, String registrationToken, String productSku) {
+    String queryId = ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_CHAT_UID_LENGTH);
+    log.info("Query - SKU={} queryId={}: {}", productSku, queryId, query);
     Thread.startVirtualThread(
         () -> saveToChatHistory(query, productSku, registrationToken, false));
     CompletionRequest request = buildGptRequest(query, productSku);
@@ -96,6 +98,7 @@ public class ChatServiceImpl implements ChatService {
               .setToken(registrationToken)
               .build();
           sendFcmMessage(message);
+          log.info("Response - SKU={} queryId={}: {}", productSku, queryId, response);
         }
       } catch (JsonProcessingException e) {
         log.error(e.getLocalizedMessage());

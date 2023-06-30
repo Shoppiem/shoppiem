@@ -56,7 +56,6 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     List<String> input = List.of(query);
     EmbeddingRequest embeddingRequest = createEmbeddingRequest(productSku);
     embeddingRequest.setInput(input);
-    log.info("Embedding user query for product {}: {}", productSku, query);
     EmbeddingResult result = getEmbeddingResult(embeddingRequest);
     if (result == null) {
       log.warn("embedUserQuery: Failed to get embeddings");
@@ -162,7 +161,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     Long productId = productEntity.getId();
     List<List<?>> batches = getBatches(reviewsToEmbed);
     for (List<?> batch : batches) {
-      log.info("Embedding a new batch of reviews");
+      log.info("Embedding a new batch of reviews - SKU={}", productSku);
       EmbeddingRequest embeddingRequest = createEmbeddingRequest(productSku);
       List<String> input = new ArrayList<>();
       List<Long> reviewIds = new ArrayList<>();
@@ -240,7 +239,7 @@ public class EmbeddingServiceImpl implements EmbeddingService {
     List<QAndA> qAndAS = inMemoryJoin(questionsToEmbed, answersToEmbed, productSku);
     List<List<?>> batches = getBatches(qAndAS);
     for (List<?> batch : batches) {
-      log.info("Embedding a new batch of questions");
+      log.info("Embedding a new batch of questions - SKU={}", productSku);
       EmbeddingRequest embeddingRequest = createEmbeddingRequest(productSku);
       List<String> input = new ArrayList<>();
       for (Object o : batch) {
