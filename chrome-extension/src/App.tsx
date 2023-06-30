@@ -146,12 +146,12 @@ export default function App(): ReactElement {
           <CloseIcon onClick={() => setOpen(false)} className="close-btn"/>
         </Drawer.Actions>
       </Drawer.Header>
-        <Drawer.Header style={{marginTop: "1rem"}}>
-          {productMetadata?.name && productMetadata?.imageUrl ?
-          <ProductCard productMetadata={productMetadata}/> :
-              <Placeholder.Paragraph rows={3} graph="image" active />
-          }
-        </Drawer.Header>
+        {productMetadata?.name && productMetadata?.imageUrl &&
+          <Drawer.Header style={{marginTop: "1rem"}}>
+            <ProductCard productMetadata={productMetadata}/>
+            {/*<Placeholder.Paragraph rows={3} graph="image" active />*/}
+          </Drawer.Header>
+        }
       <Drawer.Body style={{bottom: 0}}>
         <Hero/>
         {productSku &&
@@ -162,7 +162,7 @@ export default function App(): ReactElement {
         }
       </Drawer.Body>
       <Drawer.Footer>
-        {productSku &&
+        {productSku && productMetadata?.name && productMetadata?.imageUrl &&
           <ChatInput
               handleSubmit={handleSubmit}
               handleRawMessageChange={handleRawMessageChange}
