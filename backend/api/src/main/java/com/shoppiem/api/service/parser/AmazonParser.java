@@ -32,7 +32,7 @@ public interface AmazonParser {
 
   void parseProductAnswers(String questionId, String soup);
 
-  List<String> generateReviewLinks(ProductEntity entity, String starRating);
+  List<String> generateReviewLinks(ProductEntity entity, String starRating, long numReviews);
 
   List<String> generateProductQuestionLinks(ProductEntity entity);
 

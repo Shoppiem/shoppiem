@@ -96,7 +96,7 @@ public class AmazonParserImpl implements AmazonParser {
     String title = getTitle(doc, titleXPath);
     String seller = getSeller(doc, sellerXPath);
     Double price = getPrice(doc);
-    Long numReviews = getNumReviews(doc, reviewCountXPath);
+//    Long numReviews = getNumReviews(doc, reviewCountXPath);
     Long numQuestionsAnswered = getNumQuestionsAnswered(doc, numQuestionsAnsweredXPath);
     String canonicalUrl = getCanonicalUrl(doc, canonicalXPath);
     Thread.startVirtualThread(() -> sendProductInfoToClient(title, imageUrl, fcmToken, sku));
@@ -265,7 +265,7 @@ public class AmazonParserImpl implements AmazonParser {
         }
         productRepo.save(entity);
         log.info("Total reviews: {} for {}", numReviews, starRating);
-        List<String> reviewUrls = generateReviewLinks(entity, starRating);
+        List<String> reviewUrls = generateReviewLinks(entity, starRating, numReviews);
         Collections.shuffle(reviewUrls);
         List<ScrapingJob> jobs = new ArrayList<>();
         for (String url : reviewUrls) {
@@ -677,11 +677,10 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
   @Override
-  public List<String> generateReviewLinks(ProductEntity entity, String starRating) {
+  public List<String> generateReviewLinks(ProductEntity entity, String starRating, long numReviews) {
     List<String> urls = new ArrayList<>();
     if (entity != null) {
       String sku = entity.getProductSku();
-      long numReviews = entity.getNumReviews();
       long numPages = numReviews / 10;
       if (numReviews % 10 > 0) {
         numPages++;
