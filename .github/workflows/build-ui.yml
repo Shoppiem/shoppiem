@@ -3,9 +3,9 @@
 #**********************************************************************
 name: Shoppiem UI | Prod
 on:
-  pull_request:
+  push:
     branches: [ main ]
-    types: [closed]
+#    types: [closed]
     paths:
       - "frontend/**"
 env:
@@ -20,7 +20,7 @@ env:
 
 jobs:
   build:
-    if: ${{ github.event.pull_request.merged }}
+#    if: ${{ github.event.pull_request.merged }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
