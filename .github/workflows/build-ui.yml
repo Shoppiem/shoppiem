@@ -14,9 +14,9 @@ env:
   AWS_REGION_US: 'us-east-2'
   AWS_ECR_REGISTRY: '537408061242.dkr.ecr.us-east-2.amazonaws.com'
   AWS_ECR_REPO: 'shoppiem'
-  IMAGE_TAG: 'ui'
+  IMAGE_TAG: 'frontend'
   ARTIFACT_PATH: 'shoppiem_ui/build'
-  PROJECT_NAME: 'ui'
+  PROJECT_NAME: 'frontend'
 
 jobs:
   build:
