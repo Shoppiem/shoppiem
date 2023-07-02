@@ -13,6 +13,9 @@
 .rs-drawer-header-close {
   display: none
 }
+.floating-button {
+  max-width: 64px;
+}
 .floating-button svg {
   background: #3498ff;
   padding: 8px;

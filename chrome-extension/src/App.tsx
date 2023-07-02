@@ -175,7 +175,10 @@ export default function App(): ReactElement {
         }
       </Drawer.Footer>
     </Drawer>
-        <FloatingButton handleOpen={handleOpen}/>
+        <FloatingButton
+            handleOpen={handleOpen}
+            showBadge={productMetadata?.name && productMetadata?.imageUrl}
+        />
   </div>
   )
 }
