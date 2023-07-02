@@ -175,34 +175,34 @@ const Footer = () => {
             <div className="w-full px-4 md:w-1/2 lg:w-4/12 xl:w-3/12">
               <div className="mb-12 lg:mb-16">
                 <h2 className="mb-10 text-xl font-bold text-black dark:text-white">
-                  Helpful Links
+                  Legal
                 </h2>
                 <ul>
+                  {/*<li>*/}
+                  {/*  <a*/}
+                  {/*    href="/about"*/}
+                  {/*    className="mb-4 inline-block text-base font-medium text-body-color hover:text-primary"*/}
+                  {/*  >*/}
+                  {/*    {" "}*/}
+                  {/*    About{" "}*/}
+                  {/*  </a>*/}
+                  {/*</li>*/}
                   <li>
                     <a
-                      href="/"
-                      className="mb-4 inline-block text-base font-medium text-body-color hover:text-primary"
-                    >
-                      {" "}
-                      About{" "}
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/"
-                      className="mb-4 inline-block text-base font-medium text-body-color hover:text-primary"
-                    >
-                      {" "}
-                      Terms of Use{" "}
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="/"
+                      href="/privacy"
                       className="mb-4 inline-block text-base font-medium text-body-color hover:text-primary"
                     >
                       {" "}
                       Privacy{" "}
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                        href="/terms"
+                        className="mb-4 inline-block text-base font-medium text-body-color hover:text-primary"
+                    >
+                      {" "}
+                      Terms of Service{" "}
                     </a>
                   </li>
                 </ul>
@@ -213,7 +213,7 @@ const Footer = () => {
         <div className="bg-primary/10 py-8">
           <div className="container">
             <p className="text-center text-base text-body-color dark:text-white">
-              Copyright © 2023 Shoppiem Inc. All Rights Reserved.
+              Copyright © 2023 Shoppiem. All Rights Reserved.
             </p>
           </div>
         </div>
