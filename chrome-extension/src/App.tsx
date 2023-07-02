@@ -20,6 +20,7 @@ export default function App(): ReactElement {
   const [productSku, setProductSku] = useState("")
   const [showBubbleAnimation, setShowBubbleAnimation] = useState(false)
   const [rawMessage, setRawMessage] = useState('')
+  const [listenersInitialized, setListenersInitialized] = useState(false)
   const [initialChatHistoryLoaded, setInitialChatHistoryLoaded] = useState(false)
   const boundaryId = nanoid()
 
@@ -44,7 +45,8 @@ export default function App(): ReactElement {
   useEffect(() => {
     const href = window.location.href
     if (href.includes("/dp/")) {
-      setProductSku(window.location.href.split("/dp/")[1].split("/")[0]);
+      const url = new URL(window.location.href)
+      setProductSku(url.pathname.split("/dp/")[1])
     }
   }, [])
 
@@ -62,7 +64,8 @@ export default function App(): ReactElement {
   })
 
   useEffect(() => {
-    if (productSku) {
+    if (productSku && !listenersInitialized) {
+      setListenersInitialized(true)
       // @ts-ignore
       chrome?.runtime?.onMessage?.addListener(function (request, sender, sendResponse) {
         if (request.type === MESSAGE_TYPE.PRODUCT_INFO_REQUEST && !productMetadata?.name) {
@@ -87,7 +90,7 @@ export default function App(): ReactElement {
           });
         })();
     }
-  }, [productSku])
+  })
 
   useEffect(() => {
     // @ts-ignore
