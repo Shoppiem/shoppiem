@@ -618,7 +618,11 @@ public class AmazonParserImpl implements AmazonParser {
                   if (submittedAt != null) {
                     reviewEntity.setSubmittedAt(submittedAt);
                   }
-                  reviewEntity.setCountry(country);
+                  if (country != null) {
+                    reviewEntity.setCountry(country
+                        .replace("the", "")
+                        .strip());
+                  }
                 }
               } else if (value.equals("review-voting-widget")) {
                 List<String> values = new ArrayList<>();
@@ -668,7 +672,10 @@ public class AmazonParserImpl implements AmazonParser {
     walkHelper(doc, numQuestionsAnsweredXPath, values, 1, false);
     try {
       if (values.size() > 0) {
-        return Long.parseLong(values.get(0).replace(" answered questions", ""));
+        return Long.parseLong(values.get(0)
+            .replace(" answered questions", "")
+            .replace("+", "")
+        );
       }
     } catch (Exception e) {
       log.error(e.getLocalizedMessage());
