@@ -121,7 +121,10 @@ public class ChatServiceImpl implements ChatService {
         String jobString = objectMapper.writeValueAsString(job);
         rabbitTemplate.convertAndSend(
             rabbitMQProps.getTopicExchange(),
-            rabbitMQProps.getChatJobRoutingKeyPrefix() + productSku,
+            rabbitMQProps
+                .getJobQueues()
+                .get(RabbitMQProps.CHAT_JOB_QUEUE_KEY)
+                .getRoutingKeyPrefix() + productSku,
             jobString);
       } catch (JsonProcessingException e) {
         log.error(e.getLocalizedMessage());

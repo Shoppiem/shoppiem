@@ -1,6 +1,6 @@
 package com.shoppiem.api.service.scraper;
 
-import com.shoppiem.api.dto.ScrapingJob.JobType;
+import com.shoppiem.api.dto.JobType;
 
 /**
  * @author Bizuwork Melesse

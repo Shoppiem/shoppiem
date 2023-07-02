@@ -13,8 +13,8 @@ import com.shoppiem.api.data.postgres.repo.ProductAnswerRepo;
 import com.shoppiem.api.data.postgres.repo.ProductQuestionRepo;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
 import com.shoppiem.api.data.postgres.repo.ReviewRepo;
+import com.shoppiem.api.dto.JobType;
 import com.shoppiem.api.dto.ScrapingJob;
-import com.shoppiem.api.dto.ScrapingJob.JobType;
 import com.shoppiem.api.props.RabbitMQProps;
 import com.shoppiem.api.service.chromeExtension.ExtensionServiceImpl.MessageType;
 import com.shoppiem.api.service.embedding.EmbeddingService;
@@ -211,7 +211,10 @@ public class AmazonParserImpl implements AmazonParser {
         String jobString = objectMapper.writeValueAsString(job);
         rabbitTemplate.convertAndSend(
             rabbitMQProps.getTopicExchange(),
-            rabbitMQProps.getScrapeJobRoutingKeyPrefix() + job.getProductSku(),
+            rabbitMQProps
+                .getJobQueues()
+                .get(RabbitMQProps.SCRAPE_JOB_QUEUE_KEY)
+                .getRoutingKeyPrefix() + job.getProductSku(),
             jobString);
       } catch (JsonProcessingException e) {
         log.error(e.getLocalizedMessage());

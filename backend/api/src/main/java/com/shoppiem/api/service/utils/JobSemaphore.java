@@ -27,14 +27,20 @@ public class JobSemaphore {
 
   public Semaphore getScrapeJobSemaphore() {
     if (scrapeJobSemaphore == null) {
-      scrapeJobSemaphore = new Semaphore(rabbitMQProps.getScrapeJobThreadCount());
+      scrapeJobSemaphore = new Semaphore(rabbitMQProps
+          .getJobQueues()
+          .get(RabbitMQProps.SCRAPE_JOB_QUEUE_KEY)
+          .getThreadCount());
     }
     return scrapeJobSemaphore;
   }
 
   public Semaphore getChatJobSemaphore() {
     if (chatJobSemaphore == null) {
-      chatJobSemaphore = new Semaphore(rabbitMQProps.getChatJobThreadCount());
+      chatJobSemaphore = new Semaphore(rabbitMQProps
+          .getJobQueues()
+          .get(RabbitMQProps.CHAT_JOB_QUEUE_KEY)
+          .getThreadCount());
     }
     return chatJobSemaphore;
   }

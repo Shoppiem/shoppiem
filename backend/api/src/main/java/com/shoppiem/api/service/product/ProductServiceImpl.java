@@ -3,18 +3,16 @@ package com.shoppiem.api.service.product;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.shoppiem.api.ProductCreateResponse;
 import com.shoppiem.api.ProductFromDataRequest;
 import com.shoppiem.api.ProductRequest;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
+import com.shoppiem.api.dto.JobType;
 import com.shoppiem.api.dto.ScrapingJob;
-import com.shoppiem.api.dto.ScrapingJob.JobType;
 import com.shoppiem.api.props.RabbitMQProps;
 import com.shoppiem.api.service.chromeExtension.ExtensionServiceImpl.MessageType;
-import com.shoppiem.api.service.embedding.EmbeddingService;
 import com.shoppiem.api.service.parser.AmazonParser;
 import com.shoppiem.api.service.utils.ShoppiemUtils;
 import java.net.MalformedURLException;
@@ -95,7 +93,10 @@ public class ProductServiceImpl implements ProductService {
           String jobString = objectMapper.writeValueAsString(job);
           rabbitTemplate.convertAndSend(
               rabbitMQProps.getTopicExchange(),
-              rabbitMQProps.getScrapeJobRoutingKeyPrefix() + productSku,
+              rabbitMQProps
+                  .getJobQueues()
+                  .get(RabbitMQProps.SCRAPE_JOB_QUEUE_KEY)
+                  .getRoutingKeyPrefix() + productSku,
               jobString);
           return new ProductCreateResponse()
               .inProgress(true);

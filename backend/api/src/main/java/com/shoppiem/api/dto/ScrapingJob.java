@@ -17,12 +17,4 @@ public class ScrapingJob {
   private JobType type;
   private String id;
   private int retries;
-
-
-  public enum JobType {
-    PRODUCT_PAGE,
-    QUESTION_PAGE,
-    ANSWER_PAGE,
-    REVIEW_PAGE
-  }
 }

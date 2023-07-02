@@ -35,13 +35,19 @@ public class RabbitMQConfiguration {
   @Bean
   @Qualifier("scrape-job-queue")
   public Queue scrapeJobQueue(){
-    return new Queue(rabbitMQProps.getScrapeJobQueue());
+    return new Queue(rabbitMQProps
+        .getJobQueues()
+        .get(RabbitMQProps.SCRAPE_JOB_QUEUE_KEY)
+        .getQueue());
   }
 
   @Bean
   @Qualifier("chat-job-queue")
   public Queue chatJobQueue(){
-    return new Queue(rabbitMQProps.getChatJobQueue());
+    return new Queue(rabbitMQProps
+        .getJobQueues()
+        .get(RabbitMQProps.CHAT_JOB_QUEUE_KEY)
+        .getQueue());
   }
 
   @Bean
@@ -55,7 +61,10 @@ public class RabbitMQConfiguration {
     return BindingBuilder
         .bind(jobQueue)
         .to(exchange())
-        .with(rabbitMQProps.getScrapeJobRoutingKey());
+        .with(rabbitMQProps
+        .getJobQueues()
+        .get(RabbitMQProps.SCRAPE_JOB_QUEUE_KEY)
+        .getRoutingKey());
   }
 
   @Bean
@@ -63,7 +72,10 @@ public class RabbitMQConfiguration {
     return BindingBuilder
         .bind(jobQueue)
         .to(exchange())
-        .with(rabbitMQProps.getChatJobRoutingKey());
+        .with(rabbitMQProps
+            .getJobQueues()
+            .get(RabbitMQProps.CHAT_JOB_QUEUE_KEY)
+            .getRoutingKey());
   }
 
   @Bean
@@ -74,7 +86,10 @@ public class RabbitMQConfiguration {
     SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
     container.setConcurrentConsumers(rabbitMQProps.getConsumerConcurrency());
-    container.setQueueNames(rabbitMQProps.getScrapeJobQueue());
+    container.setQueueNames(rabbitMQProps
+        .getJobQueues()
+        .get(RabbitMQProps.SCRAPE_JOB_QUEUE_KEY)
+        .getQueue());
     container.setMessageListener(listenerAdapter);
     return container;
   }
@@ -87,7 +102,10 @@ public class RabbitMQConfiguration {
     SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
     container.setConnectionFactory(connectionFactory);
     container.setConcurrentConsumers(rabbitMQProps.getConsumerConcurrency());
-    container.setQueueNames(rabbitMQProps.getChatJobQueue());
+    container.setQueueNames(rabbitMQProps
+        .getJobQueues()
+        .get(RabbitMQProps.CHAT_JOB_QUEUE_KEY)
+        .getQueue());
     container.setMessageListener(listenerAdapter);
     return container;
   }

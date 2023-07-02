@@ -1,7 +1,7 @@
 package com.shoppiem.api.props;
 
-import java.util.HashSet;
-import java.util.Set;
+import com.shoppiem.api.dto.JobQueue;
+import java.util.Map;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -17,18 +17,15 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 @ConfigurationProperties(prefix = "rabbitmq")
 public class RabbitMQProps {
-    private String scrapeJobQueue;
-    private String chatJobQueue;
-    private String topicExchange;
-    private String scrapeJobRoutingKey;
-    private String scrapeJobRoutingKeyPrefix;
-    private String chatJobRoutingKey;
-    private String chatJobRoutingKeyPrefix;
+    public static final String SCRAPE_JOB_QUEUE_KEY = "scraping";
+    public static final String CHAT_JOB_QUEUE_KEY = "chat";
+    public static final String SMART_PROXY_JOB_QUEUE_KEY = "smart-proxy";
+
     private String host;
-    private Integer port;
+    private int port;
     private String username;
     private String password;
-    private Integer consumerConcurrency;
-    private Integer scrapeJobThreadCount;
-    private Integer chatJobThreadCount;
+    private int consumerConcurrency;
+    private String topicExchange;
+    Map<String, JobQueue> jobQueues;
 }

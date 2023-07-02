@@ -24,7 +24,8 @@ import org.springframework.context.annotation.Configuration;
     ScraperProps.class,
     RabbitMQProps.class,
     InfaticaProps.class,
-    CorsProps.class
+    CorsProps.class,
+    SmartProxyProps.class
 })
 public class PropConfiguration {
 }
