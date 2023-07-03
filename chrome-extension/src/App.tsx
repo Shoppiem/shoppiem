@@ -43,12 +43,14 @@ export default function App(): ReactElement {
   }, [initialChatHistoryLoaded, productMetadata])
 
   useEffect(() => {
-    const href = window.location.href
-    if (href.includes("/dp/")) {
-      const url = new URL(window.location.href)
-      setProductSku(url.pathname.split("/dp/")[1])
+    if (!productSku) {
+      const href = window.location.href
+      if (href.includes("/dp/")) {
+        const url = new URL(window.location.href)
+        setProductSku(url.pathname.split("/dp/")[1].split("/")[0])
+      }
     }
-  }, [])
+  })
 
   useEffect(() => {
     // Keep messaging the service worker until we have the product metadata
@@ -65,9 +67,11 @@ export default function App(): ReactElement {
 
   useEffect(() => {
     if (productSku && !listenersInitialized) {
+      console.log("setting listeners....")
       setListenersInitialized(true)
       // @ts-ignore
       chrome?.runtime?.onMessage?.addListener(function (request, sender, sendResponse) {
+        console.log("MESSAGE RECEIVED: ", request)
         if (request.type === MESSAGE_TYPE.PRODUCT_INFO_REQUEST && !productMetadata?.name) {
           setProductMetadata({
             name: request.name,
