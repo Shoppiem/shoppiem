@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-const AddToChrome = ({hidden = false}: {hidden?: false }) => {
+const AddToChrome = ({hidden = false}: {hidden?: boolean }) => {
   let className = "py-3 px-7 text-base font-bold text-dark hover:opacity-70 dark:text-white md:block"
   if (hidden) {
     className = "hidden py-3 px-7 text-base font-bold text-dark hover:opacity-70 dark:text-white md:block"

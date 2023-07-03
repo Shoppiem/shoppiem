@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import ThemeToggler from "./ThemeToggler";
 import menuData from "./menuData";
 import AddToChrome from "@/components/Buttons/AddToChrome";
+import {useTheme} from "next-themes";
 
 const Header = () => {
   // Navbar toggle
@@ -12,6 +13,8 @@ const Header = () => {
   const navbarToggleHandler = () => {
     setNavbarOpen(!navbarOpen);
   };
+  const { theme, setTheme } = useTheme();
+  setTheme("dark")
 
   // Sticky Navbar
   const [sticky, setSticky] = useState(false);
