@@ -628,7 +628,12 @@ public class AmazonParserImpl implements AmazonParser {
                 List<String> values = new ArrayList<>();
                 walk(childNode, values, 1, true);
                 if (values.size() > 0) {
-                  reviewEntity.setReviewer(values.get(0));
+                  String reviewer = values.get(0);
+                  if (reviewer.length() > 255) {
+                    reviewEntity.setReviewer("username_not_found");
+                  } else {
+                    reviewEntity.setReviewer(reviewer);
+                  }
                 }
               } else if (value.equals("review-star-rating")) {
                 List<String> values = new ArrayList<>();

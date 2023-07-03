@@ -165,7 +165,9 @@ public class ScraperServiceImpl implements ScraperService {
         try {
             getSmartProxyResult(job.getResultUrl());
             String result = getSmartProxyResult(job.getResultUrl());
-            if (result.toLowerCase().startsWith("no content")) {
+            if (result == null) {
+                reschedule = true;
+            } else if (result.toLowerCase().startsWith("no content")) {
                 TaskEntity taskEntity = taskRepo.findByTaskId(job.getTaskId());
                 taskEntity.setCompleted(true);
                 taskRepo.save(taskEntity);
@@ -289,11 +291,15 @@ public class ScraperServiceImpl implements ScraperService {
             .build()) {
             HttpGet httpGet = new HttpGet(url);
             CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
-            String result = EntityUtils.toString(httpResponse.getEntity());
-            int statusCode = httpResponse.getStatusLine().getStatusCode();
-            if (statusCode >= 400) {
-                throw new RuntimeException(
-                    String.format("Status Code: %s URL: %s", statusCode, url));
+            var entity = httpResponse.getEntity();
+            String result = null;
+            if (entity != null) {
+                result = EntityUtils.toString(entity);
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+                if (statusCode >= 400) {
+                    throw new RuntimeException(
+                        String.format("Status Code: %s URL: %s", statusCode, url));
+                }
             }
             httpResponse.close();
             return result;
