@@ -104,7 +104,6 @@ public class ScraperServiceImpl implements ScraperService {
         String starRating) {
         Merchant merchant = getPlatform(url);
         if (soup != null) {
-            log.info("Soup found for jobId={}", jobId);
             final String _soup = soup;
             Thread.startVirtualThread(() -> {
                 if (Objects.requireNonNull(merchant) == Merchant.AMAZON) {
@@ -135,6 +134,7 @@ public class ScraperServiceImpl implements ScraperService {
         taskEntity.setQuestionId(job.getQuestionId());
         SmartProxyJob smartJob = new SmartProxyJob();
         try {
+            log.info("Scheduling job={} url={}", job.getType().name(), job.getUrl());
             String taskId = submitSmartProxyTask(job.getUrl());
             taskEntity.setTaskId(taskId);
             taskRepo.save(taskEntity);
@@ -177,6 +177,8 @@ public class ScraperServiceImpl implements ScraperService {
                 if (ObjectUtils.isEmpty(resultsDto.getResults().get(0).getContent())) {
                     reschedule = true;
                 } else {
+                    log.info("Result for taskId={} job={} url={}", job.getTaskId(), job.getType().name(),
+                        job.getUrl());
                     TaskEntity taskEntity = taskRepo.findByTaskId(job.getTaskId());
                     taskEntity.setCompleted(true);
                     taskRepo.save(taskEntity);
@@ -189,7 +191,7 @@ public class ScraperServiceImpl implements ScraperService {
                 }
             }
         } catch (Exception e) {
-            log.warn("Result not found for {}. Rescheduling job", job.getTaskId());
+            log.warn("Result not found for taskId={}. Rescheduling job", job.getTaskId());
             reschedule = true;
         } finally {
             jobSemaphore.getSmartProxyJobSemaphore().release();
