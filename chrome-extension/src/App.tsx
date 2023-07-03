@@ -67,11 +67,9 @@ export default function App(): ReactElement {
 
   useEffect(() => {
     if (productSku && !listenersInitialized) {
-      console.log("setting listeners....")
       setListenersInitialized(true)
       // @ts-ignore
       chrome?.runtime?.onMessage?.addListener(function (request, sender, sendResponse) {
-        console.log("MESSAGE RECEIVED: ", request)
         if (request.type === MESSAGE_TYPE.PRODUCT_INFO_REQUEST && !productMetadata?.name) {
           setProductMetadata({
             name: request.name,
