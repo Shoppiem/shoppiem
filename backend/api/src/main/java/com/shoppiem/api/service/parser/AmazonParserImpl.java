@@ -135,7 +135,7 @@ public class AmazonParserImpl implements AmazonParser {
     if (scheduleJobs) {
       scheduleQandAScraping(entity);
       List<String> starRatings = List.of(
-          "five_star"
+          "five_star",
           "four_star",
           "three_star",
           "two_star",

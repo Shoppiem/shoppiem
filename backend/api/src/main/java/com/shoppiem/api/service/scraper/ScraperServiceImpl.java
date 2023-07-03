@@ -133,11 +133,11 @@ public class ScraperServiceImpl implements ScraperService {
         taskEntity.setProductId(job.getProductId());
         taskEntity.setStarRating(job.getStarRating());
         taskEntity.setQuestionId(job.getQuestionId());
+        SmartProxyJob smartJob = new SmartProxyJob();
         try {
             String taskId = submitSmartProxyTask(job.getUrl());
             taskEntity.setTaskId(taskId);
             taskRepo.save(taskEntity);
-            SmartProxyJob smartJob = new SmartProxyJob();
             smartJob.setUrl(job.getUrl());
             smartJob.setId(job.getId());
             smartJob.setProductId(job.getProductId());
@@ -151,15 +151,12 @@ public class ScraperServiceImpl implements ScraperService {
             smartJob.setResultUrl(smartProxyProps.getResultUrl()
                 .replace("\"", "")
                 .replace("{}", taskId));
-            jobUtils.submitJob(smartJob, rabbitMQProps
-                .getJobQueues()
-                .get(RabbitMQProps.SMART_PROXY_JOB_QUEUE_KEY)
-                .getRoutingKeyPrefix());
         } catch (IOException e) {
             log.error(e.getLocalizedMessage());
         } finally {
             jobSemaphore.getScrapeJobSemaphore().release();
         }
+        scheduleSmartProxyJob(smartJob);
     }
 
     @Override
@@ -167,34 +164,51 @@ public class ScraperServiceImpl implements ScraperService {
         boolean reschedule = false;
         try {
             getSmartProxyResult(job.getResultUrl());
-            SmartProxyResultsDto resultsDto = objectMapper.readValue(
-                getSmartProxyResult(job.getResultUrl()), SmartProxyResultsDto.class);
-            if (ObjectUtils.isEmpty(resultsDto.getResults().get(0).getContent())) {
-                reschedule = true;
-            } else {
+            String result = getSmartProxyResult(job.getResultUrl());
+            if (result.toLowerCase().startsWith("no content")) {
                 TaskEntity taskEntity = taskRepo.findByTaskId(job.getTaskId());
                 taskEntity.setCompleted(true);
                 taskRepo.save(taskEntity);
-                parseSoup(resultsDto.getResults().get(0).getContent(),
-                    job.getId(), job.getProductSku(), job.getUrl(), job.getType(),
-                    true,
-                    job.getRetries(),
-                    job.isInitialReviewsByStarRating(),
-                    job.getStarRating());
+            } else {
+                SmartProxyResultsDto resultsDto = objectMapper.readValue(result,
+                    SmartProxyResultsDto.class);
+                if (ObjectUtils.isEmpty(resultsDto.getResults().get(0).getContent())) {
+                    reschedule = true;
+                } else {
+                    TaskEntity taskEntity = taskRepo.findByTaskId(job.getTaskId());
+                    taskEntity.setCompleted(true);
+                    taskRepo.save(taskEntity);
+                    parseSoup(resultsDto.getResults().get(0).getContent(),
+                        job.getId(), job.getProductSku(), job.getUrl(), job.getType(),
+                        true,
+                        job.getRetries(),
+                        job.isInitialReviewsByStarRating(),
+                        job.getStarRating());
+                }
             }
         } catch (Exception e) {
-            log.error(e.getLocalizedMessage());
+            log.warn("Result not found for {}. Rescheduling job", job.getTaskId());
             reschedule = true;
         } finally {
             jobSemaphore.getSmartProxyJobSemaphore().release();
         }
         if (reschedule) {
+            scheduleSmartProxyJob(job);
+        }
+    }
+
+    private void scheduleSmartProxyJob(SmartProxyJob job) {
+        Thread.startVirtualThread(() -> {
+            try {
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                // pass
+            }
             jobUtils.submitJob(job, rabbitMQProps
                 .getJobQueues()
                 .get(RabbitMQProps.SMART_PROXY_JOB_QUEUE_KEY)
                 .getRoutingKeyPrefix());
-        }
-
+        });
     }
 
     private String downloadPageHeadless(String url) {
