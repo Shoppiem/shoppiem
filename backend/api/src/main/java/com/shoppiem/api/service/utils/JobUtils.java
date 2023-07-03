@@ -5,7 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.dto.ScrapingJob;
 import com.shoppiem.api.dto.SmartProxyJob;
 import com.shoppiem.api.props.RabbitMQProps;
+import com.shoppiem.api.props.ScraperProps;
 import java.util.List;
+import java.util.Random;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -21,6 +23,7 @@ public class JobUtils {
   private final ObjectMapper objectMapper;
   private final RabbitTemplate rabbitTemplate;
   private final RabbitMQProps rabbitMQProps;
+  private final ScraperProps scraperProps;
 
   public void submitJobs(List<ScrapingJob> jobs, String routingPrefix) {
     for (ScrapingJob job : jobs) {
@@ -42,5 +45,11 @@ public class JobUtils {
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
     }
+  }
+
+  public long getRandomThrottle() {
+    long min = scraperProps.getThrottleMin();
+    long max = scraperProps.getThrottleMax();
+    return new Random().nextLong((max - min) + 1) + min;
   }
 }

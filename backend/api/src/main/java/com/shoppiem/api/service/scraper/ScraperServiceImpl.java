@@ -204,7 +204,7 @@ public class ScraperServiceImpl implements ScraperService {
     private void scheduleSmartProxyJob(SmartProxyJob job) {
         Thread.startVirtualThread(() -> {
             try {
-                Thread.sleep(1000L);
+                Thread.sleep(jobUtils.getRandomThrottle());
             } catch (InterruptedException e) {
                 // pass
             }

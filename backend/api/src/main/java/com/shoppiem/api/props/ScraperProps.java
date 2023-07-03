@@ -17,4 +17,6 @@ import org.springframework.context.annotation.Primary;
 public class ScraperProps {
     private boolean useSmartProxy;
     private boolean saveHtml;
+    private long throttleMin;
+    private long throttleMax;
 }
