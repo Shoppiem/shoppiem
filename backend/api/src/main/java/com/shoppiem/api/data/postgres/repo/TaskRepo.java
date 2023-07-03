@@ -14,4 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 @Transactional
 public interface TaskRepo extends JpaRepository<TaskEntity, Long> {
+
+  TaskEntity findByTaskId(String taskId);
 }

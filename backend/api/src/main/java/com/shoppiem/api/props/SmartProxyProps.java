@@ -15,7 +15,8 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 @ConfigurationProperties(prefix = "smart-proxy")
 public class SmartProxyProps {
-    private String baseUrl;
+    private String requestUrl;
     private String token;
     private String callbackUrl;
+    private String resultUrl;
 }

@@ -1,8 +1,5 @@
 package com.shoppiem.api.props;
 
-import com.shoppiem.api.dto.Pair;
-import java.util.List;
-import java.util.Random;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -18,18 +15,6 @@ import org.springframework.context.annotation.Primary;
 @Configuration
 @ConfigurationProperties(prefix = "scraper")
 public class ScraperProps {
-    private String userAgent;
-    private List<String> proxyIpAddress;
-    private boolean useStormProxy;
+    private boolean useSmartProxy;
     private boolean saveHtml;
-
-    public Pair<String, Integer> getProxyIpWithPort() {
-        String[] tokens = proxyIpAddress.get(0).split(":");
-        return new Pair<>(tokens[0], Integer.parseInt(tokens[1]));
-    }
-
-    public String getRandomProxy() {
-        Random rand = new Random();
-        return proxyIpAddress.get(rand.nextInt(proxyIpAddress.size()));
-    }
 }

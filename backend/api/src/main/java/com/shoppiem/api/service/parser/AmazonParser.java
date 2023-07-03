@@ -23,7 +23,7 @@ public interface AmazonParser {
 
   void scheduleQandAScraping(ProductEntity entity);
 
-  void scheduleInitialReviewScraping(String productSku, String productUrl, String starRating, int retries);
+  void scheduleInitialReviewScraping(Long productId, String productSku, String productUrl, String starRating, int retries);
 
   void parseReviewPage(ProductEntity entity, String soup, boolean initialReviewByStarRating, String starRating,
       int retries);

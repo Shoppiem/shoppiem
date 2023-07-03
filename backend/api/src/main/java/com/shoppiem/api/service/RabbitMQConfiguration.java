@@ -51,6 +51,15 @@ public class RabbitMQConfiguration {
   }
 
   @Bean
+  @Qualifier("smart-proxy-job-queue")
+  public Queue smartProxyJobQueue(){
+    return new Queue(rabbitMQProps
+        .getJobQueues()
+        .get(RabbitMQProps.SMART_PROXY_JOB_QUEUE_KEY)
+        .getQueue());
+  }
+
+  @Bean
   public TopicExchange exchange(){
     return new TopicExchange(rabbitMQProps.getTopicExchange());
   }
@@ -65,6 +74,17 @@ public class RabbitMQConfiguration {
         .getJobQueues()
         .get(RabbitMQProps.SCRAPE_JOB_QUEUE_KEY)
         .getRoutingKey());
+  }
+
+  @Bean
+  public Binding smartProxyJobBinding(@Qualifier("smart-proxy-job-queue") Queue jobQueue){
+    return BindingBuilder
+        .bind(jobQueue)
+        .to(exchange())
+        .with(rabbitMQProps
+            .getJobQueues()
+            .get(RabbitMQProps.SMART_PROXY_JOB_QUEUE_KEY)
+            .getRoutingKey());
   }
 
   @Bean
@@ -105,6 +125,22 @@ public class RabbitMQConfiguration {
     container.setQueueNames(rabbitMQProps
         .getJobQueues()
         .get(RabbitMQProps.CHAT_JOB_QUEUE_KEY)
+        .getQueue());
+    container.setMessageListener(listenerAdapter);
+    return container;
+  }
+
+  @Bean
+  @Qualifier("smart-proxy-job-listener-container")
+  SimpleMessageListenerContainer smartProxyJobListenerContainer(
+      @Qualifier("smart-proxy-job-message-listener") MessageListenerAdapter listenerAdapter,
+      ConnectionFactory connectionFactory) {
+    SimpleMessageListenerContainer container = new SimpleMessageListenerContainer();
+    container.setConnectionFactory(connectionFactory);
+    container.setConcurrentConsumers(rabbitMQProps.getConsumerConcurrency());
+    container.setQueueNames(rabbitMQProps
+        .getJobQueues()
+        .get(RabbitMQProps.SMART_PROXY_JOB_QUEUE_KEY)
         .getQueue());
     container.setMessageListener(listenerAdapter);
     return container;

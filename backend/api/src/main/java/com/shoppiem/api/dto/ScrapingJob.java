@@ -17,4 +17,5 @@ public class ScrapingJob {
   private JobType type;
   private String id;
   private int retries;
+  private long productId;
 }

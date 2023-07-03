@@ -1,6 +1,8 @@
 package com.shoppiem.api.service.scraper;
 
 import com.shoppiem.api.dto.JobType;
+import com.shoppiem.api.dto.ScrapingJob;
+import com.shoppiem.api.dto.SmartProxyJob;
 
 /**
  * @author Bizuwork Melesse
@@ -20,4 +22,8 @@ public interface ScraperService {
      */
     void scrape(String jobId, String sku, String url, JobType type, boolean scheduleJobs, int numRetries, boolean headless,
         boolean initialReviewByStarRating, String starRating);
+
+    void smartProxyScraper(ScrapingJob job);
+
+    void smartProxyResultHandler(SmartProxyJob job);
 }

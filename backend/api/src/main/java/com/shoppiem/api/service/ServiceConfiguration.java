@@ -50,4 +50,10 @@ public class ServiceConfiguration {
   public MessageListenerAdapter chatJobConsumer() {
     return new MessageListenerAdapter(consumer, "chatJobConsumer");
   }
+
+  @Bean
+  @Qualifier("smart-proxy-job-message-listener")
+  public MessageListenerAdapter smartProxyJobConsumer() {
+    return new MessageListenerAdapter(consumer, "smartProxyJobConsumer");
+  }
 }

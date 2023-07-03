@@ -7,12 +7,21 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.gargoylesoftware.htmlunit.WebClient;
 import com.gargoylesoftware.htmlunit.html.HtmlPage;
 import com.shoppiem.api.data.postgres.entity.ProductEntity;
+import com.shoppiem.api.data.postgres.entity.TaskEntity;
 import com.shoppiem.api.data.postgres.repo.ProductRepo;
+import com.shoppiem.api.data.postgres.repo.TaskRepo;
 import com.shoppiem.api.dto.JobType;
+import com.shoppiem.api.dto.ScrapingJob;
+import com.shoppiem.api.dto.SmartProxyJob;
+import com.shoppiem.api.dto.SmartProxyResultsDto;
+import com.shoppiem.api.dto.SmartProxyTaskDto;
 import com.shoppiem.api.props.InfaticaProps;
+import com.shoppiem.api.props.RabbitMQProps;
 import com.shoppiem.api.props.ScraperProps;
+import com.shoppiem.api.props.SmartProxyProps;
 import com.shoppiem.api.service.parser.AmazonParser;
 import com.shoppiem.api.service.utils.JobSemaphore;
+import com.shoppiem.api.service.utils.JobUtils;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -22,6 +31,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.http.Header;
 import org.apache.http.HttpHeaders;
 import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -40,6 +51,7 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author Bizuwork Melesse
@@ -57,19 +69,22 @@ public class ScraperServiceImpl implements ScraperService {
     private final InfaticaProps infaticaProps;
     private final ObjectMapper objectMapper;
     private final ScraperProps scraperProps;
+    private final SmartProxyProps smartProxyProps;
+    private final TaskRepo taskRepo;
+    private final JobUtils jobUtils;
+    private final RabbitMQProps rabbitMQProps;
 
     @SneakyThrows
     @Override
     public void scrape(String jobId, String sku, String url, JobType type, boolean scheduleJobs, int numRetries,
         boolean headless, boolean initialReviewByStarRating, String starRating) {
         log.info("Scraping {} at {}", sku, url);
-        Merchant merchant = getPlatform(url);
         String soup = null;
         try {
             if (headless) {
                 soup = downloadPageHeadless(url);
             } else {
-                soup = downloadPage(url);
+                soup = request(url);
             }
         } catch (Exception e) {
             log.error("{}: {} - {}", e.getLocalizedMessage(), jobId, url);
@@ -79,6 +94,15 @@ public class ScraperServiceImpl implements ScraperService {
         // Although we want to retry if parsing any of the pages fails, it is okay to skip failing
         // ones. The most important page is the product page. But the HTML soup for that is
         // provided by the client.
+        parseSoup(soup,jobId, sku, url, type, scheduleJobs, numRetries,
+            initialReviewByStarRating,
+            starRating);
+    }
+
+    private void parseSoup(String soup, String jobId, String sku, String url,
+        JobType type, boolean scheduleJobs, int numRetries, boolean initialReviewByStarRating,
+        String starRating) {
+        Merchant merchant = getPlatform(url);
         if (soup != null) {
             log.info("Soup found for jobId={}", jobId);
             final String _soup = soup;
@@ -101,6 +125,78 @@ public class ScraperServiceImpl implements ScraperService {
         }
     }
 
+    @Override
+    public void smartProxyScraper(ScrapingJob job) {
+        TaskEntity taskEntity = new TaskEntity();
+        taskEntity.setUrl(job.getUrl());
+        taskEntity.setJobType(job.getType().name());
+        taskEntity.setProductId(job.getProductId());
+        taskEntity.setStarRating(job.getStarRating());
+        taskEntity.setQuestionId(job.getQuestionId());
+        try {
+            String taskId = submitSmartProxyTask(job.getUrl());
+            taskEntity.setTaskId(taskId);
+            taskRepo.save(taskEntity);
+            SmartProxyJob smartJob = new SmartProxyJob();
+            smartJob.setUrl(job.getUrl());
+            smartJob.setId(job.getId());
+            smartJob.setProductId(job.getProductId());
+            smartJob.setProductSku(job.getProductSku());
+            smartJob.setQuestionId(job.getQuestionId());
+            smartJob.setStarRating(job.getStarRating());
+            smartJob.setInitialReviewsByStarRating(job.isInitialReviewsByStarRating());
+            smartJob.setRetries(job.getRetries());
+            smartJob.setType(job.getType());
+            smartJob.setTaskId(taskId);
+            smartJob.setResultUrl(smartProxyProps.getResultUrl()
+                .replace("\"", "")
+                .replace("{}", taskId));
+            jobUtils.submitJob(smartJob, rabbitMQProps
+                .getJobQueues()
+                .get(RabbitMQProps.SMART_PROXY_JOB_QUEUE_KEY)
+                .getRoutingKeyPrefix());
+        } catch (IOException e) {
+            log.error(e.getLocalizedMessage());
+        } finally {
+            jobSemaphore.getScrapeJobSemaphore().release();
+        }
+    }
+
+    @Override
+    public void smartProxyResultHandler(SmartProxyJob job) {
+        boolean reschedule = false;
+        try {
+            getSmartProxyResult(job.getResultUrl());
+            SmartProxyResultsDto resultsDto = objectMapper.readValue(
+                getSmartProxyResult(job.getResultUrl()), SmartProxyResultsDto.class);
+            if (ObjectUtils.isEmpty(resultsDto.getResults().get(0).getContent())) {
+                reschedule = true;
+            } else {
+                TaskEntity taskEntity = taskRepo.findByTaskId(job.getTaskId());
+                taskEntity.setCompleted(true);
+                taskRepo.save(taskEntity);
+                parseSoup(resultsDto.getResults().get(0).getContent(),
+                    job.getId(), job.getProductSku(), job.getUrl(), job.getType(),
+                    true,
+                    job.getRetries(),
+                    job.isInitialReviewsByStarRating(),
+                    job.getStarRating());
+            }
+        } catch (Exception e) {
+            log.error(e.getLocalizedMessage());
+            reschedule = true;
+        } finally {
+            jobSemaphore.getSmartProxyJobSemaphore().release();
+        }
+        if (reschedule) {
+            jobUtils.submitJob(job, rabbitMQProps
+                .getJobQueues()
+                .get(RabbitMQProps.SMART_PROXY_JOB_QUEUE_KEY)
+                .getRoutingKeyPrefix());
+        }
+
+    }
+
     private String downloadPageHeadless(String url) {
         WebClient client = scraperUtils.getWebClient();
         HtmlPage page;
@@ -118,7 +214,7 @@ public class ScraperServiceImpl implements ScraperService {
         return null;
     }
 
-    private String downloadPage(String url) throws IOException {
+    private String request(String url) throws IOException {
         String soup = null;
         if (url != null) {
             List<Header> headers = getHeaders();
@@ -144,6 +240,64 @@ public class ScraperServiceImpl implements ScraperService {
             }
         }
         return soup;
+    }
+
+    private String submitSmartProxyTask(String url) throws IOException {
+        if (url != null) {
+            try (CloseableHttpClient httpClient = HttpClients
+                .custom()
+                .setUserAgent(userAgentService.getRandomUserAgent())
+                .setDefaultHeaders(getSmartProxyHeaders(true))
+                .build()) {
+                HttpPost httpPost = new HttpPost(smartProxyProps.getRequestUrl());
+                StringEntity body = getSmartProxyBody(url);
+                httpPost.setEntity(body);
+                CloseableHttpResponse httpResponse = httpClient.execute(httpPost);
+                String result = EntityUtils.toString(httpResponse.getEntity());
+                SmartProxyTaskDto dto = objectMapper.readValue(result, SmartProxyTaskDto.class);
+                int statusCode = httpResponse.getStatusLine().getStatusCode();
+                if (statusCode >= 400) {
+                    throw new RuntimeException(
+                        String.format("Status Code: %s URL: %s", statusCode, url));
+                }
+                httpResponse.close();
+                return dto.getId();
+            }
+        }
+        return null;
+    }
+
+    private String getSmartProxyResult(String url) throws IOException {
+        try (CloseableHttpClient httpClient = HttpClients
+            .custom()
+            .setUserAgent(userAgentService.getRandomUserAgent())
+            .setDefaultHeaders(getSmartProxyHeaders(false))
+            .build()) {
+            HttpGet httpGet = new HttpGet(url);
+            CloseableHttpResponse httpResponse = httpClient.execute(httpGet);
+            String result = EntityUtils.toString(httpResponse.getEntity());
+            int statusCode = httpResponse.getStatusLine().getStatusCode();
+            if (statusCode >= 400) {
+                throw new RuntimeException(
+                    String.format("Status Code: %s URL: %s", statusCode, url));
+            }
+            httpResponse.close();
+            return result;
+        }
+    }
+
+    private StringEntity getSmartProxyBody(String url) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("target", "amazon");
+        body.put("parse", false);
+        body.put("url", url);
+//        body.put("callback_url", true);
+        try {
+            return new StringEntity(objectMapper.writeValueAsString(body));
+        } catch (JsonProcessingException | UnsupportedEncodingException e) {
+            log.error(e.getLocalizedMessage());
+        }
+        return null;
     }
 
     private StringEntity getBody(List<Header> headers, String url) {
@@ -182,6 +336,16 @@ public class ScraperServiceImpl implements ScraperService {
             new BasicHeader("viewport-width", String.valueOf(width)),
             new BasicHeader("upgrade-insecure-requests", String.valueOf(1))
         );
+    }
+
+    private List<Header> getSmartProxyHeaders(boolean initialRequest) {
+        List<Header> headers = new ArrayList<>(List.of(
+            new BasicHeader(HttpHeaders.ACCEPT, "application/json"),
+            new BasicHeader(HttpHeaders.AUTHORIZATION, "Basic " + smartProxyProps.getToken())));
+        if (initialRequest) {
+            headers.add(new BasicHeader(HttpHeaders.CONTENT_TYPE, "application/json"));
+        }
+        return headers;
     }
 
     private void saveFile(String html, String path) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shoppiem.api.dto.ChatJob;
 import com.shoppiem.api.dto.ScrapingJob;
+import com.shoppiem.api.dto.SmartProxyJob;
 import com.shoppiem.api.props.ScraperProps;
 import com.shoppiem.api.service.chat.ChatService;
 import com.shoppiem.api.service.scraper.ScraperService;
@@ -30,10 +31,15 @@ public class Consumer {
     jobSemaphore.getScrapeJobSemaphore().acquire();
     try {
       ScrapingJob job = objectMapper.readValue(message, ScrapingJob.class);
-      Thread.startVirtualThread(() ->
+      Thread.startVirtualThread(() -> {
+        if (scraperProps.isUseSmartProxy()) {
+          scraperService.smartProxyScraper(job);
+        } else {
           scraperService.scrape(job.getId(), job.getProductSku(), job.getUrl(), job.getType(), true,
-              Math.max(numRetries, job.getRetries()), scraperProps.isUseStormProxy(),
-              job.isInitialReviewsByStarRating(), job.getStarRating()));
+              Math.max(numRetries, job.getRetries()), false,
+              job.isInitialReviewsByStarRating(), job.getStarRating());
+        }
+      });
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
     }
@@ -45,6 +51,17 @@ public class Consumer {
       ChatJob job = objectMapper.readValue(message, ChatJob.class);
       Thread.startVirtualThread(() ->
           chatService.callGpt(job.getQuery(), job.getFcmToken(), job.getProductSku()));
+    } catch (JsonProcessingException e) {
+      log.error(e.getLocalizedMessage());
+    }
+  }
+
+  private void smartProxyJobConsumer(String message) throws InterruptedException {
+    jobSemaphore.getSmartProxyJobSemaphore().acquire();
+    try {
+      SmartProxyJob job = objectMapper.readValue(message, SmartProxyJob.class);
+      Thread.startVirtualThread(() ->
+          scraperService.smartProxyResultHandler(job));
     } catch (JsonProcessingException e) {
       log.error(e.getLocalizedMessage());
     }

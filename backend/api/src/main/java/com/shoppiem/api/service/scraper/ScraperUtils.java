@@ -30,19 +30,21 @@ public class ScraperUtils {
 
     public WebClient getWebClient() {
         // User user agent
-        BrowserVersionBuilder browserVersion = new BrowserVersion.BrowserVersionBuilder(BrowserVersion.CHROME)
-            .setUserAgent(scraperProps.getUserAgent());
-        browserVersion.setUserAgent(scraperProps.getUserAgent());
-        WebClient webClient = new WebClient(browserVersion.build());
+//        BrowserVersionBuilder browserVersion = new BrowserVersion.BrowserVersionBuilder(BrowserVersion.CHROME)
+//            .setUserAgent(scraperProps.getUserAgent());
+//        browserVersion.setUserAgent(scraperProps.getUserAgent());
+        WebClient webClient = new WebClient(
+//            browserVersion.build()
+        );
         var headers = getHeaders();
         for (Header header : headers) {
             webClient.addRequestHeader(header.getName(), header.getValue());
         }
 
         // Set proxy
-        Pair<String, Integer> proxyIpWithPort = scraperProps.getProxyIpWithPort();
-        ProxyConfig proxyConfig = new ProxyConfig(proxyIpWithPort.getFirst(), proxyIpWithPort.getSecond(), "http");
-        webClient.getOptions().setProxyConfig(proxyConfig);
+//        Pair<String, Integer> proxyIpWithPort = scraperProps.getProxyIpWithPort();
+//        ProxyConfig proxyConfig = new ProxyConfig(proxyIpWithPort.getFirst(), proxyIpWithPort.getSecond(), "http");
+//        webClient.getOptions().setProxyConfig(proxyConfig);
 
         webClient.getOptions().setCssEnabled(false);
         webClient.getOptions().setJavaScriptEnabled(false);

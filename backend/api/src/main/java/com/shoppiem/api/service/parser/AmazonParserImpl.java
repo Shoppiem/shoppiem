@@ -1,7 +1,5 @@
 package com.shoppiem.api.service.parser;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
@@ -19,6 +17,7 @@ import com.shoppiem.api.props.RabbitMQProps;
 import com.shoppiem.api.service.chromeExtension.ExtensionServiceImpl.MessageType;
 import com.shoppiem.api.service.embedding.EmbeddingService;
 import com.shoppiem.api.service.scraper.Merchant;
+import com.shoppiem.api.service.utils.JobUtils;
 import com.shoppiem.api.service.utils.ShoppiemUtils;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -46,7 +45,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Node;
 import org.jsoup.nodes.TextNode;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ObjectUtils;
 
@@ -61,10 +59,9 @@ public class AmazonParserImpl implements AmazonParser {
   private final ProductQuestionRepo questionRepo;
   private final ReviewRepo reviewRepo;
   private final ProductAnswerRepo answerRepo;
-  private final ObjectMapper objectMapper;
-  private final RabbitTemplate rabbitTemplate;
   private final RabbitMQProps rabbitMQProps;
   private final EmbeddingService embeddingService;
+  private final JobUtils jobUtils;
 
   @PostConstruct
   public void populateIdCache() {
@@ -138,14 +135,14 @@ public class AmazonParserImpl implements AmazonParser {
     if (scheduleJobs) {
       scheduleQandAScraping(entity);
       List<String> starRatings = List.of(
-          "five_star",
+          "five_star"
           "four_star",
           "three_star",
           "two_star",
           "one_star"
       );
       for (String rating : starRatings) {
-        scheduleInitialReviewScraping(entity.getProductSku(), entity.getProductUrl(), rating,
+        scheduleInitialReviewScraping(entity.getId(), entity.getProductSku(), entity.getProductUrl(), rating,
             ScrapingJob.DEFAULT_RETRIES);
       }
     }
@@ -177,13 +174,15 @@ public class AmazonParserImpl implements AmazonParser {
       job.setId(ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_UID_LENGTH));
       job.setUrl(url);
       job.setType(JobType.QUESTION_PAGE);
+      job.setProductId(entity.getId());
       jobs.add(job);
     }
     submitJobs(jobs);
   }
 
   @Override
-  public void scheduleInitialReviewScraping(String productSku, String productUrl, String starRating,
+  public void scheduleInitialReviewScraping(Long productId, String productSku, String productUrl,
+      String starRating,
       int retries) {
     if (retries > 0) {
       String url = generateInitialReviewLink(productSku, productUrl, starRating);
@@ -194,6 +193,7 @@ public class AmazonParserImpl implements AmazonParser {
       job.setRetries(retries);
       job.setInitialReviewsByStarRating(true);
       job.setStarRating(starRating);
+      job.setProductId(productId);
       job.setType(JobType.REVIEW_PAGE);
       log.info("Scheduling review scraping job for sku={} starRating={}",
           productSku, starRating);
@@ -206,20 +206,11 @@ public class AmazonParserImpl implements AmazonParser {
 
 
   private void submitJobs(List<ScrapingJob> jobs) {
-    for (ScrapingJob job : jobs) {
-      try {
-        String jobString = objectMapper.writeValueAsString(job);
-        rabbitTemplate.convertAndSend(
-            rabbitMQProps.getTopicExchange(),
-            rabbitMQProps
-                .getJobQueues()
-                .get(RabbitMQProps.SCRAPE_JOB_QUEUE_KEY)
-                .getRoutingKeyPrefix() + job.getProductSku(),
-            jobString);
-      } catch (JsonProcessingException e) {
-        log.error(e.getLocalizedMessage());
-      }
-    }
+    String routingPrefix = rabbitMQProps
+        .getJobQueues()
+        .get(RabbitMQProps.SCRAPE_JOB_QUEUE_KEY)
+        .getRoutingKeyPrefix();
+    jobUtils.submitJobs(jobs, routingPrefix);
   }
 
   @Override
@@ -278,6 +269,7 @@ public class AmazonParserImpl implements AmazonParser {
           job.setUrl(url);
           job.setInitialReviewsByStarRating(false);
           job.setType(JobType.REVIEW_PAGE);
+          job.setProductId(entity.getId());
           jobs.add(job);
         }
         submitJobs(jobs);
@@ -286,7 +278,8 @@ public class AmazonParserImpl implements AmazonParser {
       log.error(e.getLocalizedMessage());
       log.info("Rescheduling initial review scraping: SKU={} starRating={}",
           productSku, starRating);
-      scheduleInitialReviewScraping(productSku, entity.getProductUrl(), starRating, retries - 1);
+      scheduleInitialReviewScraping(entity.getId(), productSku, entity.getProductUrl(),
+          starRating, retries - 1);
     }
   }
 

@@ -23,6 +23,7 @@ public class JobSemaphore {
 
   private Semaphore scrapeJobSemaphore = null;
   private Semaphore chatJobSemaphore = null;
+  private Semaphore smartProxyJobSemaphore = null;
 
 
   public Semaphore getScrapeJobSemaphore() {
@@ -43,6 +44,16 @@ public class JobSemaphore {
           .getThreadCount());
     }
     return chatJobSemaphore;
+  }
+
+  public Semaphore getSmartProxyJobSemaphore() {
+    if (smartProxyJobSemaphore == null) {
+      smartProxyJobSemaphore = new Semaphore(rabbitMQProps
+          .getJobQueues()
+          .get(RabbitMQProps.SCRAPE_JOB_QUEUE_KEY)
+          .getThreadCount());
+    }
+    return smartProxyJobSemaphore;
   }
 
 }
