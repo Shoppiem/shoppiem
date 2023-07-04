@@ -104,7 +104,7 @@ export default function App(): ReactElement {
           })
           sendResponse(true)
         } else if (request.type === MESSAGE_TYPE.CHAT) {
-          addToChatHistory(request.content, false)
+          addToChatHistory(request.content, false, request.productSku)
           .catch(err => console.log(err));
           setShowBubbleAnimation(false)
         } else if (request.type === MESSAGE_TYPE.TOOLBAR_BUTTON_CLICK) {
@@ -131,11 +131,12 @@ export default function App(): ReactElement {
   }, [])
 
   const handleRawMessageChange = (value: string) => {
+    if (value && value.trim().length > 0)
     setRawMessage(value)
   }
 
   const handleSubmit = () => {
-    if (rawMessage) {
+    if (rawMessage.length > 0) {
       (async () => {
         // @ts-ignore
         await chrome?.runtime?.sendMessage({
@@ -151,15 +152,18 @@ export default function App(): ReactElement {
     }
   }
 
-  const addToChatHistory = async (message: string, fromUser: boolean) => {
-    const prevHistory = await loadHistory(productSku)
+  const addToChatHistory = async (message: string, fromUser: boolean, sku: string = undefined) => {
+    // Chrome listener events have an empty context, i.e. the productSku state is empty
+    // so we must use the sku from the event sent by the server, if available
+    const _productSku = sku ? sku : productSku
+    const prevHistory = await loadHistory(_productSku)
     const newHistory = [...prevHistory,
       {
         message,
         from_user: fromUser,
         id: nanoid()
       } ]
-    await saveHistory(productSku, newHistory)
+    await saveHistory(_productSku, newHistory)
     setChatHistory(newHistory)
   }
 

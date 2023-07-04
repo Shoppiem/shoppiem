@@ -139,7 +139,8 @@ async function sendMessageToClient(message) {
   const tab = await getCurrentTab(message.data.productSku);
   await chrome.tabs.sendMessage(tab.id, {
     type: MESSAGE_TYPE.CHAT,
-    content: message.data.content
+    content: message.data.content,
+    productSku: message.data.productSku
   });
 }
 
