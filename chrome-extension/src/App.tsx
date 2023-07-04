@@ -71,24 +71,26 @@ export default function App(): ReactElement {
 
   useEffect(() => {
     if (!productSku) {
-      const href = window.location.href
-      if (href.includes("/dp/")) {
-        const url = new URL(window.location.href)
-        setProductSku(url.pathname.split("/dp/")[1].split("/")[0])
-      }
+     setProductSku(getProductSku())
     }
   })
+
+  const getProductSku = () => {
+    const href = window.location.href
+    if (href.includes("/dp/")) {
+      const url = new URL(window.location.href)
+      return url.pathname.split("/dp/")[1].split("/")[0]
+    }
+  }
 
   useEffect(() => {
     // Keep messaging the service worker until we have the product metadata
    if (!productMetadata && productSku) {
-     (async () => {
        // @ts-ignore
-       await chrome?.runtime?.sendMessage({
+       chrome?.runtime?.sendMessage({
          type: MESSAGE_TYPE.PRODUCT_INFO_REQUEST,
          productSku: productSku
-       });
-     })();
+       }).catch(e => {})
    }
   })
 
@@ -111,13 +113,6 @@ export default function App(): ReactElement {
           handleOpen()
         }
       });
-        (async () => {
-          // @ts-ignore
-          await chrome?.runtime?.sendMessage({
-            type: MESSAGE_TYPE.PRODUCT_INFO_REQUEST,
-            productSku: productSku
-          });
-        })();
     }
   })
 

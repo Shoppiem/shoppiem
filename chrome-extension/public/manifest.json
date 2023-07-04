@@ -23,6 +23,7 @@
   "permissions": [
     "storage",
     "gcm",
+    "tabs",
     "activeTab"
   ],
   "action": {},
