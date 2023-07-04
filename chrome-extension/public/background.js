@@ -1,10 +1,22 @@
+import Analytics from './scripts/google-analytics.js';
+
+addEventListener('unhandledrejection', async (event) => {
+  Analytics.fireErrorEvent(event.reason).catch(e => {})
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+  Analytics.fireEvent('install').catch(e => {})
+});
+
 const MESSAGE_TYPE = {
   CHAT: "CHAT",
   HEART_BEAT: "HEART_BEAT",
   PRODUCT_INIT: "PRODUCT_INIT",
   FCM_TOKEN: "FCM_TOKEN",
   PRODUCT_INFO_REQUEST: "PRODUCT_INFO_REQUEST",
-  TOOLBAR_BUTTON_CLICK: "TOOLBAR_BUTTON_CLICK"
+  TOOLBAR_BUTTON_CLICK: "TOOLBAR_BUTTON_CLICK",
+  PAGE_VIEW_EVENT: "PAGE_VIEW_EVENT",
+  CLICK_EVENT: "CLICK_EVENT"
 }
 const PATHS = {
   // base: "http://localhost:8080",
@@ -173,12 +185,22 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     sendProductInfo(request.productSku)
     .catch(e => console.log(e));
     sendResponse(true)
+  } else if (request.type === MESSAGE_TYPE.PAGE_VIEW_EVENT) {
+    Analytics.firePageViewEvent(request.title, request.href)
+    .catch(e => {});
+  } else if (request.type === MESSAGE_TYPE.CLICK_EVENT) {
+    Analytics.fireEvent('click_button', { id: request.id })
+    .catch(e => {});
   }
 });
 
 chrome.action.onClicked.addListener( async function(tab) {
-  await chrome.tabs.sendMessage(tab.id, {
-    type: MESSAGE_TYPE.TOOLBAR_BUTTON_CLICK
-  })
+  try {
+    await chrome.tabs.sendMessage(tab.id, {
+      type: MESSAGE_TYPE.TOOLBAR_BUTTON_CLICK
+    })
+  } catch (e) {
+    //
+  }
 });
 

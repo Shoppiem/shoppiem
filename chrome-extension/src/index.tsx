@@ -33,7 +33,6 @@ export async function init() {
     body.appendChild(app);
     const root = createRoot(app!);
     root.render(<App/>);
-  // }
 }
 
 init()

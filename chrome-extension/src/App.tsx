@@ -25,6 +25,33 @@ export default function App(): ReactElement {
   const boundaryId = nanoid()
 
   useEffect(() => {
+    // Fire a page view event on load
+    window.addEventListener('load', () => {
+      (async () => {
+        // @ts-ignore
+        await chrome?.runtime?.sendMessage({
+          type: MESSAGE_TYPE.PAGE_VIEW_EVENT,
+          title: document.title,
+          href: document.location.href
+        });
+      })();
+    });
+
+    // Listen globally for all button events
+    document.addEventListener('click', (event) => {
+      if (event.target instanceof HTMLButtonElement) {
+        (async () => {
+          // @ts-ignore
+          await chrome?.runtime?.sendMessage({
+            type: MESSAGE_TYPE.CLICK_EVENT,
+            id: event.target.id
+          });
+        })();
+      }
+    });
+  }, [])
+
+  useEffect(() => {
     if (productSku) {
       loadHistory(productSku).then(result => {
         setChatHistory(result)
@@ -66,7 +93,7 @@ export default function App(): ReactElement {
   })
 
   useEffect(() => {
-    if (productSku && !listenersInitialized) {
+    if (!listenersInitialized) {
       setListenersInitialized(true)
       // @ts-ignore
       chrome?.runtime?.onMessage?.addListener(function (request, sender, sendResponse) {
