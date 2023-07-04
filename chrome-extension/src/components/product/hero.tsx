@@ -5,7 +5,7 @@ const Hero: FC<any> =  (_) => {
   return (
       <div>
         <div className="disclaimer">
-          Shoppiem is currently in Beta. If you would like to get in touch with us, please send us an email at help@shoppiem.com.
+          Shoppiem is currently in Beta. If you would like to get in touch with us, please send us an email at shoppiemteam@gmail.com.
         </div>
         <div className="break-2"></div>
         <div className="section-header">
