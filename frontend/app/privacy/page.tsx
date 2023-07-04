@@ -3,13 +3,13 @@ const Privacy = () => {
   return (
       <>
         <Breadcrumb
-            pageName="Privacy"
+            pageName="Privacy Policy"
          description="Last updated: July 02, 2023"/>
-        <section id="privacy" className="pt-16 md:pt-20 lg:pt-28">
+        <section id="privacy" className="pt-4 md:pt-5 lg:pt-6">
           <div className="container">
             <div className="border-b border-body-color/[.15] pb-16 dark:border-white/[.15] md:pb-20 lg:pb-28">
               <div className="-mx-4 flex flex-wrap items-center">
-                <div className="legal">
+                <div className="body-container">
                   <p>This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.</p>
                   <p>We use Your Personal data to provide and improve the Service. By using the Service, You agree to the collection and use of information in accordance with this Privacy Policy.</p>
                   <h1>Interpretation and Definitions</h1>

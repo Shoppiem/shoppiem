@@ -6,11 +6,11 @@ const Terms = () => {
         <Breadcrumb
             pageName="Terms of Service"
          description="Last updated: July 02, 2023"/>
-        <section id="terms" className="pt-16 md:pt-20 lg:pt-28">
+        <section id="terms" className="pt-4 md:pt-5 lg:pt-6">
           <div className="container">
             <div className="border-b border-body-color/[.15] pb-16 dark:border-white/[.15] md:pb-20 lg:pb-28">
               <div className="-mx-4 flex flex-wrap items-center">
-                <div className="legal">
+                <div className="body-container">
                   <p>These terms and conditions (&#8220;Agreement&#8221;) set forth the general
                     terms and conditions of your use of the <a
                         href="https://shoppiem.com">shoppiem.com</a> website
