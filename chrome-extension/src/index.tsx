@@ -3,10 +3,22 @@ import 'react-app-polyfill/ie11';
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
+import {MESSAGE_TYPE} from "./types";
 
+async function onProductPageLoad() {
+  await chrome?.runtime?.sendMessage({
+    type: MESSAGE_TYPE.PRODUCT_PAGE_LOAD,
+    html: document.documentElement.outerHTML,
+    url: window.location.href
+  });
+}
 export async function init() {
   const href = window.location.href
-  // if (href.includes("amazon") && href.includes("/dp/")) {
+  if (href.includes("amazon.")) {
+    if (href.includes("/dp/")) {
+      await onProductPageLoad();
+    }
+
     // Create div wrapper
     const body = document.body;
     const bodyWrapper = document.createElement('div');
@@ -33,6 +45,7 @@ export async function init() {
     body.appendChild(app);
     const root = createRoot(app!);
     root.render(<App/>);
+  }
 }
 
 init()

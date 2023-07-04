@@ -16,7 +16,8 @@ const MESSAGE_TYPE = {
   PRODUCT_INFO_REQUEST: "PRODUCT_INFO_REQUEST",
   TOOLBAR_BUTTON_CLICK: "TOOLBAR_BUTTON_CLICK",
   PAGE_VIEW_EVENT: "PAGE_VIEW_EVENT",
-  CLICK_EVENT: "CLICK_EVENT"
+  CLICK_EVENT: "CLICK_EVENT",
+  PRODUCT_PAGE_LOAD: "PRODUCT_PAGE_LOAD"
 }
 const PATHS = {
   // base: "http://localhost:8080",
@@ -114,25 +115,6 @@ async function tokenRegistered(registration_id) {
   post(host, requestBody)
 }
 
-chrome.tabs.onUpdated.addListener(
-    function(tabId, changeInfo, tab) {
-      const url = changeInfo.url
-      if (url && url.includes("amazon") && url.includes("/dp/")) {
-        chrome.scripting
-        .executeScript({
-          target : {tabId : tab.id, allFrames : true},
-          func: getHtml,
-        })
-        .then(injectionResults => {
-          for (const {frameId, result} of injectionResults) {
-            initProduct(url, result)
-            .catch(err => console.log(err));
-            break
-          }
-        });
-      }
-    }
-);
 chrome.gcm.register(["658613891142"], tokenRegistered)
 
 async function sendMessageToClient(message) {
@@ -191,6 +173,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     .catch(e => {});
   } else if (request.type === MESSAGE_TYPE.CLICK_EVENT) {
     Analytics.fireEvent('click_button', { id: request.id })
+    .catch(e => {});
+  } else if (request.type === MESSAGE_TYPE.PRODUCT_PAGE_LOAD) {
+    initProduct(request.url, request.html)
     .catch(e => {});
   }
 });
