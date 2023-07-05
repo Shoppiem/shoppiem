@@ -13,13 +13,13 @@ const AddToChrome = ({hidden = false}: {hidden?: boolean }) => {
       >
         <div className="mx-[-12px] flex flex-wrap">
           <Link
-              href="/"
+              href="https://chrome.google.com/webstore/detail/shoppiem-chatgpt-for-amaz/hbmifofekjlighdmkcjaciljlkibfojc/related"
               className={className}
           >
             <div className="chrome-button">
               <svg width="100%" height="100%" viewBox="0 0 16 16"
                    xmlns="http://www.w3.org/2000/svg" className="index_icon__sjqiJ">
-                <g fill-rule="nonzero" fill="none">
+                <g fillRule="nonzero" fill="none">
                   <path
                       d="M7.98.001s4.716-.211 7.216 4.52H7.578S6.14 4.474 4.913 6.216c-.354.73-.73 1.483-.306 2.966-.614-1.035-3.255-5.626-3.255-5.626S3.215.19 7.979.001"
                       fill="#E14C40"></path>
