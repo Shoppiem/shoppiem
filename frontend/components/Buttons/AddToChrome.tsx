@@ -13,7 +13,7 @@ const AddToChrome = ({hidden = false}: {hidden?: boolean }) => {
       >
         <div className="mx-[-12px] flex flex-wrap">
           <Link
-              href="https://chrome.google.com/webstore/detail/shoppiem-chatgpt-for-amaz/hbmifofekjlighdmkcjaciljlkibfojc/related"
+              href="https://chrome.google.com/webstore/detail/shoppiem-chatgpt-for-amaz/hbmifofekjlighdmkcjaciljlkibfojc"
               className={className}
           >
             <div className="chrome-button">
