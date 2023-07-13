@@ -124,7 +124,7 @@ public class ProductServiceImpl implements ProductService {
     if (entity == null) {
       entity = productRepo.findByProductSku(productSku);
     }
-    if (entity != null) {
+    if (entity != null && !ObjectUtils.isEmpty(fcmToken)) {
       try {
         Message message = Message.builder()
             .putData("name", entity.getTitle())
