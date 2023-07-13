@@ -1,11 +1,38 @@
+const constants = {
+  DEV: "DEV",
+  PRODUCTION: "PRODUCTION"
+}
+const ENV = constants.DEV
+// const ENV = constants.PRODUCTION
 import Analytics from './scripts/google-analytics.js';
 
+function firePageViewEvent(title, href) {
+  if (ENV === constants.PRODUCTION) {
+    Analytics.firePageViewEvent(title, href)
+    .catch(e => {});
+  }
+}
+
+function fireErrorEvent(reason) {
+  if (ENV === constants.PRODUCTION) {
+    Analytics.fireErrorEvent(reason)
+    .catch(e => {});
+  }
+}
+
+function fireEvent(eventName, params = {}) {
+  if (ENV === constants.PRODUCTION) {
+    Analytics.fireEvent(eventName, params)
+    .catch(e => {});
+  }
+}
+
 addEventListener('unhandledrejection', async (event) => {
-  Analytics.fireErrorEvent(event.reason).catch(e => {})
+  fireErrorEvent(event.reason);
 });
 
 chrome.runtime.onInstalled.addListener(() => {
-  Analytics.fireEvent('install').catch(e => {})
+  fireEvent('install');
 });
 
 const MESSAGE_TYPE = {
@@ -20,8 +47,7 @@ const MESSAGE_TYPE = {
   PRODUCT_PAGE_LOAD: "PRODUCT_PAGE_LOAD"
 }
 const PATHS = {
-  // base: "http://localhost:8080",
-  base: "https://api.shoppiem.com",
+  base: ENV === constants.PRODUCTION ? "https://api.shoppiem.com" : "http://localhost:8080",
   extension: "/extension"
 }
 
@@ -169,11 +195,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     .catch(e => console.log(e));
     sendResponse(true)
   } else if (request.type === MESSAGE_TYPE.PAGE_VIEW_EVENT) {
-    Analytics.firePageViewEvent(request.title, request.href)
-    .catch(e => {});
+    firePageViewEvent(request.title, request.href);
   } else if (request.type === MESSAGE_TYPE.CLICK_EVENT) {
-    Analytics.fireEvent('click_button', { id: request.id })
-    .catch(e => {});
+    fireEvent('click_button', { id: request.id });
   } else if (request.type === MESSAGE_TYPE.PRODUCT_PAGE_LOAD) {
     initProduct(request.url, request.html)
     .catch(e => {});
