@@ -7,10 +7,13 @@ import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.shoppiem.api.data.postgres.entity.ChatHistoryEntity;
 import com.shoppiem.api.data.postgres.entity.FcmTokenEntity;
+import com.shoppiem.api.data.postgres.entity.FeedbackEntity;
 import com.shoppiem.api.data.postgres.repo.ChatHistoryRepo;
 import com.shoppiem.api.data.postgres.repo.FcmTokenRepo;
+import com.shoppiem.api.data.postgres.repo.FeedbackRepo;
 import com.shoppiem.api.dto.ChatJob;
 import com.shoppiem.api.props.OpenAiProps;
+import com.shoppiem.api.props.OtherProps;
 import com.shoppiem.api.props.RabbitMQProps;
 import com.shoppiem.api.service.chromeExtension.ExtensionServiceImpl.MessageType;
 import com.shoppiem.api.service.embedding.EmbeddingService;
@@ -48,6 +51,8 @@ public class ChatServiceImpl implements ChatService {
   private final FcmTokenRepo fcmTokenRepo;
   private final RabbitTemplate rabbitTemplate;
   private final RabbitMQProps rabbitMQProps;
+  private final FeedbackRepo feedbackRepo;
+  private final OtherProps otherProps;
 
   @Override
   public CompletionRequest buildGptRequest(String query, String productSku) {
@@ -68,44 +73,66 @@ public class ChatServiceImpl implements ChatService {
   }
 
   @Override
-  public void callGpt(String query, String registrationToken, String productSku) {
+  public void callGpt(String query, String fcmToken, String productSku) {
     String queryId = ShoppiemUtils.generateUid(ShoppiemUtils.DEFAULT_CHAT_UID_LENGTH);
     log.info("Query - SKU={} queryId={}: {}", productSku, queryId, query);
-    Thread.startVirtualThread(
-        () -> saveToChatHistory(query, productSku, registrationToken, false));
-    CompletionRequest request = buildGptRequest(query, productSku);
-    if (request == null) {
-      Message message = Message.builder()
-          .putData("content", "Sorry, I'm unable to find answers for this product.")
-          .putData("productSku", productSku)
-          .putData("type", MessageType.CHAT)
-          .setToken(registrationToken)
-          .build();
-      sendFcmMessage(message);
+    if (query.toLowerCase().contains("feedback")) {
+      handleFeedback(query, fcmToken, productSku);
     } else {
-      try {
-        String json = objectMapper.writeValueAsString(request);
-        CompletionResult result = gptHttpRequest(json);
-        if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
-            result.getChoices().get(0).getMessage() != null) {
-          String response = result.getChoices().get(0).getMessage().getContent();
-          Thread.startVirtualThread(
-              () -> saveToChatHistory(response, productSku, registrationToken, true));
-          Message message = Message.builder()
-              .putData("content", response)
-              .putData("productSku", productSku)
-              .putData("type", MessageType.CHAT)
-              .setToken(registrationToken)
-              .build();
-          sendFcmMessage(message);
-          log.info("Response - SKU={} queryId={}: {}", productSku, queryId, response);
+      Thread.startVirtualThread(
+          () -> saveToChatHistory(query, productSku, fcmToken, false));
+      CompletionRequest request = buildGptRequest(query, productSku);
+      if (request == null) {
+        Message message = Message.builder()
+            .putData("content", "Sorry, I'm unable to find answers for this product.")
+            .putData("productSku", productSku)
+            .putData("type", MessageType.CHAT)
+            .setToken(fcmToken)
+            .build();
+        sendFcmMessage(message);
+      } else {
+        try {
+          String json = objectMapper.writeValueAsString(request);
+          CompletionResult result = gptHttpRequest(json);
+          if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
+              result.getChoices().get(0).getMessage() != null) {
+            String response = result.getChoices().get(0).getMessage().getContent();
+            Thread.startVirtualThread(
+                () -> saveToChatHistory(response, productSku, fcmToken, true));
+            Message message = Message.builder()
+                .putData("content", response)
+                .putData("productSku", productSku)
+                .putData("type", MessageType.CHAT)
+                .setToken(fcmToken)
+                .build();
+            sendFcmMessage(message);
+            log.info("Response - SKU={} queryId={}: {}", productSku, queryId, response);
+          }
+        } catch (JsonProcessingException e) {
+          log.error(e.getLocalizedMessage());
         }
-      } catch (JsonProcessingException e) {
-        log.error(e.getLocalizedMessage());
-      } finally {
-        jobSemaphore.getChatJobSemaphore().release();
       }
     }
+    jobSemaphore.getChatJobSemaphore().release();
+  }
+
+  private void handleFeedback(String query, String fcmToken, String productSku) {
+    FeedbackEntity entity = new FeedbackEntity();
+    entity.setBody(query);
+    entity.setSubject(fcmToken);
+    entity.setUserId(-1L);
+    feedbackRepo.save(entity);
+    Message message = Message.builder()
+        .putData("content",
+            String.format("We really appreciate your feedback! Please don't forget to give us 5 "
+            + "stars <a href=%s target=\"_blank\"><strong style=\"color: red;\">here</strong></a>. This will help us "
+                    + "continue to make Shoppiem better.",
+                    otherProps.getChromeExtensionStoreUrl()))
+        .putData("productSku", productSku)
+        .putData("type", MessageType.CHAT)
+        .setToken(fcmToken)
+        .build();
+    sendFcmMessage(message);
   }
 
   @Override
