@@ -72,8 +72,27 @@ export default function App(): ReactElement {
   useEffect(() => {
     if (!productSku) {
      setProductSku(getProductSku())
+      if (!productMetadata?.name) {
+        parseProductInfo()
+      }
     }
   })
+
+  const parseProductInfo = () => {
+    const html = document.documentElement.outerHTML
+    const parser = new DOMParser()
+    try {
+      const soup = parser.parseFromString(html, "text/html");
+      const title = soup.getElementById("title").textContent.trim();
+      const productUrl = window.location.href
+      const imageUrl = soup.querySelector("#landingImage").src
+      setProductMetadata({
+        name: title,
+        imageUrl: imageUrl
+      })
+    } catch (e) {
+    }
+  }
 
   const getProductSku = () => {
     const href = window.location.href

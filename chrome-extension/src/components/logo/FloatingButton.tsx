@@ -13,9 +13,11 @@ const FloatingButton: FC<FloatingButtonProps> =  (props) => {
   </Button>
   return (
       <div className="absolute bottom-0 right-0 w-16 z-1000 mb-6 mr-4 flex justify-center items-center p-1">
+        <div className="floating-btn-badge">
         { props.showBadge ?
             <Badge content={1}>{button}</Badge> : button
         }
+        </div>
       </div>
   );
 }

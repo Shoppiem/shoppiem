@@ -15,7 +15,12 @@
 }
 .floating-button {
   max-width: 64px;
+  z-index: 9999999;
 }
+#floating-btn, .floating-btn-badge, .rs-badge-content {
+  z-index: 9999999 !important;
+}
+
 .floating-button svg {
   background: #3498ff;
   padding: 8px;
