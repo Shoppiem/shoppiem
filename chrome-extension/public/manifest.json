@@ -2,7 +2,7 @@
   "short_name": "shoppiem",
   "name": "Shoppiem ChatGPT for Amazon",
   "description": "Shoppiem is ChatGPT for Amazon. Get instant answers to all your product questions when shopping on Amazon.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "manifest_version": 3,
   "background": {
     "service_worker": "background.js",
