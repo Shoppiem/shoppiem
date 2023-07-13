@@ -10,6 +10,7 @@ import com.shoppiem.api.service.product.ProductService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
 /**
  * @author Biz Melesse created on 6/15/23
@@ -34,24 +35,32 @@ public class ExtensionServiceImpl implements ExtensionService {
   public GenericResponse handleMessages(ExtensionRequest request) {
     switch (request.getType()) {
       case MessageType.HEART_BEAT -> handleHeartbeatACK();
-      case MessageType.FCM_TOKEN ->  {
-        FcmTokenEntity entity = fcmTokenRepo.findByFcmToken(request.getToken());
-        if (entity == null) {
-          entity = new FcmTokenEntity();
-          entity.setFcmToken(request.getToken());
-          fcmTokenRepo.save(entity);
-        }
-      }
+      case MessageType.FCM_TOKEN ->  saveFcmToken(request.getToken());
       case MessageType.CHAT -> chatService.addQueryToQueue(
           request.getQuery(), request.getToken(), request.getProductSku());
       case MessageType.PRODUCT_INIT -> productService.createProduct(new ProductRequest()
           .productUrl(request.getProductUrl())
           .html(request.getHtml()),
           request.getToken());
-      case MessageType.PRODUCT_INFO_REQUEST ->  productService.sendProductInfoToClient(
-          null, request.getProductSku(), request.getToken());
+      case MessageType.PRODUCT_INFO_REQUEST ->  {
+        final String token = request.getToken();
+        Thread.startVirtualThread(() -> saveFcmToken(token));
+        productService.sendProductInfoToClient(
+            null, request.getProductSku(), token);
+      }
     }
     return new GenericResponse().status("ok");
+  }
+
+  private void saveFcmToken(String token) {
+    if (!ObjectUtils.isEmpty(token)) {
+      FcmTokenEntity entity = fcmTokenRepo.findByFcmToken(token);
+      if (entity == null) {
+        entity = new FcmTokenEntity();
+        entity.setFcmToken(token);
+        fcmTokenRepo.save(entity);
+      }
+    }
   }
 
   private void handleHeartbeatACK() {
