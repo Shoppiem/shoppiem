@@ -15,17 +15,17 @@ const Hero: FC<any> =  (_) => {
         <div className="landing-section-header">
           💡<span>Open an Amazon product page to use Shoppiem</span>
         </div>
-        <div className="break-1"></div>
-        <div className="landing-section">
-          Shoppiem combines data on the specific product you are interested in from Amazon and all over the Internet to provide you with accurate information.
-        </div>
+        {/*<div className="break-1"></div>*/}
+        {/*<div className="landing-section">*/}
+        {/*  Shoppiem combines data on the specific product you are interested in from Amazon and all over the Internet to provide you with accurate information.*/}
+        {/*</div>*/}
         <div className="break-1"></div>
         <div className="landing-section-header">
-          💡<span>Shoppiem is powered by AI</span>
+          🙏<span>Please give us a feedback</span>
         </div>
         <div className="break-1"></div>
         <div className="landing-section">
-          When using Shoppiem, ask detailed questions about the product and use keywords. For example, say "How long does the battery last on this laptop?" or "How many liters of water can I carry in this bottle?"
+          Please give us a review in the Chrome Store if you liked using Shoppiem and tell your friends! Send us a feedback right from the chat box below by starting your message with the word "Feedback". Thank you!
         </div>
       </div>
   );

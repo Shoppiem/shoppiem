@@ -2,8 +2,8 @@ const constants = {
   DEV: "DEV",
   PRODUCTION: "PRODUCTION"
 }
-// const ENV = constants.DEV
-const ENV = constants.PRODUCTION
+const ENV = constants.DEV
+// const ENV = constants.PRODUCTION
 import Analytics from './scripts/google-analytics.js';
 
 function firePageViewEvent(title, href) {
