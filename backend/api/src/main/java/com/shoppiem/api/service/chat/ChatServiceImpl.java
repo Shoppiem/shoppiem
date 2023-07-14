@@ -60,7 +60,7 @@ public class ChatServiceImpl implements ChatService {
   @Override
   public CompletionRequest buildGptRequest(String query, String fcmToken, String productSku) {
     List<CompletionMessage> history = getChatHistory(fcmToken, productSku);
-    String finalQuery = queryBuilder(query, history, productSku);
+    String finalQuery = queryBuilder(query, new ArrayList<>(history), productSku);
     List<String> embeddings = embeddingService.fetchEmbeddings(finalQuery, productSku);
     String context = String.join(" ", embeddings);
     String content = String.format("CONTEXT:\n%s\n\nQUESTION: %s\n\nANSWER:",
@@ -189,12 +189,13 @@ public class ChatServiceImpl implements ChatService {
 
   @Override
   public String queryBuilder(String query, List<CompletionMessage> conversationHistory, String productSku) {
+    Collections.reverse(conversationHistory);
     String history = conversationHistory
         .stream()
         .map(it -> String.format("%s: %s", it.getRole().toUpperCase(), it.getContent()))
         .collect(Collectors.joining("\n"));
     String systemMessage = openAiProps.getQueryBuilderPrompt();
-    String userMessage = String.format("USER PROMPT: %s\n\nCONVERSATION LOG: %s\n\nFinal answer:;",
+    String userMessage = String.format("USER PROMPT: %s\n\nCONVERSATION LOG: \n%s\n\nGENERATED QUESTION:;",
         query, history);
     CompletionRequest request =  CompletionRequest
         .builder()
