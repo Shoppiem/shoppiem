@@ -64,7 +64,8 @@ public class ChatServiceImpl implements ChatService {
     List<String> embeddings = embeddingService.fetchEmbeddings(finalQuery, productSku);
     String context = String.join(" ", embeddings);
     String content = String.format("CONTEXT:\n%s\n\nQUESTION: %s\n\nANSWER:",
-        context, query);
+        context, finalQuery);
+    log.info("Generated query: {}", finalQuery);
     List<CompletionMessage> messages = new ArrayList<>();
     messages.add(new CompletionMessage("system", openAiProps.getSystemMessage()));
     messages.addAll(history);
