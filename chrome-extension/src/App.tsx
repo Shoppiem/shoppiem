@@ -145,12 +145,11 @@ export default function App(): ReactElement {
   }, [])
 
   const handleRawMessageChange = (value: string) => {
-    if (value && value.trim().length > 0)
     setRawMessage(value)
   }
 
   const handleSubmit = () => {
-    if (rawMessage.length > 0) {
+    if (rawMessage && rawMessage.trim().length > 0) {
       (async () => {
         // @ts-ignore
         await chrome?.runtime?.sendMessage({
