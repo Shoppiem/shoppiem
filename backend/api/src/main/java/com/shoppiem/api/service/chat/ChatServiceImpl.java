@@ -26,6 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Call;
@@ -58,13 +59,15 @@ public class ChatServiceImpl implements ChatService {
 
   @Override
   public CompletionRequest buildGptRequest(String query, String fcmToken, String productSku) {
-    List<String> embeddings = embeddingService.fetchEmbeddings(query, productSku);
+    List<CompletionMessage> history = getChatHistory(fcmToken, productSku);
+    String finalQuery = queryBuilder(query, history, productSku);
+    List<String> embeddings = embeddingService.fetchEmbeddings(finalQuery, productSku);
     String context = String.join(" ", embeddings);
     String content = String.format("CONTEXT:\n%s\n\nQUESTION: %s\n\nANSWER:",
         context, query);
     List<CompletionMessage> messages = new ArrayList<>();
     messages.add(new CompletionMessage("system", openAiProps.getSystemMessage()));
-    messages.addAll(getChatHistory(fcmToken, productSku));
+    messages.addAll(history);
     messages.add(new CompletionMessage("user", content));
     return CompletionRequest
         .builder()
@@ -116,6 +119,7 @@ public class ChatServiceImpl implements ChatService {
       } else {
         try {
           String json = objectMapper.writeValueAsString(request);
+          log.info("Full request: {}", json);
           CompletionResult result = gptHttpRequest(json);
           if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
               result.getChoices().get(0).getMessage() != null) {
@@ -182,6 +186,37 @@ public class ChatServiceImpl implements ChatService {
     });
   }
 
+  @Override
+  public String queryBuilder(String query, List<CompletionMessage> conversationHistory, String productSku) {
+    String history = conversationHistory
+        .stream()
+        .map(it -> String.format("%s: %s", it.getRole().toUpperCase(), it.getContent()))
+        .collect(Collectors.joining("\n"));
+    String systemMessage = openAiProps.getQueryBuilderPrompt();
+    String userMessage = String.format("USER PROMPT: %s\n\nCONVERSATION LOG: %s\n\nFinal answer:;",
+        query, history);
+    CompletionRequest request =  CompletionRequest
+        .builder()
+        .user(productSku)
+        .model(openAiProps.getCompletionModel())
+        .maxTokens(openAiProps.getMaxTokens())
+        .temperature(openAiProps.getTemp())
+        .messages(List.of(
+            new CompletionMessage("system", systemMessage),
+            new CompletionMessage("user", userMessage)))
+        .build();
+    try {
+      CompletionResult result = gptHttpRequest(objectMapper.writeValueAsString(request));
+      if (result != null && !ObjectUtils.isEmpty(result.getChoices()) &&
+          result.getChoices().get(0).getMessage() != null) {
+        return result.getChoices().get(0).getMessage().getContent();
+      }
+    } catch (Exception e) {
+      log.error(e.getLocalizedMessage());
+    }
+    return query;
+  }
+
   private void saveToChatHistory(String query, String productSku, String fcmToken, boolean isGpt) {
     ChatHistoryEntity entity = new ChatHistoryEntity();
     entity.setMessage(query);
@@ -207,10 +242,10 @@ public class ChatServiceImpl implements ChatService {
     }
   }
 
-  private CompletionResult gptHttpRequest(String json) {
+  private CompletionResult gptHttpRequest(String prompt) {
     OkHttpClient httpClient = new OkHttpClient.Builder().build();
     RequestBody body = RequestBody.create(
-        MediaType.parse("application/json"), json);
+        MediaType.parse("application/json"), prompt);
     Request request = new Request.Builder()
         .url(openAiProps.getCompletionEndpoint())
         .addHeader("Authorization", "Bearer " + openAiProps.getApiKey())

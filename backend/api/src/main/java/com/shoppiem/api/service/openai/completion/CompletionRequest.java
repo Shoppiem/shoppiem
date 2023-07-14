@@ -26,11 +26,6 @@ public class CompletionRequest {
      */
     String model;
 
-//    /**
-//     * An optional prompt to complete from
-//     */
-//    String prompt;
-
     /**
      * The maximum number of tokens to generate.
      * Requests can use up to 2048 tokens shared between prompt and completion.

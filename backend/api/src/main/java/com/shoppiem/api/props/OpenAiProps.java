@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Primary;
 public class OpenAiProps {
     private int numRetries = 5;
     private String apiKey;
+    private String queryBuilderPrompt;
     private String embeddingModel = "text-embedding-ada-002";
     private String completionModel = "gpt-3.5-turbo";
     private String systemMessage;
