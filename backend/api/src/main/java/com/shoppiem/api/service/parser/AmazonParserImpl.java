@@ -149,17 +149,19 @@ public class AmazonParserImpl implements AmazonParser {
   }
 
   private void sendProductInfoToClient(String title, String imageUrl, String fcmToken, String productSku) {
-    Message message = Message.builder()
-        .putData("name", title)
-        .putData("imageUrl", imageUrl)
-        .putData("productSku", productSku)
-        .putData("type", MessageType.PRODUCT_INFO_REQUEST)
-        .setToken(fcmToken)
-        .build();
-    try {
-      FirebaseMessaging.getInstance().send(message);
-    } catch (FirebaseMessagingException e) {
-      log.error(e.getLocalizedMessage());
+    if (!ObjectUtils.isEmpty(fcmToken)) {
+      Message message = Message.builder()
+          .putData("name", title)
+          .putData("imageUrl", imageUrl)
+          .putData("productSku", productSku)
+          .putData("type", MessageType.PRODUCT_INFO_REQUEST)
+          .setToken(fcmToken)
+          .build();
+      try {
+        FirebaseMessaging.getInstance().send(message);
+      } catch (FirebaseMessagingException e) {
+        log.error(e.getLocalizedMessage());
+      }
     }
   }
 
