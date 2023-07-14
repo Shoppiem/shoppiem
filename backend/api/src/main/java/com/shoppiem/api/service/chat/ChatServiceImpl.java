@@ -60,7 +60,10 @@ public class ChatServiceImpl implements ChatService {
   @Override
   public CompletionRequest buildGptRequest(String query, String fcmToken, String productSku) {
     List<CompletionMessage> history = getChatHistory(fcmToken, productSku);
-    String finalQuery = queryBuilder(query, new ArrayList<>(history), productSku);
+    String finalQuery = query;
+    if (openAiProps.getUseQueryGenerator()) {
+      finalQuery = queryBuilder(query, new ArrayList<>(history), productSku);
+    }
     List<String> embeddings = embeddingService.fetchEmbeddings(finalQuery, productSku);
     String context = String.join(" ", embeddings);
     String content = String.format("CONTEXT:\n%s\n\nQUESTION: %s\n\nANSWER:",

@@ -16,6 +16,7 @@ import org.springframework.context.annotation.Primary;
 @ConfigurationProperties(prefix = "openai")
 public class OpenAiProps {
     private int numRetries = 5;
+    private Boolean useQueryGenerator = false;
     private String apiKey;
     private String queryBuilderPrompt;
     private String embeddingModel = "text-embedding-ada-002";
