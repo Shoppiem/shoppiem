@@ -16,4 +16,5 @@ import org.springframework.context.annotation.Primary;
 @ConfigurationProperties(prefix = "other")
 public class OtherProps {
     private String chromeExtensionStoreUrl;
+    private Long lastNHistoryMessages = 25L;
 }

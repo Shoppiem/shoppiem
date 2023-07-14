@@ -23,6 +23,8 @@ import com.shoppiem.api.service.openai.completion.CompletionMessage;
 import com.shoppiem.api.service.utils.JobSemaphore;
 import com.shoppiem.api.service.utils.ShoppiemUtils;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,21 +57,42 @@ public class ChatServiceImpl implements ChatService {
   private final OtherProps otherProps;
 
   @Override
-  public CompletionRequest buildGptRequest(String query, String productSku) {
+  public CompletionRequest buildGptRequest(String query, String fcmToken, String productSku) {
     List<String> embeddings = embeddingService.fetchEmbeddings(query, productSku);
     String context = String.join(" ", embeddings);
     String content = String.format("CONTEXT:\n%s\n\nQUESTION: %s\n\nANSWER:",
         context, query);
+    List<CompletionMessage> messages = new ArrayList<>();
+    messages.add(new CompletionMessage("system", openAiProps.getSystemMessage()));
+    messages.addAll(getChatHistory(fcmToken, productSku));
+    messages.add(new CompletionMessage("user", content));
     return CompletionRequest
         .builder()
         .user(productSku)
         .model(openAiProps.getCompletionModel())
         .maxTokens(openAiProps.getMaxTokens())
         .temperature(openAiProps.getTemp())
-        .messages(List.of(
-            new CompletionMessage("system", openAiProps.getSystemMessage()),
-            new CompletionMessage("user", content)
-        )).build();
+        .messages(messages)
+        .build();
+  }
+
+  List<CompletionMessage> getChatHistory(String fcmToken, String productSku) {
+    List<CompletionMessage> history = new ArrayList<>();
+    // TODO: keep track of the total length of the strings to not exceed context window limit
+    FcmTokenEntity tokenEntity = fcmTokenRepo.findByFcmToken(fcmToken);
+    if (tokenEntity != null) {
+      List<ChatHistoryEntity> historyEntities = chatHistoryRepo.findLastNMessages(
+          tokenEntity.getId(),
+          productSku,
+          otherProps.getLastNHistoryMessages());
+      for (ChatHistoryEntity historyEntity : historyEntities) {
+        history.add(new CompletionMessage(historyEntity.getIsGpt() ? "assistant" : "user",
+            historyEntity.getMessage()));
+      }
+    }
+    // Reverse the list so the messages are sorted in ascending order time-wise
+    Collections.reverse(history);
+    return history;
   }
 
   @Override
@@ -79,9 +102,9 @@ public class ChatServiceImpl implements ChatService {
     if (query.toLowerCase().contains("feedback")) {
       handleFeedback(query, fcmToken, productSku);
     } else {
+      CompletionRequest request = buildGptRequest(query, fcmToken, productSku);
       Thread.startVirtualThread(
           () -> saveToChatHistory(query, productSku, fcmToken, false));
-      CompletionRequest request = buildGptRequest(query, productSku);
       if (request == null) {
         Message message = Message.builder()
             .putData("content", "Sorry, I'm unable to find answers for this product.")
